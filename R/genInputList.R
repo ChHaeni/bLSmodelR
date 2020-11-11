@@ -21,7 +21,7 @@ genInputList <- function(...,Tol.Zero=FALSE){
 		stop("Please provide a data.frame of class 'Sensors'!")
 	}
 	if(is.null(Model)){
-		Model <- genModel()
+		Model <- model_options()
 	}
 	if(is.null(Tolerances)|Tol.Zero){
 		Tolerances <- genTolerances(Tol.Zero=Tol.Zero)

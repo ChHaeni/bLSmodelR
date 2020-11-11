@@ -31,7 +31,7 @@ Christoph Haeni
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-\code{\link{Class-Sources}}, \code{\link{genInputList}}, \code{\link{genInterval}}, \code{\link{genSensors}}, \code{\link{genModel}}, \code{\link{genTolerances}}, \code{\link{runbLS}}, \code{\link{bLSmodelR-package}}.
+\code{\link{Class-Sources}}, \code{\link{genInputList}}, \code{\link{genInterval}}, \code{\link{genSensors}}, \code{\link{model_options}}, \code{\link{genTolerances}}, \code{\link{runbLS}}, \code{\link{bLSmodelR-package}}.
 }
 \examples{
 \dontrun{

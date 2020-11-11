@@ -74,7 +74,7 @@ Touchdown catalogs can be saved for future runs.
 }
 
 \section{Parallel Computing}{
-This package provides the option to run some parts of the model calculation in parallel. The number of cores that will be used can be defined via the \code{ncores} argument in the model input (see \code{\link{genModel}} or \code{\link{runbLS}}). Parallel computing is done using the package \code{snow} (and parts of \code{\link{snowfall}} and \code{\link{parallel}}). If the model is run in parallel mode, two parts of the model will be processed parallel, a) the core C++ routine, calculating the trajectories and corresponding touchdowns, and b) the calculation of the model results (i.e. \emph{C/E} etc.) from the touchdown catalogs.
+This package provides the option to run some parts of the model calculation in parallel. The number of cores that will be used can be defined via the \code{ncores} argument in the model input (see \code{\link{model_options}} or \code{\link{runbLS}}). Parallel computing is done using the package \code{snow} (and parts of \code{\link{snowfall}} and \code{\link{parallel}}). If the model is run in parallel mode, two parts of the model will be processed parallel, a) the core C++ routine, calculating the trajectories and corresponding touchdowns, and b) the calculation of the model results (i.e. \emph{C/E} etc.) from the touchdown catalogs.
 }
 
 \section{To Do:}{
@@ -96,7 +96,7 @@ Flesch, T. K., J. D. Wilson, et al. (1995). \dQuote{Backward-time Lagrangian sto
 
 \keyword{ package }
 \seealso{
-	\code{\link{runbLS}}, \code{\link{genInputList}}, \code{\link{genSensors}}, \code{\link{genSources}}, \code{\link{genInterval}}, \code{\link{genModel}}, \code{\link{coreModel}}.
+	\code{\link{runbLS}}, \code{\link{genInputList}}, \code{\link{genSensors}}, \code{\link{genSources}}, \code{\link{genInterval}}, \code{\link{model_options}}, \code{\link{coreModel}}.
 }
 \examples{
 \dontrun{
@@ -111,7 +111,7 @@ Source <- genSources(Source1=list('c',M=c(0,20),R=10))
 Int <- genInterval(MaxFetch=-20)
 
 ## generate TD catalog with temporary touchdown catalogs:
-Model <- genModel(TDwrite=FALSE)
+Model <- model_options(TDwrite=FALSE)
 InList <- genInputList(Sensors,Source,Int,Model)
 Run <- runbLS(InList,Cat.Path=getwd())
 

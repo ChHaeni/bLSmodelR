@@ -2,7 +2,7 @@
 
 
 
-plotFootprint <- function(x,SensorName,rn=NULL,MyMap=NULL,type=c("CE","wCE","uCE"),use.avg=FALSE,use.sym=FALSE,use.var=TRUE,wTDcutoff=NULL,origin=NULL,
+plotFootprint <- function(x,SensorName,rn=NULL,MyMap=NULL,type=c("CE","wCE","uCE"),use.avg=FALSE,use.sym=FALSE,use.var=TRUE,wTD.cutoff=NULL,origin=NULL,
 	dx=2,dy=dx,breaks=function(x)quantile(c(0,max(x)),c(0.01,0.1,0.5,0.9)),xlim=c(-100,100),ylim=c(-100,100),add=FALSE,alpha=0.3,axs=c("r","i"),
 	main=NULL,asp=1,fill=TRUE,sub=NULL,bg.col=NULL,addSource=TRUE,showMax=FALSE,showSensor=TRUE,dispSname=showSensor, N0 = NULL,
 	lpos=NULL,showPerc=FALSE,leg.bg.col=grey(0.9),cpal=NULL,decPlaces=0,sigNums=1,addWR=FALSE,WRpos=2,WRfrac=20,WRscale=1,xy_transform=NULL,transformArgs=NULL,
@@ -245,7 +245,7 @@ plotFootprint <- function(x,SensorName,rn=NULL,MyMap=NULL,type=c("CE","wCE","uCE
 					}
 
 
-					if(!is.null(wTDcutoff)) Catalog[wTD<wTDcutoff,wTD:=wTDcutoff]
+					if(!is.null(wTD.cutoff)) Catalog[wTD<wTD.cutoff,wTD:=wTD.cutoff]
 
 					Catalog[,CE:=2/wTD/N0]
 

@@ -111,7 +111,7 @@ Source <- genSources(Source1=list('c',M=c(0,20),R=10))
 Int <- genInterval(MaxFetch=-20)
 
 ## generate TD catalog with temporary touchdown catalogs:
-Model <- model_options(TDwrite=FALSE)
+Model <- model_options(TD.write=FALSE)
 InList <- genInputList(Sensors,Source,Int,Model)
 Run <- runbLS(InList,Cat.Path=getwd())
 

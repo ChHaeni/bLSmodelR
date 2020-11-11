@@ -69,7 +69,7 @@ addWindrose(WD = 270)
 Int <- genInterval(WD=270,N0=1E4,SensorNames="LineSensor2",SourceNames="Circle 1,Circle 2")
 
 ## generate List of model input:
-Model <- model_options(TDwrite=FALSE)
+Model <- model_options(TD.write=FALSE)
 InputList <- genInputList(Int, Sources, Sensors, Model)
 
 ## run bLSmodelR (takes 2 to 5 mins):

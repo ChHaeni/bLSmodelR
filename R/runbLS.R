@@ -30,7 +30,7 @@ runbLS <- function(ModelInput,Cat.Path=NULL,TDonly=NULL,ncores=NULL,writeCsv=FAL
 
 	Model <- ModelInput[["Model"]]
 
-	if(Model[["TDwrite"]]|Model[["TDread"]]){
+	if(Model[["TD.write"]]|Model[["TD.read"]]){
 		Cat.Path <- switch(class(Cat.Path),
 			"character" = {
 				if(!dir.exists(Cat.Path)){
@@ -74,9 +74,9 @@ runbLS <- function(ModelInput,Cat.Path=NULL,TDonly=NULL,ncores=NULL,writeCsv=FAL
 
 
 	tempCats <- FALSE
-	if(!Model[["TDwrite"]]){
+	if(!Model[["TD.write"]]){
 		if(is.null(Cat.Path))Cat.Path <- getwd()
-		Model[["overwriteTD"]] <- FALSE
+		Model[["TD.overwrite"]] <- FALSE
 		dir_CatPath <- dir(Cat.Path,pattern="Cat|Header",full.names=TRUE)
 		tempCats <- TRUE
 		on.exit(

@@ -120,7 +120,7 @@ prepareIntervals <- function(InputList,C.Path=NULL,asDT=TRUE,simpleNames=TRUE,nc
 
 
 	#### check existing Catalogs:
-	if(InputList[["Model"]][["TDread"]]){
+	if(InputList[["Model"]][["TD.read"]]){
 
 		cat("* Checking for matches in existing TD catalogs...\n")
 
@@ -471,7 +471,7 @@ prepareIntervals <- function(InputList,C.Path=NULL,asDT=TRUE,simpleNames=TRUE,nc
 			rm(Key,CatList)
 		}
 	} else {
-		# TDread == FALSE: 
+		# TD.read == FALSE: 
 		IntExt[,":="(
 			Calc.ZSens=SensorHeight,
 			Calc.L=L,

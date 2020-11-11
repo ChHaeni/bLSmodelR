@@ -24,10 +24,10 @@
 			SnRun <- SncRun[i,]
 			SnRun[,(Orig.names) := mget(Calc.names)]
 
-			if(InputList[["Model"]][["TDread"]]){
+			if(InputList[["Model"]][["TD.read"]]){
 				if(SnRun[,Cat.exists]){
 					CatRead <- SnRun[,Cat.Name]
-					if(InputList[["Model"]][["overwriteTD"]]){
+					if(InputList[["Model"]][["TD.overwrite"]]){
 						CatNameNew <- CatRead	
 					} else {
 						CatNameNew <- createCatName(SnRun,format(Sys.time(),"%Y%m%d%H%M%S"))					
@@ -89,8 +89,8 @@
 				rm(list=c("ListOut","attCat"))
 			}
 
-			# wTDcutoff:
-			if(Catalog[wTD<InputList[["Model"]][["wTDcutoff"]],.N])Catalog[wTD<InputList[["Model"]][["wTDcutoff"]],wTD:=InputList[["Model"]][["wTDcutoff"]]]
+			# wTD.cutoff:
+			if(Catalog[wTD<InputList[["Model"]][["wTD.cutoff"]],.N])Catalog[wTD<InputList[["Model"]][["wTD.cutoff"]],wTD:=InputList[["Model"]][["wTD.cutoff"]]]
 			
 			cat("\ndone\n")
 
@@ -110,7 +110,7 @@
 			# }
 
 			# write catalog:
-			if(InputList[["Model"]][["overwriteTD"]]&&SnRun[,Cat.exists]){
+			if(InputList[["Model"]][["TD.overwrite"]]&&SnRun[,Cat.exists]){
 				cat("Replacing existing TD Catalog\n")
 				file.remove(file=paste0(C.Path,"/",CatNameNew))
 			} else {
@@ -121,7 +121,7 @@
 		}
 	}
 
-	if(InputList[["Model"]][["overwriteTD"]]){
+	if(InputList[["Model"]][["TD.overwrite"]]){
 		rebuildCatListFile(C.Path,SncRun[(rebuild),Cat.Name])
 	}
 	SncRun[,rebuild:=NULL]

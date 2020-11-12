@@ -26,10 +26,6 @@ genInputList <- function(...,Tol.Zero=FALSE){
 	if(is.null(Tolerances)|Tol.Zero){
 		Tolerances <- genTolerances(Tol.Zero=Tol.Zero)
 	}
-	if(!Model$TDonly&&is.null(Sources)){
-		warning("Argument TDonly in 'Model' data.frame is set to TRUE since no Sources are defined!")
-		Model$TDonly <- TRUE
-	}
 
 	# extend to all combinations?
 	Snames_compact <- paste(Snames <- unique(Sensors[, "Sensor Name"]), collapse = ",")
@@ -38,8 +34,8 @@ genInputList <- function(...,Tol.Zero=FALSE){
 	# check consistency of sensor and source names
 	if(!all(unique(unlist(strsplit(Interval[,"Sensor Names (sep = \",\")"],","))) %in% unique(Snames)))
 		stop("All entries in column \"Sensor Names (sep = \",\")\" need a matching entry in column \"Sensor Name\" of the Sensors data.frame!\n")
-	if(!Model$TDonly&any(Interval[,"Source Names (sep = \",\")"]==""))stop("Interval column \"Source Names (sep = \",\")\" must be specified to calculate C/E values!\n")
-	if(!Model$TDonly&!all(unique(unlist(strsplit(Interval[,"Source Names (sep = \",\")"],","))) %in% Sources[,1]))stop("All entries in column \"Source Names (sep = \",\")\" need a matching entry in column \"SourceArea Name\" of the Sources data.frame!\n")
+	if(any(Interval[,"Source Names (sep = \",\")"]==""))stop("Interval column \"Source Names (sep = \",\")\" must be specified to calculate C/E values!\n")
+	if(!all(unique(unlist(strsplit(Interval[,"Source Names (sep = \",\")"],","))) %in% Sources[,1]))stop("All entries in column \"Source Names (sep = \",\")\" need a matching entry in column \"SourceArea Name\" of the Sources data.frame!\n")
 	# check sensor heights:
 	checkZo <- ""
 	Nms <- character(0)

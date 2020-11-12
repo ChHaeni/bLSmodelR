@@ -1,4 +1,4 @@
-runbLS <- function(ModelInput,Cat.Path=NULL,TDonly=NULL,ncores=NULL,writeCsv=FALSE,asDT=TRUE,simpleNames=asDT){
+runbLS <- function(ModelInput,Cat.Path=NULL,ncores=NULL,writeCsv=FALSE,asDT=TRUE,simpleNames=asDT){
 
 	cat("\n**********************************************\n")
 	cat("\nLocal Date/Time: ",format(Start <- Sys.time(),format="%d-%m-%Y %H:%M:%S"),"\n")
@@ -25,7 +25,6 @@ runbLS <- function(ModelInput,Cat.Path=NULL,TDonly=NULL,ncores=NULL,writeCsv=FAL
 	C.Path <- Cat.Path
 	Cat.Path <- Cat.Path[[1]]
 
-	if(!is.null(TDonly))ModelInput[["Model"]]$TDonly <- TDonly
 	if(!is.null(ncores))ModelInput[["Model"]]$ncores <- ncores
 
 	Model <- ModelInput[["Model"]]
@@ -45,14 +44,11 @@ runbLS <- function(ModelInput,Cat.Path=NULL,TDonly=NULL,ncores=NULL,writeCsv=FAL
 		if(is.na(Cat.Path)){cat("\n- tcltk interface canceled -\n");return(invisible(NULL))}
 	} 
 	
-	if(Model[["TDonly"]]){
-		if(writeCsv)cat("TDonly is TRUE, no output file will be saved!\n")
-		writeCsv <- FALSE
-	}
-	if((writeCsv==TRUE|class(writeCsv)=="character"|!Model[["TDonly"]])&is.null(ModelInput[["Sources"]])){
+	if((writeCsv==TRUE|class(writeCsv)=="character")&is.null(ModelInput[["Sources"]])){
 		stop("No Source Area specified!\n")
 	}
-	if(!is.null(ModelInput[["Sources"]])){
+	TD.only <- is.null(ModelInput[["Sources"]])
+	if(!TD.only){
 		ModelInput[["Sources"]] <- procSources(ModelInput[["Sources"]])
 	}
 
@@ -153,9 +149,9 @@ runbLS <- function(ModelInput,Cat.Path=NULL,TDonly=NULL,ncores=NULL,writeCsv=FAL
 	# 	.calcCatalogs(Intervals,ModelInput,Cat.Path,parl)
 	# }
 	
-	.calcCatalogs(Intervals,ModelInput,Cat.Path,parl)
+	.calcCatalogs(Intervals,ModelInput,Cat.Path,parl, TD.only)
 
-	if(!ModelInput[["Model"]][["TDonly"]]){
+	if(!TD.only){
 		
 		Out <- .calcOutput(Intervals,ModelInput,Cat.Path)
 		Intervals <- attr(Out,"CalcSteps")

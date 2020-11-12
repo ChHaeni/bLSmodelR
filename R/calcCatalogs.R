@@ -1,4 +1,4 @@
-.calcCatalogs <- function(SncRun,InputList,C.Path, parl){
+.calcCatalogs <- function(SncRun,InputList,C.Path, parl, TD.only){
 
 	
 	cindex <- SncRun[,which(Cat.calc)]
@@ -6,8 +6,8 @@
 	### precalculations
 	SncRun[ ,rebuild := Cat.calc&Cat.exists]
 
-	if(!length(cindex)&InputList[["Model"]][["TDonly"]]){
-		cat("All TD catalogs existing...\n")
+	if(!length(cindex)&TD.only){
+		cat("All TD catalogs already exist!\n")
 	}
 
 	#### Calculate TD catalogs and CE:

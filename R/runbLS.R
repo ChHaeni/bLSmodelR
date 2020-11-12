@@ -25,8 +25,6 @@ runbLS <- function(ModelInput,Cat.Path=NULL,ncores=NULL,writeCsv=FALSE,asDT=TRUE
 	C.Path <- Cat.Path
 	Cat.Path <- Cat.Path[[1]]
 
-	if(!is.null(ncores))ModelInput[["Model"]]$ncores <- ncores
-
 	Model <- ModelInput[["Model"]]
 
 	if(Model[["TD.write"]]|Model[["TD.read"]]){
@@ -88,8 +86,6 @@ runbLS <- function(ModelInput,Cat.Path=NULL,ncores=NULL,writeCsv=FALSE,asDT=TRUE
 
 	if(!is.list(C.Path))C.Path <- Cat.Path
 
-	ncores <- Model[["ncores"]]
-	
 	if(sfIsRunning()){
 		parl <- TRUE
 		cl <- sfGetCluster()

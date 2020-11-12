@@ -74,7 +74,7 @@ Touchdown catalogs can be saved for future runs.
 }
 
 \section{Parallel Computing}{
-This package provides the option to run some parts of the model calculation in parallel. The number of cores that will be used can be defined via the \code{ncores} argument in the model input (see \code{\link{model_options}} or \code{\link{runbLS}}). Parallel computing is done using the package \code{snow} (and parts of \code{\link{snowfall}} and \code{\link{parallel}}). If the model is run in parallel mode, two parts of the model will be processed parallel, a) the core C++ routine, calculating the trajectories and corresponding touchdowns, and b) the calculation of the model results (i.e. \emph{C/E} etc.) from the touchdown catalogs.
+This package provides the option to run some parts of the model calculation in parallel. The number of cores that will be used can be defined via the \code{ncores} argument in the main function \code{\link{runbLS}}). Parallel computing is done using the package \code{snow} (and parts of \code{\link{snowfall}} and \code{\link{parallel}}). If the model is run in parallel mode, two parts of the model will be processed parallel, a) the core C++ routine, calculating the trajectories and corresponding touchdowns, and b) the calculation of the model results (i.e. \emph{C/E} etc.) from the touchdown catalogs.
 }
 
 \section{To Do:}{
@@ -82,7 +82,6 @@ This package provides the option to run some parts of the model calculation in p
 \item{Plots (Contour, etc)}
 \item{explain output csv}
 \item{Docu}
-\item{data.table}
 }
 }
 

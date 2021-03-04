@@ -12,7 +12,7 @@ install.packages(c('rlecuyer', 'snow', 'snowfall', 'data.table'))
 # install.packages(c('sp', 'rgeos', 'geosphere', 'RgoogleMaps', 'maptools'))
 
 # install bLSmodelR
-devtools::install_github('ChHaeni/bLSmodelR')
+devtools::install_github('ChHaeni/bLSmodelR', dependencies = FALSE)
 ```
 
 ## How to run the model

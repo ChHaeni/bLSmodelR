@@ -4,16 +4,32 @@
 The package bLSmodelR provides functions to run a backward Lagrangian stochastic (bLS) dispersion model with the [R programming language](https://www.r-project.org/). Results from bLSmodelR are consistent with results from the freeware [WindTrax](http://www.thunderbeachscientific.com/).
 
 ## Installation
+
+### Install package dependencies
 ```r
 # install required packages
-install.packages(c('rlecuyer', 'snow', 'snowfall', 'data.table'))
+install.packages(c('Rcpp', 'rlecuyer', 'snow', 'snowfall', 'data.table'))
 
 # install optional packages for footprint plotting
 # install.packages(c('sp', 'rgeos', 'geosphere', 'RgoogleMaps', 'maptools'))
+```
 
+### Install package from source
+```r
 # install bLSmodelR
 devtools::install_github('ChHaeni/bLSmodelR', dependencies = FALSE)
 ```
+
+### Install package from local file
+If you don't want to install the package from source, you can download the latest package files from the list below:
+
+#### R version >= 4.0.0
+Windows: [bLSmodelR_4.3-0.zip](https://github.com/ChHaeni/bLSmodelR/blob/main/.pkgfiles/R_version_ge_4/bLSmodelR_4.3-0.zip?raw=true)
+Other OS: [bLSmodelR_4.3-0.tar.gz](https://github.com/ChHaeni/bLSmodelR/blob/main/.pkgfiles/R_version_ge_4/bLSmodelR_4.3-0.tar.gz?raw=true)
+
+#### R version < 4.0.0
+Windows: [bLSmodelR_4.3-0.zip](https://github.com/ChHaeni/bLSmodelR/blob/main/.pkgfiles/R_version_lt_4/bLSmodelR_4.3-0.zip?raw=true)
+Other OS: [bLSmodelR_4.3-0.tar.gz](https://github.com/ChHaeni/bLSmodelR/blob/main/.pkgfiles/R_version_lt_4/bLSmodelR_4.3-0.tar.gz?raw=true)
 
 ## How to run the model
 Guide to bLSmodelR: [https://github.com/ChHaeni/bLSmodelR/blob/main/Guide2bLSmodelR.r](https://github.com/ChHaeni/bLSmodelR/blob/main/Guide2bLSmodelR.r)

@@ -45,7 +45,7 @@ combineSources <- function(res, comb_list = NULL, weight_units = c("m/A/t", "m/t
     prior_wts <- comb_list[[source_to]]
     outlist[[source_to]] <- res[Source %in% sources, {
       if(.N == length(sources)){
-        CE_wts <- avgSourcesWeights(prior_wts, SourceArea)
+        CE_wts <- avgSourcesWeights(prior_wts[Source], SourceArea)
         out <- data.table(
           # Source
           Source = source_to,

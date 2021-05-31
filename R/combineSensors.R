@@ -41,9 +41,10 @@ combineSensors <- function(res, comb_list = NULL, conc_column = NULL, add = FALS
       )
     }
     # get path lengths
-    path_lengths <- getPathLengths(Sensors)
+    path_sensors <- getPathLengths(Sensors)
     outlist[[sensor_to]] <- res[Sensor %in% sensors, {
       if(.N == length(sensors)){
+        path_lengths <- path_sensors[Sensor]
         out <- data.table(
           # Sensor
           Sensor = sensor_to,

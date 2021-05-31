@@ -24,12 +24,12 @@ devtools::install_github('ChHaeni/bLSmodelR', dependencies = FALSE)
 If you don't want to install the package from source, you can download the latest package files from the corresponding link below:
 
 #### R version >= 4.0.0
-- Windows: [bLSmodelR_4.3-0.zip](https://github.com/ChHaeni/bLSmodelR/blob/main/.pkgfiles/R_version_ge_4/bLSmodelR_4.3-0.zip?raw=true)
-- Other OS: [bLSmodelR_4.3-0.tar.gz](https://github.com/ChHaeni/bLSmodelR/blob/main/.pkgfiles/R_version_ge_4/bLSmodelR_4.3-0.tar.gz?raw=true)
+- Windows: [bLSmodelR_4.3-1.zip](https://github.com/ChHaeni/bLSmodelR/blob/main/.pkgfiles/R_version_ge_4/bLSmodelR_4.3-1.zip?raw=true)
+- Other OS: [bLSmodelR_4.3-1.tar.gz](https://github.com/ChHaeni/bLSmodelR/blob/main/.pkgfiles/R_version_ge_4/bLSmodelR_4.3-1.tar.gz?raw=true)
 
 #### R version < 4.0.0
-- Windows: [bLSmodelR_4.3-0.zip](https://github.com/ChHaeni/bLSmodelR/blob/main/.pkgfiles/R_version_lt_4/bLSmodelR_4.3-0.zip?raw=true)
-- Other OS: [bLSmodelR_4.3-0.tar.gz](https://github.com/ChHaeni/bLSmodelR/blob/main/.pkgfiles/R_version_lt_4/bLSmodelR_4.3-0.tar.gz?raw=true)
+- Windows: [bLSmodelR_4.3-1.zip](https://github.com/ChHaeni/bLSmodelR/blob/main/.pkgfiles/R_version_lt_4/bLSmodelR_4.3-1.zip?raw=true)
+- Other OS: [bLSmodelR_4.3-1.tar.gz](https://github.com/ChHaeni/bLSmodelR/blob/main/.pkgfiles/R_version_lt_4/bLSmodelR_4.3-1.tar.gz?raw=true)
 
 ## How to run the model
 Guide to bLSmodelR: [https://github.com/ChHaeni/bLSmodelR/blob/main/Guide2bLSmodelR.r](https://github.com/ChHaeni/bLSmodelR/blob/main/Guide2bLSmodelR.r)

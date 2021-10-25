@@ -3,7 +3,7 @@ rebuildCatListFile <- function(C.Path,File=character(0),fromScratch=FALSE){
 	Existing <- dir(C.Path,pattern="Cat_Zm.*_[0-9]{14}$")
 	ExistingFull <- paste(C.Path,Existing,sep="/")
 	CatfileOrig <- paste0(C.Path,"/.CatList")
-	Catfile <- tempfile('CatList')
+	Catfile <- tempfile(paste0('CatList', sample(1000, 1)))
 	if(!fromScratch){
         file.copy(CatfileOrig, Catfile, overwrite = TRUE)
 	} else {

@@ -2,10 +2,13 @@ rebuildCatListFile <- function(C.Path,File=character(0),fromScratch=FALSE){
 	
 	Existing <- dir(C.Path,pattern="Cat_Zm.*_[0-9]{14}$")
 	ExistingFull <- paste(C.Path,Existing,sep="/")
-	Catfile <- paste0(C.Path,"/.CatList")
-	if(fromScratch){
-		file.remove(Catfile)
-	}
+	CatfileOrig <- paste0(C.Path,"/.CatList")
+	Catfile <- tempfile('CatList')
+	if(!fromScratch){
+        file.copy(CatfileOrig, Catfile, overwrite = TRUE)
+	} else {
+		if (file.exists(Catfile)) file.remove(Catfile)
+    }
 
 	if(length(Existing)){
 		if(!file.exists(Catfile)){
@@ -21,9 +24,7 @@ rebuildCatListFile <- function(C.Path,File=character(0),fromScratch=FALSE){
 		CatNames <- CatList[,1] %w/o% File
 		if(!all(CatNames%in%Existing)){
 			CatList <- CatList[CatNames%in%Existing,]
-			write.table(CatList,file=paste0(C.Path,"/.CatList0"),row.names=FALSE,col.names=TRUE)
-			if(file.exists(Catfile))file.remove(Catfile)
-			file.rename(paste0(C.Path,"/.CatList0"),Catfile)
+			write.table(CatList,file=Catfile,row.names=FALSE,col.names=TRUE)
 		}
 		if(!all(exCat <- Existing%in%CatNames)){
 			CatAdd <- data.frame(matrix(NA,nrow=sum(!exCat),ncol=ncol(CatList)),stringsAsFactors=FALSE)
@@ -36,12 +37,12 @@ rebuildCatListFile <- function(C.Path,File=character(0),fromScratch=FALSE){
 				CatAdd[i,1] <- basename(ExCat[i])
 			}
 			CatList <- rbind(CatList,CatAdd)
-			write.table(CatList,file=paste0(C.Path,"/.CatList0"),row.names=FALSE,col.names=TRUE)
-			if(file.exists(Catfile))file.remove(Catfile)
-			file.rename(paste0(C.Path,"/.CatList0"),Catfile)
+			write.table(CatList,file=Catfile,row.names=FALSE,col.names=TRUE)
 		}
+        file.copy(Catfile, CatfileOrig, overwrite = TRUE)
+        file.remove(Catfile)
 	} else {
-		if(file.exists(Catfile))invisible(suppressWarnings(file.remove(Catfile)))
+		if(file.exists(CatfileOrig))invisible(suppressWarnings(file.remove(CatfileOrig)))
 		CatList <- as.data.frame(c(list(a=character(0)),rep(list(a=numeric(0)),13)),stringsAsFactors=FALSE)
 		colnames(CatList) <- c("Name","N0","ZSens","Ustar","L","Zo","Su_Ustar","Sv_Ustar","bw","C0","kv","A","alpha","MaxFetch")
 	}

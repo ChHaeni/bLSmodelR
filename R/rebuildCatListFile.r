@@ -39,7 +39,8 @@ rebuildCatListFile <- function(C.Path,File=character(0),fromScratch=FALSE){
 			CatList <- rbind(CatList,CatAdd)
 			write.table(CatList,file=Catfile,row.names=FALSE,col.names=TRUE)
 		}
-        file.copy(Catfile, CatfileOrig, overwrite = TRUE)
+        file.remove(CatfileOrig)
+        file.rename(Catfile, CatfileOrig)
         file.remove(Catfile)
 	} else {
 		if(file.exists(CatfileOrig))invisible(suppressWarnings(file.remove(CatfileOrig)))

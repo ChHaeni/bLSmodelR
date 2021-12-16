@@ -345,6 +345,8 @@ clean_ntasks <- function(x) {
 
 # find partition
 find_partition <- function(memory, ...) {
+    # ni call
+    ni_call <- 'ni'
     # capture dots
     dts <- list(...)
     # check if list of options has been provided

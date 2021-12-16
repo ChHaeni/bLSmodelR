@@ -4,13 +4,14 @@ rebuildCatListFile <- function(C.Path,File=character(0),fromScratch=FALSE){
 	ExistingFull <- paste(C.Path,Existing,sep="/")
 	CatfileOrig <- paste0(C.Path,"/.CatList")
 	Catfile <- tempfile(paste0('CatList', sample(1000, 1)))
-	if(!fromScratch){
-        file.copy(CatfileOrig, Catfile, overwrite = TRUE)
-	} else {
+	if(fromScratch || !file.exists(CatfileOrig)){
 		if (file.exists(Catfile)) file.remove(Catfile)
+	} else {
+        file.copy(CatfileOrig, Catfile, overwrite = TRUE)
     }
+    if (file.exists(CatfileOrig)) file.remove(CatfileOrig)
 
-	if(length(Existing)){
+	if(length(Existing) > 0){
 		if(!file.exists(Catfile)){
 			CatList <- as.data.frame(c(list(a=character(0)),rep(list(a=numeric(0)),13)),stringsAsFactors=FALSE)
 			colnames(CatList) <- c("Name","N0","ZSens","Ustar","L","Zo","Su_Ustar","Sv_Ustar","bw","C0","kv","A","alpha","MaxFetch")
@@ -39,11 +40,9 @@ rebuildCatListFile <- function(C.Path,File=character(0),fromScratch=FALSE){
 			CatList <- rbind(CatList,CatAdd)
 			write.table(CatList,file=Catfile,row.names=FALSE,col.names=TRUE)
 		}
-        file.remove(CatfileOrig)
-        file.rename(Catfile, CatfileOrig)
+        file.copy(Catfile, CatfileOrig, overwrite = TRUE)
         file.remove(Catfile)
 	} else {
-		if(file.exists(CatfileOrig))invisible(suppressWarnings(file.remove(CatfileOrig)))
 		CatList <- as.data.frame(c(list(a=character(0)),rep(list(a=numeric(0)),13)),stringsAsFactors=FALSE)
 		colnames(CatList) <- c("Name","N0","ZSens","Ustar","L","Zo","Su_Ustar","Sv_Ustar","bw","C0","kv","A","alpha","MaxFetch")
 	}

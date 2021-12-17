@@ -3,13 +3,12 @@ rebuildCatListFile <- function(C.Path,File=character(0),fromScratch=FALSE){
 	Existing <- dir(C.Path,pattern="Cat_Zm.*_[0-9]{14}$")
 	ExistingFull <- paste(C.Path,Existing,sep="/")
 	CatfileOrig <- paste0(C.Path,"/.CatList")
-	Catfile <- tempfile(paste0('CatList', sample(1000, 1)))
+	Catfile <- tempfile(paste0('CatList', sample(1e5, 1)))
 	if(fromScratch || !file.exists(CatfileOrig)){
 		if (file.exists(Catfile)) file.remove(Catfile)
 	} else {
         file.copy(CatfileOrig, Catfile, overwrite = TRUE)
     }
-    if (file.exists(CatfileOrig)) file.remove(CatfileOrig)
 
 	if(length(Existing) > 0){
 		if(!file.exists(Catfile)){
@@ -31,13 +30,17 @@ rebuildCatListFile <- function(C.Path,File=character(0),fromScratch=FALSE){
 			CatAdd <- data.frame(matrix(NA,nrow=sum(!exCat),ncol=ncol(CatList)),stringsAsFactors=FALSE)
 			colnames(CatAdd) <- colnames(CatList)
 			for(i in seq_along(ExCat <- ExistingFull[!exCat])){
-				Cat <- readCatalog(ExCat[i])
-				Head <- unlist(strsplit(attr(Cat,"header"),"\n"))[-1]
-				Whead <- matrix(as.numeric(gsub(".*[=] ","",Head)),nrow=1)
-				CatAdd[i,-1] <- Whead
-				CatAdd[i,1] <- basename(ExCat[i])
+				Cat <- try(readCatalog(ExCat[i]))
+                if (inherits(Cat, 'try-error')) {
+                    file.remove(ExCat[i])
+                } else {
+                    Head <- unlist(strsplit(attr(Cat,"header"),"\n"))[-1]
+                    Whead <- matrix(as.numeric(gsub(".*[=] ","",Head)),nrow=1)
+                    CatAdd[i,-1] <- Whead
+                    CatAdd[i,1] <- basename(ExCat[i])
+                }
 			}
-			CatList <- rbind(CatList,CatAdd)
+			CatList <- na.omit(rbind(CatList,CatAdd))
 			write.table(CatList,file=Catfile,row.names=FALSE,col.names=TRUE)
 		}
         file.copy(Catfile, CatfileOrig, overwrite = TRUE)

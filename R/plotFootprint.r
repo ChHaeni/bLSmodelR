@@ -377,8 +377,8 @@ plotFootprint <- function(x,SensorName,rn=NULL,MyMap=NULL,type=c("CE","wCE","uCE
 	sp::plot(SpPclip,col=fillcol,border=cpal,add=TRUE)
 	box()
 
+    mi <- which(xy==max(xy),arr.ind=T)
 	if(showMax){
-		mi <- which(xy==max(xy),arr.ind=T)
 		maxli <- rotate(cbind(x=xm[mi[1]],y=ym[mi[2]]),Angle=WD+90,Center=origin)+c(SensorPosition[,2],SensorPosition[,3])
 		points(maxli,pch=20,cex=0.4,col="red")
 		text(maxli[1],maxli[2],"max.",cex=0.6,pos=4,offset=0.2,col="red")
@@ -405,7 +405,7 @@ plotFootprint <- function(x,SensorName,rn=NULL,MyMap=NULL,type=c("CE","wCE","uCE
 	out <- structure(list(
 		breaks=rev(brks),
 		range.z=range(xy),
-		max.pos=cbind(x=-xm[wm[1]]*sin(WDrad)+ym[wm[2]]*cos(WDrad)+SensorPosition[,2],y=-xm[wm[1]]*cos(WDrad)-ym[wm[2]]*sin(WDrad)+SensorPosition[,3]),
+		max.index = mi,
 		xy_transform = xy_transform,
 		transformArgs = transformArgs,
 		SensorPosition = SensorPosition,

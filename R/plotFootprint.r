@@ -6,7 +6,7 @@ plotFootprint <- function(x,SensorName,rn=NULL,MyMap=NULL,type=c("CE","wCE","uCE
 	dx=2,dy=dx,breaks=function(x)quantile(c(0,max(x)),c(0.01,0.1,0.5,0.9)),xlim=c(-100,100),ylim=c(-100,100),add=FALSE,alpha=0.3,axs=c("r","i"),
 	main=NULL,asp=1,fill=TRUE,sub=NULL,bg.col=NULL,addSource=TRUE,showMax=FALSE,showSensor=TRUE,dispSname=showSensor, N0 = NULL,
 	lpos=NULL,showPerc=FALSE,leg.bg.col=grey(0.9),cpal=NULL,decPlaces=0,sigNums=1,addWR=FALSE,WRpos=2,WRfrac=20,WRscale=1,xy_transform=NULL,transformArgs=NULL,
-	useSTRtree=TRUE,avoidGEOS = FALSE,addSB=FALSE,SBpos=3,StaticMapArgs=NULL,showLegend=TRUE){
+	useSTRtree=TRUE,avoidGEOS = FALSE,addSB=FALSE,SBpos=3,StaticMapArgs=NULL,showLegend=TRUE, verbose = FALSE){
 
 	if(!requireNamespace("maptools")){
 		stop("please install package maptools: install.packages('maptools')")
@@ -204,7 +204,7 @@ plotFootprint <- function(x,SensorName,rn=NULL,MyMap=NULL,type=c("CE","wCE","uCE
 
 		# loop over index
 		for(j in seq_along(index)){
-			cat(j,"/",length(index),"\n")
+			if (verbose) cat(j,"/",length(index),"\n")
 			Catalogs <- getCatalogs(x,index[j])
 			CatNames <- Catalogs[,Catalog]
 			Subset_seed <- Catalogs[, seed]

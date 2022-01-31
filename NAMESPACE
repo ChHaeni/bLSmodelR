@@ -150,6 +150,8 @@ S3method(tagNear,matrix)
 S3method(rotate,data.table)
 S3method(rotate,default)
 S3method(rotate,matrix)
+S3method(rotate,Sensors)
+S3method(rotate,Sources)
 
 
 

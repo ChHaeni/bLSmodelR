@@ -9,7 +9,7 @@ This is the core function to calculate the (air parcel) trajectories in a backwa
 }
 \usage{
 coreModel(u, v, w, zSens, ustar, L, Zo, bw, sigmaUustar, sigmaVustar, 
-  kv, C0, alpha, MaxFetch, method = "Euler")
+  kv, C0, alpha, MaxFetch)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -54,9 +54,6 @@ coreModel(u, v, w, zSens, ustar, L, Zo, bw, sigmaUustar, sigmaVustar,
   }
     \item{MaxFetch}{
   maximum tracking distance of trajectories (in m).
-  }
-    \item{method}{
-  the method of numerical discretization to be used. The default \dQuote{Euler} corresponds to \cite{Flesch et al. (1995)}. \dQuote{RK4} corresponds to the classical (4th order) Runge-Kutta method.
   }
 }
 % \details{

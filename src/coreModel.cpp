@@ -87,7 +87,7 @@ Rcpp::List csFs(
 				y += v*deltaT*fracZ;
 				Time += deltaT*fracZ;
 
-				IDOut.push_back(ID);
+				IDOut.push_back(ID + 1);
 				xOut.push_back(x);
 				yOut.push_back(y);
 				TimeOut.push_back(Time);
@@ -212,7 +212,7 @@ Rcpp::List csFi(
 				y += v*deltaT*fracZ;
 				Time += deltaT*fracZ;
 
-				IDOut.push_back(ID);
+				IDOut.push_back(ID + 1);
 				xOut.push_back(x);
 				yOut.push_back(y);
 				TimeOut.push_back(Time);

@@ -2,8 +2,8 @@ rebuildCatListFile <- function(C.Path,File=character(0),fromScratch=FALSE){
 	
 	Existing <- dir(C.Path,pattern="Cat_Zm.*_[0-9]{14}$")
 	ExistingFull <- paste(C.Path,Existing,sep="/")
-	CatfileOrig <- paste0(C.Path,"/.CatList")
-	Catfile <- tempfile(paste0('CatList', sample(1e5, 1)))
+	CatfileOrig <- paste0(C.Path,"/.CatListqs")
+	Catfile <- tempfile(paste0('CatListqs', sample(1e5, 1)))
 	if(fromScratch || !file.exists(CatfileOrig)){
 		if (file.exists(Catfile)) file.remove(Catfile)
 	} else {
@@ -31,9 +31,11 @@ rebuildCatListFile <- function(C.Path,File=character(0),fromScratch=FALSE){
 			colnames(CatAdd) <- colnames(CatList)
 			for(i in seq_along(ExCat <- ExistingFull[!exCat])){
 				Cat <- try(qs::qread(ExCat[i], strict = TRUE))
+                # convert from old serialization?
                 if (inherits(Cat, 'try-error')) {
                     Cat <- try(readRDS(ExCat[i]))
                     if (inherits(Cat, 'try-error')) {
+                        # file corrupt
                         file.remove(ExCat[i])
                     } else {
                         Head <- unlist(strsplit(attr(Cat,"header"),"\n"))[-1]
@@ -57,6 +59,7 @@ rebuildCatListFile <- function(C.Path,File=character(0),fromScratch=FALSE){
 	} else {
 		CatList <- as.data.frame(c(list(a=character(0)),rep(list(a=numeric(0)),13)),stringsAsFactors=FALSE)
 		colnames(CatList) <- c("Name","N0","ZSens","Ustar","L","Zo","Su_Ustar","Sv_Ustar","bw","C0","kv","A","alpha","MaxFetch")
+        if (file.exists(CatFile)) file.remove(CatFile)
 	}
 	invisible(CatList)
 }

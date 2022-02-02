@@ -54,16 +54,12 @@ BEGIN_RCPP
 END_RCPP
 }
 
-RcppExport SEXP bLSmodelR_csFi(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
-RcppExport SEXP bLSmodelR_csFs(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 RcppExport SEXP pip(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 
 static const R_CallMethodDef CallEntries[] = {
     {"_bLSmodelR_csFs", (DL_FUNC) &_bLSmodelR_csFs, 14},
     {"_bLSmodelR_csFi", (DL_FUNC) &_bLSmodelR_csFi, 14},
-    {"bLSmodelR_csFi", (DL_FUNC) &bLSmodelR_csFi, 14},
-    {"bLSmodelR_csFs", (DL_FUNC) &bLSmodelR_csFs, 14},
-    {"pip",            (DL_FUNC) &pip,             6},
+    {"pip", (DL_FUNC) &pip, 6},
     {NULL, NULL, 0}
 };
 

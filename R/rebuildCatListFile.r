@@ -30,7 +30,7 @@ rebuildCatListFile <- function(C.Path,File=character(0),fromScratch=FALSE){
 			CatAdd <- data.frame(matrix(NA,nrow=sum(!exCat),ncol=ncol(CatList)),stringsAsFactors=FALSE)
 			colnames(CatAdd) <- colnames(CatList)
 			for(i in seq_along(ExCat <- ExistingFull[!exCat])){
-				Cat <- try(qs::qread(ExCat[i], strict = TRUE))
+				Cat <- try(qs::qread(ExCat[i], strict = TRUE), silent = TRUE)
                 # convert from old serialization?
                 if (inherits(Cat, 'try-error')) {
                     Cat <- try(readRDS(ExCat[i]))

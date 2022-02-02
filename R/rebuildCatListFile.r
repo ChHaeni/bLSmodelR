@@ -30,9 +30,18 @@ rebuildCatListFile <- function(C.Path,File=character(0),fromScratch=FALSE){
 			CatAdd <- data.frame(matrix(NA,nrow=sum(!exCat),ncol=ncol(CatList)),stringsAsFactors=FALSE)
 			colnames(CatAdd) <- colnames(CatList)
 			for(i in seq_along(ExCat <- ExistingFull[!exCat])){
-				Cat <- try(readCatalog(ExCat[i]))
+				Cat <- try(qs::qread(ExCat[i], strict = TRUE))
                 if (inherits(Cat, 'try-error')) {
-                    file.remove(ExCat[i])
+                    Cat <- try(readRDS(ExCat[i]))
+                    if (inherits(Cat, 'try-error')) {
+                        file.remove(ExCat[i])
+                    } else {
+                        Head <- unlist(strsplit(attr(Cat,"header"),"\n"))[-1]
+                        Whead <- matrix(as.numeric(gsub(".*[=] ","",Head)),nrow=1)
+                        CatAdd[i,-1] <- Whead
+                        CatAdd[i,1] <- basename(ExCat[i])
+                        qs::qsave(Cat, ExCat[i], 'balanced')
+                    }
                 } else {
                     Head <- unlist(strsplit(attr(Cat,"header"),"\n"))[-1]
                     Whead <- matrix(as.numeric(gsub(".*[=] ","",Head)),nrow=1)

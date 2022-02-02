@@ -8,7 +8,7 @@ The package bLSmodelR provides functions to run a backward Lagrangian stochastic
 ### Install package dependencies
 ```r
 # install required packages
-install.packages(c('Rcpp', 'rlecuyer', 'snow', 'snowfall', 'data.table'))
+install.packages(c('Rcpp', 'rlecuyer', 'snow', 'snowfall', 'data.table', 'qs'))
 
 # install optional packages for footprint plotting
 # install.packages(c('sp', 'rgeos', 'geosphere', 'RgoogleMaps', 'maptools'))
@@ -19,17 +19,6 @@ install.packages(c('Rcpp', 'rlecuyer', 'snow', 'snowfall', 'data.table'))
 # install bLSmodelR
 devtools::install_github('ChHaeni/bLSmodelR', dependencies = FALSE)
 ```
-
-### Install package from local file
-If you don't want to install the package from source, you can download the latest package files from the corresponding link below:
-
-#### R version >= 4.0.0
-- Windows: [bLSmodelR_4.3-1.zip](https://github.com/ChHaeni/bLSmodelR/blob/main/.pkgfiles/R_version_ge_4/bLSmodelR_4.3-1.zip?raw=true)
-- Other OS: [bLSmodelR_4.3-1.tar.gz](https://github.com/ChHaeni/bLSmodelR/blob/main/.pkgfiles/R_version_ge_4/bLSmodelR_4.3-1.tar.gz?raw=true)
-
-#### R version < 4.0.0
-- Windows: [bLSmodelR_4.3-1.zip](https://github.com/ChHaeni/bLSmodelR/blob/main/.pkgfiles/R_version_lt_4/bLSmodelR_4.3-1.zip?raw=true)
-- Other OS: [bLSmodelR_4.3-1.tar.gz](https://github.com/ChHaeni/bLSmodelR/blob/main/.pkgfiles/R_version_lt_4/bLSmodelR_4.3-1.tar.gz?raw=true)
 
 ## How to run the model
 Guide to bLSmodelR: [https://github.com/ChHaeni/bLSmodelR/blob/main/Guide2bLSmodelR.r](https://github.com/ChHaeni/bLSmodelR/blob/main/Guide2bLSmodelR.r)

@@ -68,7 +68,7 @@ plotFootprint <- function(x, SensorName, rn = NULL, MyMap = NULL, type = c("CE",
         if(is.null(rn)){
             getThisRows <- x[Sensor==getThisSensor,unique(rn)]
         } else {
-            getThisRows <- as.integer(rn)
+            getThisRows <- rn
         }
         getThisSource <- x[rn%in%getThisRows&Sensor==getThisSensor,Source[1]]
         index <- x[,which(rn%in%getThisRows&Sensor==getThisSensor&Source==getThisSource)]

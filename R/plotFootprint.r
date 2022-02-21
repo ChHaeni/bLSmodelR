@@ -110,6 +110,7 @@ plotFootprint <- function(x, SensorName, rn = NULL, MyMap = NULL, type = c("CE",
                 "uCE"="u'C'-Footprint")
             if(is.null(MyMap)){
                 plot(SensorPosition[,2],SensorPosition[,3],type="n",xlim=xlim + origin[1],ylim=ylim + origin[2],xlab="",ylab="",asp=asp,yaxt="n",xaxt="n",main=main,sub=sub)
+                pr <- par()
                 if(!is.null(bg.col))polygon(pr$usr[c(1,2,2,1)],pr$usr[c(3,3,4,4)],col=bg.col)
                 axis(1,at=atx<-pretty(pr$usr[1:2]))
                 axis(2,at=aty<-pretty(pr$usr[3:4]))

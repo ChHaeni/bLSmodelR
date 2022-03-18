@@ -59,7 +59,7 @@ rebuildCatListFile <- function(C.Path,File=character(0),fromScratch=FALSE){
 	} else {
 		CatList <- as.data.frame(c(list(a=character(0)),rep(list(a=numeric(0)),13)),stringsAsFactors=FALSE)
 		colnames(CatList) <- c("Name","N0","ZSens","Ustar","L","Zo","Su_Ustar","Sv_Ustar","bw","C0","kv","A","alpha","MaxFetch")
-        if (file.exists(CatFile)) file.remove(CatFile)
+        if (file.exists(Catfile)) file.remove(Catfile)
 	}
 	invisible(CatList)
 }

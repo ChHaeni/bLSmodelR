@@ -440,9 +440,20 @@ collect_results <- function(job_dir) {
     # read in
     res_list <- lapply(res_files, readRDS)
     # check them
-    if (any(lengths(res_list) == 0) || any(sapply(res_list, nrow) == 0)) {
-        # what now?
-        browser()
+    if (any(lengths(res_list) == 0) {
+        # which empty
+        ind <- which(lengths(res_list) == 0)
+        # shorten list and give warning
+        warning(length(ind), " job result(s) were removed because their returned values were NULL!")
+        # remove empty
+        res_list <- res_list[-ind]
+    } else if(any(sapply(res_list, nrow) == 0)) {
+        # which empty
+        ind <- which(sapply(res_list, nrow) == 0)
+        # shorten list and give warning
+        warning(length(ind), " job result(s) were removed because their returned data.table were empty!")
+        # remove empty
+        res_list <- res_list[-ind]
     }
     # get original rn values
     rn_values <- unlist(lapply(res_list, function(x) x[, rn]))

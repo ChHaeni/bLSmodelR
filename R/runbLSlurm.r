@@ -20,10 +20,7 @@ runbLSlurm <- function(input_list, cat_path, ..., wait = TRUE) {
         return(invisible(NULL))
     }
 
-    # get current time
-    current_time <- Sys.time()
-
-    # remove NA values
+    # remove NA values in Interval data.frame
     isna <- as.logical(rowSums(is.na(input_list$Interval[, 1:13])))
     input_list$Interval <- input_list$Interval[!isna, ]
     if (any(isna)) cat('Removed', sum(isna), 'rows due to NA values\n')
@@ -44,31 +41,36 @@ runbLSlurm <- function(input_list, cat_path, ..., wait = TRUE) {
     # create script with argument
     rscript_file <- write_script(slurm$tmp_dir, cat_path, slurm$part[, cpus_per_task])
 
+    # create sbatch file, run slurm job & return result
+    run_sbatch(slurm = slurm, rscript = rscript_file, wait = wait)
+
+}
+
+# create and run sbatch file
+run_sbatch <- function(slurm, rscript, wait) {
     # dots without partition, nodes, cpus_per_task
     dots <- get_sopt(slurm$dots, 
         'p', 'partition', 'N', 'nodes', 'cpus.*', 'J', 'job-name', 
         remove = TRUE) 
-
     # create sbatch file
     sbatch_file <- write_sbatch(
         slurm$tmp_dir, 
-        rscript_file,
+        rscript,
         'job-name' = slurm$job_name,
         partition = slurm$part[, Part],
         nodes = slurm$part[, nodes],
         'cpus-per-task' = slurm$part[, cpus_per_task],
         dots
     )
-
     # run sbatch file
     re <- system(paste('sbatch', sbatch_file), intern = TRUE)
     cat(re, '\n')
     # capture job id
     job_id <- sub('[^0-9]*([0-9]*)[^0-9]*', '\\1', re)
-
-
     # if else: either wait for job to finish or save job id and collect later
     if (wait) {
+        # get current time
+        current_time <- Sys.time()
         # wait for job to finish
         # how can we know that jobs finished?
         # squeue -j $job_id
@@ -92,17 +94,13 @@ runbLSlurm <- function(input_list, cat_path, ..., wait = TRUE) {
             sleep_secs <- sleep_secs + 1
         }
         cat('\njob finished.\n')
-
         # collect and return results
         res <- collect_results(slurm$tmp_dir)
-
         # duration of job?
         dur <- Sys.time() - current_time
         cat('Time since sending job: ', round(dur, 2), attr(dur, 'units'), '\n')
-
         # return value
         res
-
     } else {
         # be verbose
         cat('Not waiting for job to finish & returning job info.

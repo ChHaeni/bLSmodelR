@@ -277,9 +277,6 @@ write_runbLS_script <- function(tmpdir, cpath, ncores) {
 }
 # depostion
 write_deposition_script <- function(tmpdir, ncores) {
-
-    hier bin ich!!
-
     # get tmpfile name
     tmp <- tempfile(pattern = 'Rscript', tmpdir = tmpdir, fileext = '.R')
     # write R script to tmp file
@@ -291,13 +288,16 @@ write_deposition_script <- function(tmpdir, ncores) {
             # read intervals
             'int <- readRDS(ifile)',
             # read bls result
-            paste0('bls_result <- readRDS(file.path("', tmpdir, '", "bls_result.rds"))'),
-            # add int to inlist
-            'attr(bls_result, "ModelInput")$Interval <- int',
-            # read arguments
+            'bls_result <- int',
+            # read arguments and attributes
             paste0('dep_args <- readRDS(file.path("', tmpdir, '", "dep_args.rds"))'),
+            # add attributes to result
+            'attr(bls_result, "ModelInput") <- dep_args[["ModelInput"]]',
+            'attr(bls_result, "Catalogs") <- dep_args[["Catalogs"]]',
+            'attr(bls_result, "Cat.Path") <- dep_args[["Cat.Path"]]',
             # run deposition
-            paste0('res <- do.call(deposition, c(list(x = bls_result, ncores = ', ncores, '), dep_args))'),
+            paste0('res <- do.call(deposition, c(list(x = bls_result, ncores = ', 
+                ncores, '), dep_args[c("vDep", "vDepSpatial")]))'),
             # save result; get index from int%i.rds
             'saveRDS(res, sub("/int([0-9]{1,2}[.]rds)", "/res\\\\1", ifile))'
         ), 
@@ -378,15 +378,13 @@ depoSlurm <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL, vDepSpat
         saveRDS(il[[i]], file.path(slurm$tmp_dir, paste0('int', i, '.rds')))
     }
 
-    # save function arguments to rds file
+    # save function arguments and bls result attributes to rds file
     saveRDS(
         list(
+            # arguments
             vDep = vDep, 
-            rn = rn, 
-            Sensor = Sensor, 
-            Source = Source, 
             vDepSpatial = vDepSpatial,
-            # add attributes
+            # attributes
             ModelInput = attr(x, "ModelInput"),
             Catalogs = attr(x, "Catalogs"),
             Cat.Path = attr(x, "CatPath")

@@ -308,6 +308,17 @@ write_deposition_script <- function(tmpdir, ncores) {
 }
 
 depoSlurm <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL, vDepSpatial = NULL) {
+
+    RunDep <- deposition(DemoOutput,0.03,Sensor="Sensor1",Source="SourceRects")
+    RunDep2 <- deposition(DemoOutput,0.002,Sensor="Sensor1",Source="SourcePoly",vDepSpatial = list(vDepList,vDepAreas))
+
+    x <- DemoOutput
+    vDep <- 0.03
+    rn <- NULL
+    Sensor <- "Sensor1"
+    Source <- "SourcePoly"
+    vDepSpatial <- list(vDepList, vDepAreas)
+
     # convert old versions 
     sx <- as.character(substitute(x))
     x <- copy(x)
@@ -347,10 +358,13 @@ depoSlurm <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL, vDepSpat
         stop('Argument "vDep" must be either a single number or a column name')
     }
     if (!is.null(vDepSpatial) && (!is.list(vDepSpatial) || 
-        length(vDepSpatial) != 2 || length(vDepSpatial[[1]]) != length(vDepSpatial[[2]]))) {
-        stop('Argument "vDepSpatial" must be a list with two list entries
-            \r\t first entry: list with "extra" areas as class "Sources"
-            \r\t second entry: list with corresponding "extra" vDep values (or column names)')
+        length(vDepSpatial) != 2 || any(!(names(vDepSpatial[[1]]) %in% unique(vDepSpatial[[2]][, 1]))))) {
+        stop('Argument "vDepSpatial" must be a list with two elements:
+            \r\t first element: named list with corresponding "extra" vDep values (or column names)
+            \r\t second element: data.frame of class "Source" with "extra" areas
+            \r\t               -> any specified "extra" name in vDepSpatial[[1]] must have a
+            \r\t                  corresponding source element in vDepSpatial[[2]]!'
+        )
     }
 
     # extract slurm options and prepare job directory

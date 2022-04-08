@@ -39,7 +39,7 @@ runbLSlurm <- function(input_list, cat_path, ..., wait = TRUE) {
     saveRDS(input_list, file.path(slurm$tmp_dir, 'input_list.rds'))
 
     # create script with argument
-    rscript_file <- write_script(slurm$tmp_dir, cat_path, slurm$part[, cpus_per_task])
+    rscript_file <- write_runbLS_script(slurm$tmp_dir, cat_path, slurm$part[, cpus_per_task])
 
     # create sbatch file, run slurm job & return result
     run_sbatch(slurm = slurm, rscript = rscript_file, wait = wait)
@@ -245,8 +245,8 @@ split_int <- function(int, p){
     lapply(ind, function(i) int[i, ])
 }
 
-# write R script
-write_script <- function(tmpdir, cpath, ncores) {
+# write R scripts
+write_runbLS_script <- function(tmpdir, cpath, ncores) {
     # get tmpfile name
     tmp <- tempfile(pattern = 'Rscript', tmpdir = tmpdir, fileext = '.R')
     # write R script to tmp file

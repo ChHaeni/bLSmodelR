@@ -328,10 +328,6 @@ depoSlurm <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL, vDepSpat
         warning(paste0("Object '", sx[min(length(sx), 2)], "' has not yet been converted to version 4.2+"))
         convert(x)
     }
-    # get attributes
-	ModelInput <- attr(x,"ModelInput")
-	Catalogs <- attr(x,"Catalogs")
-	Cat.Path <- attr(x,"CatPath")
     # check rn argument
 	if(is.null(rn)){
 		Selrn <- x[,unique(rn)]
@@ -373,8 +369,27 @@ depoSlurm <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL, vDepSpat
     # split Intervals and save to rds files
     il <- split_int(Run, slurm$part)
     for (i in seq_along(il)) {
+        # strip attributes
+        attributes(il) <- attributes(il)[c('row.names', 'class', '.internal.selfref', 'names')]
+        # save to file
         saveRDS(il[[i]], file.path(slurm$tmp_dir, paste0('int', i, '.rds')))
     }
+
+    # save function arguments to rds file
+    saveRDS(
+        list(
+            vDep = vDep, 
+            rn = rn, 
+            Sensor = Sensor, 
+            Source = Source, 
+            vDepSpatial = vDepSpatial,
+            # add attributes
+            ModelInput = attr(x, "ModelInput"),
+            Catalogs = attr(x, "Catalogs"),
+            Cat.Path = attr(x, "CatPath")
+            ), 
+        file.path(slurm$tmp_dir, "dep_args.rds")
+    )
 
     # remove Interval and save model input list
     input_list$Interval <- NULL

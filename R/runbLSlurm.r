@@ -277,6 +277,9 @@ write_runbLS_script <- function(tmpdir, cpath, ncores) {
 }
 # depostion
 write_deposition_script <- function(tmpdir, ncores) {
+
+    hier bin ich!!
+
     # get tmpfile name
     tmp <- tempfile(pattern = 'Rscript', tmpdir = tmpdir, fileext = '.R')
     # write R script to tmp file
@@ -390,51 +393,14 @@ depoSlurm <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL, vDepSpat
             ), 
         file.path(slurm$tmp_dir, "dep_args.rds")
     )
-
-    # remove Interval and save model input list
-    input_list$Interval <- NULL
-    saveRDS(input_list, file.path(slurm$tmp_dir, 'input_list.rds'))
-
+    
     # create script with argument
-    rscript_file <- write_runbLS_script(slurm$tmp_dir, cat_path, slurm$part[, cpus_per_task])
+    rscript_file <- write_deposition_script(slurm$tmp_dir, cat_path, slurm$part[, cpus_per_task])
 
     # create sbatch file, run slurm job & return result
     run_sbatch(slurm = slurm, rscript = rscript_file, wait = wait)
 
-
-
--> subset x by rn, Sensor and Source
--> add attributes ModelInput(Sources & Senors), Cat.Path & Catalogs
--> arguments as list -> do.call
--> change all deposition velocities to column names:
-
-deposition <- function(x,vDep,rn=NULL,Sensor=NULL,Source=NULL,vDepSpatial=NULL,ncores=1){#,fracDepInside=0,vDepInside=0,ncores=1){
-	if(is.character(vDep)){
-		vDep <- Run[,vDep,with=FALSE][[1]]
-	} else {
-		vDep <- rep(vDep,N)[seq_len(N)]
-	}
-	# vDepSpatial
-	if(vdSpat <- !is.null(vDepSpatial)){
-		# check names:
-		nms <- names(vDepSpatial[[1]])
-		if(!inherits(vDepSpatial[[2]],"Sources")){
-			stop("Second list entry of argument 'vDepSpatial' must be of class 'Sources'!")
-		}
-		if(!all(nms %in% unique(vDepSpatial[[2]][,1]))){
-			stop(paste(nms[!(nms %in% unique(vDepSpatial[[2]][,1]))],collapse=", "),": area not defined!")
-		}
-		
-		for(i in nms){
-			if(is.character(vDepSpatial[[1]][[i]])){
-				vDepSpatial[[1]][[i]] <- Run[,vDepSpatial[[1]][[i]],with=FALSE][[1]]
-			} else {
-				vDepSpatial[[1]][[i]] <- rep(vDepSpatial[[1]][[i]],N)[seq_len(N)]
-			}
-		}
-	}
-    -> subset x (runbLS results)
-
+}
 
 # get slurm option
 find_sopt <- function(x, ...) {

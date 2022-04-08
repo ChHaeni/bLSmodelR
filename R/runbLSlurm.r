@@ -260,7 +260,7 @@ write_runbLS_script <- function(tmpdir, cpath, ncores) {
             'int <- readRDS(ifile)',
             # read inlist
             paste0('inlist <- readRDS(file.path("', tmpdir, '", "input_list.rds"))'),
-            # add to inlist
+            # add int to inlist
             'inlist$Interval <- int',
             # run model
             paste0('res <- runbLS(inlist, "', cpath, '", ncores = ', ncores, ')'),
@@ -275,6 +275,67 @@ write_runbLS_script <- function(tmpdir, cpath, ncores) {
     # return tmpfile name
     tmp
 }
+# depostion
+write_deposition_script <- function(tmpdir, ncores) {
+    # get tmpfile name
+    tmp <- tempfile(pattern = 'Rscript', tmpdir = tmpdir, fileext = '.R')
+    # write R script to tmp file
+    writeLines(
+        c(
+            'library(bLSmodelR)',
+            # format of file: int%i.rds
+            'ifile <- commandArgs(TRUE)',
+            # read intervals
+            'int <- readRDS(ifile)',
+            # read bls result
+            paste0('bls_result <- readRDS(file.path("', tmpdir, '", "bls_result.rds"))'),
+            # add int to inlist
+            'attr(bls_result, "ModelInput")$Interval <- int',
+            # read arguments
+            paste0('dep_args <- readRDS(file.path("', tmpdir, '", "dep_args.rds"))'),
+            # run deposition
+            paste0('res <- do.call(deposition, c(list(x = bls_result, ncores = ', ncores, '), dep_args))'),
+            # save result; get index from int%i.rds
+            'saveRDS(res, sub("/int([0-9]{1,2}[.]rds)", "/res\\\\1", ifile))'
+        ), 
+        tmp
+    )
+    # make file executable
+    # Sys.chmod could be a better option?
+    system(paste('chmod +x', tmp))
+    # return tmpfile name
+    tmp
+}
+
+deposition <- function(x,vDep,rn=NULL,Sensor=NULL,Source=NULL,vDepSpatial=NULL,ncores=1){#,fracDepInside=0,vDepInside=0,ncores=1){
+    -> arguments as list -> do.call
+    -> change all deposition velocities to column names:
+	if(is.character(vDep)){
+		vDep <- Run[,vDep,with=FALSE][[1]]
+	} else {
+		vDep <- rep(vDep,N)[seq_len(N)]
+	}
+	# vDepSpatial
+	if(vdSpat <- !is.null(vDepSpatial)){
+		# check names:
+		nms <- names(vDepSpatial[[1]])
+		if(!inherits(vDepSpatial[[2]],"Sources")){
+			stop("Second list entry of argument 'vDepSpatial' must be of class 'Sources'!")
+		}
+		if(!all(nms %in% unique(vDepSpatial[[2]][,1]))){
+			stop(paste(nms[!(nms %in% unique(vDepSpatial[[2]][,1]))],collapse=", "),": area not defined!")
+		}
+		
+		for(i in nms){
+			if(is.character(vDepSpatial[[1]][[i]])){
+				vDepSpatial[[1]][[i]] <- Run[,vDepSpatial[[1]][[i]],with=FALSE][[1]]
+			} else {
+				vDepSpatial[[1]][[i]] <- rep(vDepSpatial[[1]][[i]],N)[seq_len(N)]
+			}
+		}
+	}
+    -> subset x (runbLS results)
+
 
 # get slurm option
 find_sopt <- function(x, ...) {

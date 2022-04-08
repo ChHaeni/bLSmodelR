@@ -246,6 +246,7 @@ split_int <- function(int, p){
 }
 
 # write R scripts
+# runbLS
 write_runbLS_script <- function(tmpdir, cpath, ncores) {
     # get tmpfile name
     tmp <- tempfile(pattern = 'Rscript', tmpdir = tmpdir, fileext = '.R')
@@ -255,12 +256,16 @@ write_runbLS_script <- function(tmpdir, cpath, ncores) {
             'library(bLSmodelR)',
             # format of file: int%i.rds
             'ifile <- commandArgs(TRUE)',
-            paste0('int <- readRDS(ifile)'),
+            # read intervals
+            'int <- readRDS(ifile)',
+            # read inlist
             paste0('inlist <- readRDS(file.path("', tmpdir, '", "input_list.rds"))'),
+            # add to inlist
             'inlist$Interval <- int',
+            # run model
             paste0('res <- runbLS(inlist, "', cpath, '", ncores = ', ncores, ')'),
-            # get index from int%i.rds
-            paste0('saveRDS(res, sub("/int([0-9]{1,2}[.]rds)", "/res\\\\1", ifile))')
+            # save result; get index from int%i.rds
+            'saveRDS(res, sub("/int([0-9]{1,2}[.]rds)", "/res\\\\1", ifile))'
         ), 
         tmp
     )

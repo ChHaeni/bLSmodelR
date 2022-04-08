@@ -23,91 +23,40 @@ runbLSlurm <- function(input_list, cat_path, ..., wait = TRUE) {
     # get current time
     current_time <- Sys.time()
 
-    # get dot arguments
-    dots <- list(...)
-
-    # check if list of options has been provided
-    if (any(sapply(dots, is.list))) {
-        dots <- unlist(dots, recursive = FALSE)
-    }
-
     # remove NA values
     isna <- as.logical(rowSums(is.na(input_list$Interval[, 1:13])))
     input_list$Interval <- input_list$Interval[!isna, ]
     if (any(isna)) cat('Removed', sum(isna), 'rows due to NA values\n')
 
-    # get nrows of Interval
-    ntasks <- NROW(input_list$Interval)
-
-    # remove -n --ntasks and give warning
-    dots <- clean_ntasks(dots)
-
-    # jobname (-J --job-name)
-    job_name <- get_jobname(dots, current_time)
-
-    # memory usage (--mem --mem-per-cpu)
-    mem <- get_mem(dots)
-    # an option could be, to distribute mem and tasks
-    # to different nodes with different cpus
-    # for now, finding the most cpus by using equal mem/cpu
-    # distribution should be sufficient
-
-    # find partition and nodes
-    # partition name (-p --partition)
-    # number of nodes (-N --nodes)
-    # cpus per task
-    part <- find_partition(mem, ntasks, dots)
-
-    # create temporary directory
-    # check if -D --chdir exists
-    # otherwise default to $HOME/.slurm/$jobname
-    tmp_dir <- get_sopt(dots, 'D', 'chdir', alternative = {
-        # get home directory
-        home <- Sys.getenv('HOME')
-        # set path to $HOME/.slurm
-        file.path(home, '.slurm', job_name)
-    })
-
-    # create tmp_dir if directory doesn't exists
-    if (!dir.exists(tmp_dir)) {
-        dir.create(tmp_dir, recursive = TRUE)
-    } else {
-        cat(paste0('Directory "', tmp_dir, '" already exists with content:\n'))
-        system(paste('ls -la', tmp_dir))
-        cat('Make sure that you have removed any unwanted files in it!\n')
-        ans <- 'ask'
-        while (!(ans %in% c('y', 'Y', 'yes', 'N', 'n', 'no', ''))) {
-            ans <- readline('Do you want to proceed? [Y/n]: ')
-        }
-        if (any(ans %in% c('N', 'n', 'no'))) return(invisible(NULL))
-    }
+    # extract slurm options and prepare job directory
+    slurm <- prep_slurm(..., ntasks = NROW(input_list$Interval))
 
     # split Intervals and save to rds files
-    il <- split_int(input_list$Interval, part)
+    il <- split_int(input_list$Interval, slurm$part)
     for (i in seq_along(il)) {
-        saveRDS(il[[i]], file.path(tmp_dir, paste0('int', i, '.rds')))
+        saveRDS(il[[i]], file.path(slurm$tmp_dir, paste0('int', i, '.rds')))
     }
 
     # remove Interval and save model input list
     input_list$Interval <- NULL
-    saveRDS(input_list, file.path(tmp_dir, 'input_list.rds'))
+    saveRDS(input_list, file.path(slurm$tmp_dir, 'input_list.rds'))
 
     # create script with argument
-    rscript_file <- write_script(tmp_dir, cat_path, part[, cpus_per_task])
+    rscript_file <- write_script(slurm$tmp_dir, cat_path, slurm$part[, cpus_per_task])
 
     # dots without partition, nodes, cpus_per_task
-    dots <- get_sopt(dots, 
+    dots <- get_sopt(slurm$dots, 
         'p', 'partition', 'N', 'nodes', 'cpus.*', 'J', 'job-name', 
         remove = TRUE) 
 
     # create sbatch file
     sbatch_file <- write_sbatch(
-        tmp_dir, 
+        slurm$tmp_dir, 
         rscript_file,
-        'job-name' = job_name,
-        partition = part[, Part],
-        nodes = part[, nodes],
-        'cpus-per-task' = part[, cpus_per_task],
+        'job-name' = slurm$job_name,
+        partition = slurm$part[, Part],
+        nodes = slurm$part[, nodes],
+        'cpus-per-task' = slurm$part[, cpus_per_task],
         dots
     )
 
@@ -117,6 +66,8 @@ runbLSlurm <- function(input_list, cat_path, ..., wait = TRUE) {
     # capture job id
     job_id <- sub('[^0-9]*([0-9]*)[^0-9]*', '\\1', re)
 
+
+    # if else: either wait for job to finish or save job id and collect later
     if (wait) {
         # wait for job to finish
         # how can we know that jobs finished?
@@ -142,10 +93,8 @@ runbLSlurm <- function(input_list, cat_path, ..., wait = TRUE) {
         }
         cat('\njob finished.\n')
 
-        # if else: either wait for job to finish or save job id and collect later
-
         # collect and return results
-        res <- collect_results(tmp_dir)
+        res <- collect_results(slurm$tmp_dir)
 
         # duration of job?
         dur <- Sys.time() - current_time
@@ -161,15 +110,15 @@ runbLSlurm <- function(input_list, cat_path, ..., wait = TRUE) {
         \r\tthe returned object or
         \r\tthe path to the job directory
         \r')
-        # return job id and tmp_dir
+        # return job id and slurm$tmp_dir
         list(
-            'job-dir' = tmp_dir,
+            'job-dir' = slurm$tmp_dir,
             'job-id' = job_id,
-            'job-name' = job_name,
-            'partition' = part[, Part],
-            'nodes' = part[, nodes],
-            'nodelist' = part[, node_names],
-            'cpus-per-task' = part[, cpus_per_task]
+            'job-name' = slurm$job_name,
+            'partition' = slurm$part[, Part],
+            'nodes' = slurm$part[, nodes],
+            'nodelist' = slurm$part[, node_names],
+            'cpus-per-task' = slurm$part[, cpus_per_task]
         )
     }
 }
@@ -220,6 +169,60 @@ write_sbatch <- function(tmpdir, rscript, ...) {
     )
     # return sbatch file path
     tmp
+}
+
+# prepare slurm arguments and directory
+prep_slurm <- function(..., ntasks = 1) {
+    # get dot arguments
+    dots <- list(...)
+    # check if list of options has been provided
+    if (any(sapply(dots, is.list))) {
+        dots <- unlist(dots, recursive = FALSE)
+    }
+    # remove -n --ntasks and give warning
+    dots <- clean_ntasks(dots)
+    # jobname (-J --job-name)
+    job_name <- get_jobname(dots, current_time)
+    # memory usage (--mem --mem-per-cpu)
+    #    an option could be, to distribute mem and tasks
+    #    to different nodes with different cpus
+    #    for now, finding the most cpus by using equal mem/cpu
+    #    distribution should be sufficient
+    mem <- get_mem(dots)
+    # find partition and nodes
+    #    partition name (-p --partition)
+    #    number of nodes (-N --nodes)
+    #    cpus per task
+    part <- find_partition(mem, ntasks, dots)
+    # create temporary directory
+    #    check if -D --chdir exists
+    #    otherwise default to $HOME/.slurm/$jobname
+    tmp_dir <- get_sopt(dots, 'D', 'chdir', alternative = {
+        # get home directory
+        home <- Sys.getenv('HOME')
+        # set path to $HOME/.slurm
+        file.path(home, '.slurm', job_name)
+    })
+    # create tmp_dir if directory doesn't exists
+    if (!dir.exists(tmp_dir)) {
+        dir.create(tmp_dir, recursive = TRUE)
+    } else {
+        cat(paste0('Directory "', tmp_dir, '" already exists with content:\n'))
+        system(paste('ls -la', tmp_dir))
+        cat('Make sure that you have removed any unwanted files in it!\n')
+        ans <- 'ask'
+        while (!(ans %in% c('y', 'Y', 'yes', 'N', 'n', 'no', ''))) {
+            ans <- readline('Do you want to proceed? [Y/n]: ')
+        }
+        if (any(ans %in% c('N', 'n', 'no'))) return(invisible(NULL))
+    }
+    # return list with dots & part
+    list(
+        dots = dots,
+        part = part,
+        tmp_dir = tmp_dir,
+        job_name = job_name
+        )
 }
 
 # split Interval into chunks

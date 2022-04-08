@@ -307,9 +307,79 @@ write_deposition_script <- function(tmpdir, ncores) {
     tmp
 }
 
+depoSlurm <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL, vDepSpatial = NULL) {
+    # convert old versions 
+    sx <- as.character(substitute(x))
+    x <- copy(x)
+    setDT(x)
+    switchNames(x)
+    if(is.null(attr(x, "Version"))){
+        warning(paste0("Object '", sx[min(length(sx), 2)], "' has not yet been converted to version 4.2+"))
+        convert(x)
+    }
+    # get attributes
+	ModelInput <- attr(x,"ModelInput")
+	Catalogs <- attr(x,"Catalogs")
+	Cat.Path <- attr(x,"CatPath")
+    # check rn argument
+	if(is.null(rn)){
+		Selrn <- x[,unique(rn)]
+	} else {
+		Selrn <- rn
+	}
+    # check Sensor argument
+	if(is.null(Sensor)){
+		SelSensor <- x[,unique(Sensor)]
+	} else {
+		SelSensor <- Sensor
+	}
+    # check Source argument
+	if(is.null(Source)){
+		SelSource <- x[,unique(Source)]
+	} else {
+		SelSource <- Source
+	}
+    # subset
+	Run <- x[rn %in% Selrn & Sensor %chin% SelSensor & Source %chin% SelSource,]
+
+    # throw error if vDep/vDepSpatial length > 1
+    if (length(vDep) != 1) {
+        stop('Argument "vDep" must be either a single number or a column name')
+    }
+    if (!is.null(vDepSpatial) && (!is.list(vDepSpatial) || 
+        length(vDepSpatial) != 2 || length(vDepSpatial[[1]]) != length(vDepSpatial[[2]]))) {
+        stop('Argument "vDepSpatial" must be a list with two list entries
+            \r\t first entry: list with "extra" areas as class "Sources"
+            \r\t second entry: list with corresponding "extra" vDep values (or column names)')
+    }
+
+    # extract slurm options and prepare job directory
+    slurm <- prep_slurm(..., ntasks = Run[, .N])
+
+    # split Intervals and save to rds files
+    il <- split_int(Run, slurm$part)
+    for (i in seq_along(il)) {
+        saveRDS(il[[i]], file.path(slurm$tmp_dir, paste0('int', i, '.rds')))
+    }
+
+    # remove Interval and save model input list
+    input_list$Interval <- NULL
+    saveRDS(input_list, file.path(slurm$tmp_dir, 'input_list.rds'))
+
+    # create script with argument
+    rscript_file <- write_runbLS_script(slurm$tmp_dir, cat_path, slurm$part[, cpus_per_task])
+
+    # create sbatch file, run slurm job & return result
+    run_sbatch(slurm = slurm, rscript = rscript_file, wait = wait)
+
+
+
+-> subset x by rn, Sensor and Source
+-> add attributes ModelInput(Sources & Senors), Cat.Path & Catalogs
+-> arguments as list -> do.call
+-> change all deposition velocities to column names:
+
 deposition <- function(x,vDep,rn=NULL,Sensor=NULL,Source=NULL,vDepSpatial=NULL,ncores=1){#,fracDepInside=0,vDepInside=0,ncores=1){
-    -> arguments as list -> do.call
-    -> change all deposition velocities to column names:
 	if(is.character(vDep)){
 		vDep <- Run[,vDep,with=FALSE][[1]]
 	} else {

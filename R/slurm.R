@@ -100,15 +100,7 @@ run_sbatch <- function(slurm, rscript, wait) {
         dur <- Sys.time() - current_time
         cat('Time since sending job: ', round(dur, 2), attr(dur, 'units'), '\n')
         # return value
-        structure(res, slurm = list(
-            'job-dir' = slurm$tmp_dir,
-            'job-id' = job_id,
-            'job-name' = slurm$job_name,
-            'partition' = slurm$part[, Part],
-            'nodes' = slurm$part[, nodes],
-            'nodelist' = slurm$part[, node_names],
-            'cpus-per-task' = slurm$part[, cpus_per_task]
-        ))
+        res
     } else {
         # be verbose
         cat('Not waiting for job to finish & returning job info.

@@ -177,11 +177,6 @@ write_sbatch <- function(tmpdir, rscript, ...) {
     tmp
 }
 
-# set alternative job directory in options
-options(
-    bls.slurm.jobdir = file.path(Sys.getenv('HOME'), '.slurm')
-    )
-
 # prepare slurm arguments and directory
 prep_slurm <- function(..., ntasks = 1) {
     # get dot arguments
@@ -532,8 +527,14 @@ find_partition <- function(memory, ...) {
     if (nrow(ni_mem) == 0) {
         stop({find_partition(); paste0('No partition with enough memory available.')})
     }
+    # any partitions to exclude?
+    exclude_partitions <- getOption('bls.slurm.exclude.partition', '')
+    # check if it is a vector
+    if (!is.character(exclude_partitions) || length(exclude_partitions) == 0) {
+        stop('option "bls.slurm.exclude.partition" should be a character vector!')
+    }
     # summarize
-    ni_sum <- ni_mem[, {
+    ni_sum <- ni_mem[!(Part %in% exclude_partitions), {
         Cav <- unique(CIdle)
         rbindlist(lapply(Cav, function(cav) {
             # print node names if colored below

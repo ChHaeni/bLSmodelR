@@ -1,7 +1,18 @@
 .onLoad <- function(libname, pkgname) {
-	 invisible(reg.finalizer(
+	 invisible(
+         reg.finalizer(
         e = parent.env(environment()),
-        f = function(env){eval(env,{snowfall::sfStop();bLSmodelR::cleanTemporary()})},
+        f = function(env){
+            eval(env, {
+                # remove options
+                options(
+                    bls.slurm.jobdir = NULL,
+                    bls.slurm.exclude.partition = NULL
+                )
+                snowfall::sfStop()
+                bLSmodelR::cleanTemporary()
+            })
+        },
         onexit = TRUE))
 }
 .onAttach <- function(libname, pkgname){
@@ -9,6 +20,13 @@
     packageStartupMessage(paste0(" This is bLSmodelR version ",packageVersion("bLSmodelR")))
     packageStartupMessage(paste0(" last updated ",packageDescription("bLSmodelR")[["Date"]]))
     packageStartupMessage("#################################\n")
+    # set some options
+    options(
+        # parent directory of job dir
+        bls.slurm.jobdir = file.path(Sys.getenv('HOME'), '.slurm'),
+        # exclude partitions?
+        bls.slurm.exclude.partition = ''
+    )
 }
 .inifu <- function(n,theta){
 	# http://stats.stackexchange.com/questions/15011/generate-a-random-variable-with-a-defined-correlation-to-an-existing-variable

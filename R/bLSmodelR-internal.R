@@ -4,11 +4,6 @@
         e = parent.env(environment()),
         f = function(env){
             eval(env, {
-                # remove options
-                options(
-                    bls.slurm.jobdir = NULL,
-                    bls.slurm.exclude.partition = NULL
-                )
                 snowfall::sfStop()
                 bLSmodelR::cleanTemporary()
             })
@@ -23,9 +18,9 @@
     # set some options
     options(
         # parent directory of job dir
-        bls.slurm.jobdir = file.path(Sys.getenv('HOME'), '.slurm'),
+        bls.slurm.jobdir = getOption('bls.slurm.jobdir', file.path(Sys.getenv('HOME'), '.slurm')),
         # exclude partitions?
-        bls.slurm.exclude.partition = ''
+        bls.slurm.exclude.partition = getOption('bls.slurm.exclude.partition', '')
     )
 }
 .inifu <- function(n,theta){

@@ -177,6 +177,11 @@ write_sbatch <- function(tmpdir, rscript, ...) {
     tmp
 }
 
+# set alternative job directory in options
+options(
+    bls.slurm.jobdir = file.path(Sys.getenv('HOME'), '.slurm')
+    )
+
 # prepare slurm arguments and directory
 prep_slurm <- function(..., ntasks = 1) {
     # get dot arguments
@@ -206,10 +211,13 @@ prep_slurm <- function(..., ntasks = 1) {
     #    check if -D --chdir exists
     #    otherwise default to $HOME/.slurm/$jobname
     tmp_dir <- get_sopt(dots, 'D', 'chdir', alternative = {
-        # get home directory
-        home <- Sys.getenv('HOME')
+        # get directory from options
+        job_parent_dir <- getOption(
+            'bls.slurm.jobdir',
+            default = file.path(Sys.getenv('HOME'), '.slurm')
+        )
         # set path to $HOME/.slurm
-        file.path(home, '.slurm', job_name)
+        file.path(job_parent_dir, job_name)
     })
     # create tmp_dir if directory doesn't exists
     if (!dir.exists(tmp_dir)) {

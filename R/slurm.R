@@ -561,13 +561,23 @@ find_partition <- function(memory, ...) {
     out
 }
 
-collect_results <- function(job_dir) {
+collect_results <- function(job_dir, check.res = TRUE) {
     # job_dir as list with jobid
     if (is.list(job_dir)) job_dir <- job_dir[['job-dir']]
     # be verbose about collecting from path and job
     cat('Collecting results from:', job_dir, '\n')
     # get res.*rds file paths
     res_files <- dir(job_dir, pattern = 'res.*[.]rds', full.names = TRUE)
+    if (check.res) {
+        # get int.*rds file paths
+        int_files <- dir(job_dir, pattern = 'int.*[.]rds', full.names = TRUE)
+        if (length(res_files) != length(int_files)) {
+            stop('Some jobs didn\'t finish!\n',
+                'If you still want to collect the results, run:\n',
+                'collect_results("', job_dir, '", check.res = FALSE)\n'
+                )
+        }
+    }
     # read in
     res_list <- lapply(res_files, readRDS)
     # check them

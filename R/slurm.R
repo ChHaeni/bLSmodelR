@@ -100,7 +100,15 @@ run_sbatch <- function(slurm, rscript, wait) {
         dur <- Sys.time() - current_time
         cat('Time since sending job: ', round(dur, 2), attr(dur, 'units'), '\n')
         # return value
-        res
+        structure(res, slurm = list(
+            'job-dir' = slurm$tmp_dir,
+            'job-id' = job_id,
+            'job-name' = slurm$job_name,
+            'partition' = slurm$part[, Part],
+            'nodes' = slurm$part[, nodes],
+            'nodelist' = slurm$part[, node_names],
+            'cpus-per-task' = slurm$part[, cpus_per_task]
+        ))
     } else {
         # be verbose
         cat('Not waiting for job to finish & returning job info.
@@ -179,6 +187,8 @@ prep_slurm <- function(..., ntasks = 1) {
     }
     # remove -n --ntasks and give warning
     dots <- clean_ntasks(dots)
+    # get current time
+    current_time <- Sys.time()
     # jobname (-J --job-name)
     job_name <- get_jobname(dots, current_time)
     # memory usage (--mem --mem-per-cpu)
@@ -570,7 +580,7 @@ collect_results <- function(job_dir) {
     # read in
     res_list <- lapply(res_files, readRDS)
     # check them
-    if (any(lengths(res_list) == 0) {
+    if (any(lengths(res_list) == 0)) {
         # which empty
         ind <- which(lengths(res_list) == 0)
         # shorten list and give warning

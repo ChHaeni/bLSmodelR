@@ -315,7 +315,7 @@ write_deposition_script <- function(tmpdir, ncores) {
     tmp
 }
 
-depoSlurm <- function(x, vDep, ..., rn = NULL, Sensor = NULL, Source = NULL, vDepSpatial = NULL) {
+depoSlurm <- function(x, vDep, ..., rn = NULL, Sensor = NULL, Source = NULL, vDepSpatial = NULL, wait = TRUE) {
 
     # convert old versions 
     sx <- as.character(substitute(x))

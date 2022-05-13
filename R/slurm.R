@@ -317,16 +317,6 @@ write_deposition_script <- function(tmpdir, ncores) {
 
 depoSlurm <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL, vDepSpatial = NULL) {
 
-    RunDep <- deposition(DemoOutput,0.03,Sensor="Sensor1",Source="SourceRects")
-    RunDep2 <- deposition(DemoOutput,0.002,Sensor="Sensor1",Source="SourcePoly",vDepSpatial = list(vDepList,vDepAreas))
-
-    x <- DemoOutput
-    vDep <- 0.03
-    rn <- NULL
-    Sensor <- "Sensor1"
-    Source <- "SourcePoly"
-    vDepSpatial <- list(vDepList, vDepAreas)
-
     # convert old versions 
     sx <- as.character(substitute(x))
     x <- copy(x)

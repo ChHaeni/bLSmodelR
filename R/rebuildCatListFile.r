@@ -1,11 +1,17 @@
 rebuildCatListFile <- function(C.Path,File=character(0),fromScratch=FALSE){
 	
+    # check if cats exist & list them
 	Existing <- dir(C.Path,pattern="Cat_Zm.*_[0-9]{14}$")
 	ExistingFull <- paste(C.Path,Existing,sep="/")
+    # define path to CatListqs file
 	CatfileOrig <- paste0(C.Path,"/.CatListqs")
+    # define path to temporary CatListqs file
 	Catfile <- tempfile(paste0('CatListqs', sample(1e5, 1)))
+    # check if file exists
 	if(fromScratch || !file.exists(CatfileOrig)){
 		if (file.exists(Catfile)) file.remove(Catfile)
+        # remove old CatList file
+        if (file.exists(previousCatList <- file.path(C.Path, '.CatList'))) file.remove(previousCatList)
 	} else {
         file.copy(CatfileOrig, Catfile, overwrite = TRUE)
     }

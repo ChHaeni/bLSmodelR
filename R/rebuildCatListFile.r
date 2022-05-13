@@ -17,16 +17,26 @@ rebuildCatListFile <- function(C.Path,File=character(0),fromScratch=FALSE){
     }
 
 	if(length(Existing) > 0){
-		if(!file.exists(Catfile)){
-			CatList <- as.data.frame(c(list(a=character(0)),rep(list(a=numeric(0)),13)),stringsAsFactors=FALSE)
-			colnames(CatList) <- c("Name","N0","ZSens","Ustar","L","Zo","Su_Ustar","Sv_Ustar","bw","C0","kv","A","alpha","MaxFetch")
-		} else {
-			CatList <- read.table(Catfile,header=TRUE,as.is=TRUE,colClasses=c("character",rep("numeric",13)))
+		if(file.exists(Catfile)){
+            # try to read file
+			CatList <- try(read.table(Catfile,header=TRUE,as.is=TRUE,colClasses=c("character",rep("numeric",13))))
+            # if fails, wait and try again
+            if (inherits(CatList, 'try-error')) {
+                # try again
+                CatList <- try(read.table(Catfile,header=TRUE,as.is=TRUE,colClasses=c("character",rep("numeric",13))))
+                # improved error message upon failure
+                if (inherits(CatList, 'try-error')) {
+                    stop('rebuildCatListFile: reading temporary CatList file ', Catfile, ' fails!')
+                }
+            }
 			# check erroneous
 			CatList <- CatList[grepl("Cat_Zm.*_[0-9]{14}$",CatList[,1]),]
 			# remove duplicates
 			CatList <- CatList[!(CatList[,1] %in% unique(CatList[duplicated(CatList[,1]),1])),]
-		}		
+		} else {
+			CatList <- as.data.frame(c(list(a=character(0)),rep(list(a=numeric(0)),13)),stringsAsFactors=FALSE)
+			colnames(CatList) <- c("Name","N0","ZSens","Ustar","L","Zo","Su_Ustar","Sv_Ustar","bw","C0","kv","A","alpha","MaxFetch")
+        }
 		CatNames <- CatList[,1] %w/o% File
 		if(!all(CatNames%in%Existing)){
 			CatList <- CatList[CatNames%in%Existing,]

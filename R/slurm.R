@@ -388,7 +388,7 @@ depoSlurm <- function(x, vDep, ..., rn = NULL, Sensor = NULL, Source = NULL, vDe
     )
     
     # create script with argument
-    rscript_file <- write_deposition_script(slurm$tmp_dir, cat_path, slurm$part[, cpus_per_task])
+    rscript_file <- write_deposition_script(slurm$tmp_dir, slurm$part[, cpus_per_task])
 
     # create sbatch file, run slurm job & return result
     run_sbatch(slurm = slurm, rscript = rscript_file, wait = wait)

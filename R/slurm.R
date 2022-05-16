@@ -596,10 +596,10 @@ collect_results <- function(job_dir, check.res = TRUE) {
         # remove empty
         res_list <- res_list[-ind]
     }
-    # get original rn values
-    rn_values <- unlist(lapply(res_list, function(x) x[, rn]))
     # join them to one
     res <- do.call(join, res_list)
+    # get original rn values
+    rn_values <- res[, sub('^[0-9]+_', '', rn)]
     # get new rn values
     names(rn_values) <- res[, rn]
     # restore rn values

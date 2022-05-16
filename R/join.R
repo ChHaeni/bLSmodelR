@@ -78,8 +78,12 @@ join.bLSresult <- function(...,asDT=TRUE){
     Sens <- unique(rbindlist(lapply(InLists,"[[","Sensors")))
     setnames(Sens, c("name", "id", "node", "x", "y", "z", "d", "n"))
     MInput$Sensors <- genSensors(Sens)
-    Sour <- as.data.frame(rbindlist(lapply(InLists,"[[","Sources")))
-    MInput$Sources <- genSources(Sour[!duplicated(apply(Sour,1,paste,collapse=",")),])
+    # bind Sources & check for duplicated sources
+    Sour <- as.data.frame(unique(rbindlist(lapply(InLists, function(x) {
+                cbind(x[["Sources"]], row = seq_len(nrow(x[["Sources"]])))
+    }))))
+    # gen new unique sources
+    MInput$Sources <- genSources(Sour[, 1:4])
     if(!all(sapply(lapply(InLists,"[[","Model"),function(x)identical(x,MInput$Model)))){
         warning("ignored differing (global) model parameters!")
     }

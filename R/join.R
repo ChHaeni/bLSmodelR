@@ -92,6 +92,9 @@ join.bLSresult <- function(...,asDT=TRUE){
     setattr(out,"CalcSteps",rbindlist(lapply(allargs,attr,which="CalcSteps"),fill = TRUE))
     ### Catalogs
     setattr(out,"Catalogs",rbindlist(lapply(allargs,attr,which="Catalogs"),fill = TRUE))
+    # set Catalogs and CalcSteps keys
+    setkey(attr(out, 'CalcSteps'),rn,Sensor)
+    setkey(attr(out, 'Catalogs'),rn,Sensor,PointSensor)
     ### class bLSresult
     setattr(out, "class", c("bLSresult", "data.table", "data.frame"))
     if(asDT){

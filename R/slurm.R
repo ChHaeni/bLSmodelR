@@ -604,12 +604,19 @@ collect_results <- function(job_dir, check.res = TRUE) {
     names(rn_values) <- res[, rn]
     # restore rn values
     res[, rn := rn_values]
-    # also in attributes
-    attr(res, 'CalcSteps')[, rn := rn_values[rn]]
-    attr(res, 'Catalogs')[, rn := rn_values[rn]]
-    # set keys again
-    setkey(attr(res, 'CalcSteps'), rn, Sensor)
-    setkey(attr(res, 'Catalogs'), rn, Sensor, PointSensor)
+    if (inherits(res, 'deposition')) {
+        attr(res, 'vDep') <- list(
+            vDep = unlist(attr(res, 'vDep')[['vDep']]),
+            vDepSpatial = unlist(attr(res, 'vDep')[['vDepSpatial']])
+            )
+    } else {
+        # also in attributes
+        attr(res, 'CalcSteps')[, rn := rn_values[rn]]
+        attr(res, 'Catalogs')[, rn := rn_values[rn]]
+        # set keys again
+        setkey(attr(res, 'CalcSteps'), rn, Sensor)
+        setkey(attr(res, 'Catalogs'), rn, Sensor, PointSensor)
+    }
     # return
     res
 }

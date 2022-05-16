@@ -6,7 +6,7 @@ rebuildCatListFile <- function(C.Path,File=character(0),fromScratch=FALSE){
     # define path to CatListqs file
 	CatfileOrig <- paste0(C.Path,"/.CatListqs")
     # define path to temporary CatListqs file
-	Catfile <- tempfile(paste0('CatListqs', sample(1e5, 1)))
+	Catfile <- tempfile(paste0('CatListqs', sample(1e5, 1)), tmpdir = getwd())
     # check if file exists
 	if(fromScratch || !file.exists(CatfileOrig)){
 		if (file.exists(Catfile)) file.remove(Catfile)
@@ -20,9 +20,11 @@ rebuildCatListFile <- function(C.Path,File=character(0),fromScratch=FALSE){
 		if(file.exists(Catfile)){
             # try to read file
 			CatList <- try(read.table(Catfile,header=TRUE,as.is=TRUE,colClasses=c("character",rep("numeric",13))))
-            # if fails, wait and try again
+            # if fails (issues on prime), try again
             if (inherits(CatList, 'try-error')) {
                 # try again
+                cat('Trying to copy file again...\n')
+                file.copy(CatfileOrig, Catfile, overwrite = TRUE)
                 CatList <- try(read.table(Catfile,header=TRUE,as.is=TRUE,colClasses=c("character",rep("numeric",13))))
                 # improved error message upon failure
                 if (inherits(CatList, 'try-error')) {

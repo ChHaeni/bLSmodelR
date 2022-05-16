@@ -73,8 +73,8 @@ rebuildCatListFile <- function(C.Path,File=character(0),fromScratch=FALSE){
         # copy first and then rename
         Catfile_tmp <- paste0(CatfileOrig, '_tmp')
         # check if first copy exists, wait until copy has been removed (or max 20 secs)
-        time_now <- now()
-        while (file.exists(Catfile_tmp) && as.numeric(now() - time_now, units = 'secs') < 60) {
+        time_now <- Sys.time()
+        while (file.exists(Catfile_tmp) && as.numeric(Sys.time() - time_now, units = 'secs') < 60) {
             # wait to continue...
             Sys.sleep(1)
         }

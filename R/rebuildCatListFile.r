@@ -70,7 +70,20 @@ rebuildCatListFile <- function(C.Path,File=character(0),fromScratch=FALSE){
 			CatList <- na.omit(rbind(CatList,CatAdd))
 			write.table(CatList,file=Catfile,row.names=FALSE,col.names=TRUE)
 		}
-        file.copy(Catfile, CatfileOrig, overwrite = TRUE)
+        # copy first and then rename
+        Catfile_tmp <- paste0(CatfileOrig, '_tmp')
+        # check if first copy exists, wait until copy has been removed (or max 20 secs)
+        time_now <- now()
+        while (file.exists(Catfile_tmp) && as.numeric(now() - time_now, units = 'secs') < 60) {
+            # wait to continue...
+            Sys.sleep(1)
+        }
+        # copy file
+        file.copy(Catfile, Catfile_tmp, overwrite = TRUE)
+        # remove original
+        if (file.exists(CatfileOrig)) file.remove(CatfileOrig)
+        # rename to original
+        file.rename(Catfile_tmp, CatfileOrig)
 	} else {
 		CatList <- as.data.frame(c(list(a=character(0)),rep(list(a=numeric(0)),13)),stringsAsFactors=FALSE)
 		colnames(CatList) <- c("Name","N0","ZSens","Ustar","L","Zo","Su_Ustar","Sv_Ustar","bw","C0","kv","A","alpha","MaxFetch")

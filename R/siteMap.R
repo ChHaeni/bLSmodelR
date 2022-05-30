@@ -2,7 +2,7 @@ plot.Sources <- function(x,...)siteMap(x,...)
 plot.Sensors <- function(x,...)siteMap(x,...)
 plot.InputList <- function(x,...)siteMap(x,...)
 plot.bLSresult <- function(x,...)siteMap(x,...)
-siteMap <- function(x,y=NULL,xlab="x-Coord",ylab="y-Coord",
+siteMap <- function(x,y=NULL,xlab="x-Coord",ylab="y-Coord", panel.first = grid(),
 	polygon.args=list(lwd=2,col=c("#107833","#23974A","#3EA962","#62C182","#93DBAC")),
 	points.args=list(pch=20,cex=0.5,col=1), 
 	lines.args=list(lty=3),
@@ -79,7 +79,7 @@ siteMap <- function(x,y=NULL,xlab="x-Coord",ylab="y-Coord",
 	rangeX <- range(c(Srcs[,2], Snsrs[, x]))
 	rangeY <- range(c(Srcs[,3], Snsrs[, y]))
 	if(!add){
-		plot(rangeX,rangeY,type="n",panel.first=grid(),asp=asp,xlab=xlab,ylab=ylab,...)
+		plot(rangeX,rangeY,type="n",panel.first=panel.first,asp=asp,xlab=xlab,ylab=ylab,...)
 	}
 	if(length(Slist)){
 

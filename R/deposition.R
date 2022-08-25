@@ -106,43 +106,43 @@ deposition <- function(x,vDep,rn=NULL,Sensor=NULL,Source=NULL,vDepSpatial=NULL,n
 
 		cl <- sfGetCluster()
 
+        # get N_TD > 0
+        ntd_g0 <- Run[, which(N_TD > 0)]
 
-		Key <- Run[,paste0(.I,collapse=","),by=.(Sensor,rn)]
-		nk <- nrow(Key)
+        if (length(ntd_g0) > 0) {
 
-		# sort by LineSensor/PointSensor:
-		sort_nindex <- character(nk)
-		if(length(pSens$"LineSensors") > 0){
-			add <- rep("1",nk)
-			add[Key[,Sensor %chin% pSens$"LineSensors"]] <- "0"
-			sort_nindex <- paste0(sort_nindex,add)
-		}
-		
-		# sort by height:
-		Sheights <- sapply(Key[,Sensor],function(x,y){
-			min(y[x == y[, "Sensor Name"], "Sensor Height (m)"])
-		},y=pSens$"Calc.Sensors")
-		add <- rank(Sheights, ties.method = "min")
-		sort_nindex <- paste0(sort_nindex,sprintf(paste0("%0",floor(log(max(add),10))+1,"i"),add))
+            # sort by N_TD
+            ntd_order <- Run[ntd_g0, order(N_TD)]
 
-		Key <- Key[order(sort_nindex)]
-		####
+            # distribute to clusters
+            RunList <- lapply(seq_along(cl), function(x, run) {
+                    run[seq.int(from = x, to = nrow(run), by = length(cl)), ]
+                }, run = as.data.frame(Run[ntd_g0[ntd_order], ]))
 
-		ilist <- lapply(strsplit(Key[,V1],",",fixed=TRUE),as.numeric)
-		RunList <- lapply(ilist,function(x,y)y[x,], as.data.frame(Run))
+            # run parallel
+            cat("Parallel computing deposition corrected C/E...\nThis will take a moment...\n")
+            if(vdSpat){
+                OutList <- snow::clusterApply(cl,RunList,.calcDep_Wrapper,Catalogs,
+                    Cat.Path,ModelInput[["Sources"]],pSens$"Calc.Sensors",vDep,vDepSpatial, "spatial")
+            } else {
+                OutList <- snow::clusterApply(cl,RunList,.calcDep_Wrapper,Catalogs,
+                    Cat.Path,ModelInput[["Sources"]],pSens$"Calc.Sensors",vDep,vDepSpatial)
+            }
 
-		#### calculate and reorder
-		cat("Parallel computing deposition corrected C/E...\nThis will take a moment...\n")
-		if(vdSpat){
-			OutList <- snow::clusterApplyLB(cl,RunList,.calcDep_Wrapper,Catalogs,
-				Cat.Path,ModelInput[["Sources"]],pSens$"Calc.Sensors",vDep,vDepSpatial, "spatial")
-		} else {
-			OutList <- snow::clusterApplyLB(cl,RunList,.calcDep_Wrapper,Catalogs,
-				Cat.Path,ModelInput[["Sources"]],pSens$"Calc.Sensors",vDep,vDepSpatial)
-		}
+            # bind together
+            Out <- rbind(
+                # N_TD > 0 from clusters
+                rbindlist(OutList),
+                # N_TD == 0
+                Run[N_TD == 0, .(CE, CE_se, uCE, uCE_se, vCE, vCE_se, wCE, wCE_se, UCE, vd_index)]
+            )
 
-		# Out <- rbindlist(OutList)[order(vd_index)][,vd_index := NULL]
-		Out <- rbindlist(OutList)
+        } else {
+
+            # all N_TD == 0
+            Out <- Run[, .(CE, CE_se, uCE, uCE_se, vCE, vCE_se, wCE, wCE_se, UCE, vd_index)]
+
+        }
 
 	} else {
 

@@ -42,6 +42,7 @@ combineSources <- function(res, comb_list = NULL, weight_units = c("m/A/t", "m/t
   for(source_to in names(comb_list)){
     # source_to <- names(comb_list)[1]
     sources <- names(comb_list[[source_to]])
+    cat('Combining sources', paste(sources, collapse = ' + '), 'to', source_to, '\n')
     prior_wts <- comb_list[[source_to]]
     outlist[[source_to]] <- res[Source %in% sources, {
       if(.N == length(sources)){

@@ -24,7 +24,9 @@
 		# N_TD_tot <- Run[,N_TD]
 		# N_TD_sum <- 0
 
+        # merge Catalogs with row
 		Row <- Catalogs[Run][order(as.numeric(gsub(".*[.]([0-9]*)$","\\1",PointSensor)))]
+        # TODO: get vDep from Run
 		vdep <- vd[vd_index]
 
 		n <- nrow(Row)
@@ -42,10 +44,14 @@
 		UVW <- vector(mode="list",length=nCats)
 		names(UVW) <- uniqueCats
 
-		nms_Spatial <- names(vdSpatial[[1]])
-		vd_Spatial <- lapply(nms_Spatial,function(x,y,ind)y[[x]][ind],y=vdSpatial[[1]],ind=vd_index)
+        # get vDepSpatial column names
+        nms_Spatial <- unlist(strsplit(Row[, get(vdSpatial[[1]])], split = ','))
+        # get corresponding vDep and Sources obj.
+        vd_Spatial <- Row[, I(mget(nms_Spatial))]
 		Src_Spatial <- lapply(nms_Spatial,function(x,y)y[y[,1] %in% x,],y=vdSpatial[[2]])
 		names(Src_Spatial) <- names(vd_Spatial) <- nms_Spatial
+        # exclude if NA values in vDep
+        nms_Spatial <- nms_Spatial[!is.na(unlist(vd_Spatial))]
 
 		for(i in seq_len(n)){
 

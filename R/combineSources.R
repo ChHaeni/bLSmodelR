@@ -91,6 +91,29 @@ combineSources <- function(res, comb_list = NULL, weight_units = c("m/A/t", "m/t
           # fct
           fct = if(fct_exists) sum(fct) else NULL
           )
+        # depositon:
+        if (inherits(result, 'deposition')) {
+            out[, ':='(
+                  # CE_Dep
+                  CE_Dep = avgCE_sources(CE_Dep, CE_wts),
+                  # CE_se_Dep
+                  CE_se_Dep = avgCE_sources_se(CE_se_Dep, CE_wts),
+                  # uCE_Dep
+                  uCE_Dep = avgCE_sources(uCE_Dep, CE_wts),
+                  # uCE_se_Dep
+                  uCE_se_Dep = avgCE_sources_se(uCE_se_Dep, CE_wts),
+                  # vCE_Dep
+                  vCE_Dep = avgCE_sources(vCE_Dep, CE_wts),
+                  # vCE_se_Dep
+                  vCE_se_Dep = avgCE_sources_se(vCE_se_Dep, CE_wts),
+                  # wCE_Dep
+                  wCE_Dep = avgCE_sources(wCE_Dep, CE_wts),
+                  # wCE_se_Dep
+                  wCE_se_Dep = avgCE_sources_se(wCE_se_Dep, CE_wts),
+                  # UCE_Dep
+                  UCE_Dep = avgCE_sources(UCE_Dep, CE_wts),
+                )]
+        }
         # all lo und hi nachrechnen...
         N0m <- mean(N0)
         qtlo <- qt(0.025, N0m - 1)

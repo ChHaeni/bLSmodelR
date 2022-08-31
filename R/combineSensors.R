@@ -113,6 +113,29 @@ combineSensors <- function(result, comb_list = NULL, conc_column = NULL, add = F
                     # UCE
                     UCE = sum(UCE * wts)
                 )
+                # depositon:
+                if (inherits(result, 'deposition')) {
+                    out[, ':='(
+                        # CE_Dep
+                        CE_Dep = sum(CE_Dep * wts),
+                        # CE_se_Dep
+                        CE_se_Dep = sqrt(sum(CE_se_Dep ^ 2 * wts_sqr)),
+                        # uCE_Dep
+                        uCE_Dep = sum(uCE_Dep * wts),
+                        # uCE_se_Dep
+                        uCE_se_Dep = sqrt(sum(uCE_se_Dep ^ 2 * wts_sqr)),
+                        # vCE_Dep
+                        vCE_Dep = sum(vCE_Dep * wts),
+                        # vCE_se_Dep
+                        vCE_se_Dep = sqrt(sum(vCE_se_Dep ^ 2 * wts_sqr)),
+                        # wCE_Dep
+                        wCE_Dep = sum(wCE_Dep * wts),
+                        # wCE_se_Dep
+                        wCE_se_Dep = sqrt(sum(wCE_se_Dep ^ 2 * wts_sqr)),
+                        # UCE_Dep
+                        UCE_Dep = sum(UCE_Dep * wts)
+                        )]
+                }
                 # all lo und hi nachrechnen... (TODO: aus by nehmen (N0m in out ausgeben)
                 N0m <- mean(N0)
                 qtlo <- qt(0.025, N0m - 1)

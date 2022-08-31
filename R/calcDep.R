@@ -44,11 +44,21 @@
 		UVW <- vector(mode="list",length=nCats)
 		names(UVW) <- uniqueCats
 
-        # get vDepSpatial column names
-        nms_Spatial <- unlist(strsplit(Row[, get(vdSpatial[[1]])], split = ','))
-        # get corresponding vDep and Sources obj.
-        vd_Spatial <- Row[, I(mget(nms_Spatial))]
+        # data.frame-like or other - i.e. does spatial name column exist?
+        if (!is.null(names(vdSpatial[[1]])) && all(names(vdSpatial[[1]]) %in% vdSpatial[[2]][, 1])) {
+            # get vDepSpatial column names
+            nms_Spatial <- names(vdSpatial[[1]])
+            # get corresponding vDep and Sources obj.
+            vd_Spatial <- Row[, I(mget(vdSpatial[[1]]))]
+        } else {
+            # get vDepSpatial column names
+            nms_Spatial <- unlist(strsplit(Row[, get(vdSpatial[[1]])], split = ','))
+            # get corresponding vDep and Sources obj.
+            vd_Spatial <- Row[, I(mget(nms_Spatial))]
+        }
+        # get corresponding Sources
 		Src_Spatial <- lapply(nms_Spatial,function(x,y)y[y[,1] %in% x,],y=vdSpatial[[2]])
+        # name them
 		names(Src_Spatial) <- names(vd_Spatial) <- nms_Spatial
         # exclude if NA values in vDep
         nms_Spatial <- nms_Spatial[!is.na(unlist(vd_Spatial))]

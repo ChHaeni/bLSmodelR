@@ -68,9 +68,21 @@ deposition <- function(x,vDep,rn=NULL,Sensor=NULL,Source=NULL,vDepSpatial=NULL,n
 		nms <- names(vds1)
         # check if list, data.frame-like or character-vector
         if (is.character(vds1)) {
-            # column names
-            browser()
-            # old option, but allow for NA -> new option 2.
+            # column names (old option, but allow for NA -> new option 2.)
+            # check if names are null
+            if (is.null(nms)) {
+                # assign values as names if missing
+                names(vDepSpatial[[1]]) <- nms <- 
+                    names(vds1) <- vds1 
+            }
+            # check if column names exist
+            if (!all(vds1 %in% names(Run))) {
+                stop('columns ', paste(vds1[!(vds1 %in% names(Run))],collapse=", ")," are missing!")
+            }
+            # check names:
+            if(!all(nms %in% unique(vDepSpatial[[2]][,1]))){
+                stop(paste(nms[!(nms %in% unique(vDepSpatial[[2]][,1]))],collapse=", "),": area not defined!")
+            }
         } else if (inherits(vds1, 'data.frame')) {
             # new option 1.
             # subset by rn, Sensor & Source if nrow != N

@@ -43,7 +43,7 @@ deposition <- function(x,vDep,rn=NULL,Sensor=NULL,Source=NULL,vDepSpatial=NULL,n
 	N <- nrow(Run)
 	Run[, vd_index := 1:.N]
 
-    # TODO: attach vDep to Run in any case
+    # TODO: attach vDep to Run in any case?
 	if(is.character(vDep)){
 		vDep <- Run[,vDep,with=FALSE][[1]]
 	} else {
@@ -51,12 +51,6 @@ deposition <- function(x,vDep,rn=NULL,Sensor=NULL,Source=NULL,vDepSpatial=NULL,n
 	}
 
 	# vDepSpatial
-    # NOTE: 2 additional options: 
-    #   1. vDepSpatial == data.frame-like object with exactly N rows and columns 'Sources', '*Source1*', etc.
-    #       - if nrow != N -> recycle if nrow == 1?
-    #       - split & unlist Sources names separated by ','
-    #   2. column in Run where NA == "exclude from vDepSpatial for this interval"
-    # TODO: change any Format to "column in Run where NA == ..."
 	if(vdSpat <- !is.null(vDepSpatial)){
         # check 'Sources' obj
 		if(!inherits(vDepSpatial[[2]],"Sources")){
@@ -160,20 +154,23 @@ deposition <- function(x,vDep,rn=NULL,Sensor=NULL,Source=NULL,vDepSpatial=NULL,n
             vDepSpatial[[2]][, 1] <- paste0('vDepSpatial.', vDepSpatial[[2]][, 1])
         } else if (is.list(vds1)) {
             # old option
-            browser()
             # check names:
             if(!all(nms %in% unique(vDepSpatial[[2]][,1]))){
                 stop(paste(nms[!(nms %in% unique(vDepSpatial[[2]][,1]))],collapse=", "),": area not defined!")
             }
-            
+            # extend/recycle
             for(i in nms){
-                if(is.character(vDepSpatial[[1]][[i]])){
-                    vDepSpatial[[1]][[i]] <- Run[,vDepSpatial[[1]][[i]],with=FALSE][[1]]
+                if(is.character(vds1[[i]])){
+                    vds1[[i]] <- Run[, vds1[[i]], with = FALSE][[1]]
                 } else {
-                    vDepSpatial[[1]][[i]] <- rep(vDepSpatial[[1]][[i]],N)[seq_len(N)]
+                    n_rep <- ceiling(N / length(vds1[[i]]))
+                    vds1[[i]] <- rep(vds1[[i]], n_rep)[seq_len(N)]
                 }
             }
-            # attach to Run -> via dcast -> vdadd
+            # attach to Run -> cbind
+            Run <- cbind(Run, list2DF(vds1))
+            # replace vDepSpatial[[1]]
+            vDepSpatial[[1]] <- setNames(nms, nms)
         } else {
             stop("First list element of argument 'vDepSpatial' must be either a character vector,",
                 " a list or an object that inherits from 'data.frame'!")

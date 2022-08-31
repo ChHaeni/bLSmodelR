@@ -26,7 +26,7 @@
 
         # merge Catalogs with row
 		Row <- Catalogs[Run][order(as.numeric(gsub(".*[.]([0-9]*)$","\\1",PointSensor)))]
-        # TODO: get vDep from Run
+        # TODO: get vDep from Run?
 		vdep <- vd[vd_index]
 
 		n <- nrow(Row)

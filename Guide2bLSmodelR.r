@@ -376,6 +376,35 @@ library(bLSmodelR)
 		RunDep2 <- deposition(DemoOutput,0.002,Sensor="Sensor1",Source="SourcePoly",vDepSpatial = list(vDepList,vDepAreas))
 		RunDep2[,.(CE,CE_Dep,"Reduction of CE by deposition (in %)"=(CE - CE_Dep)/CE*100)]
 
+        #### example on new vDepSpatial treatment
+        ## define key
+        #snames <- unique(Sources[, 1])
+        ## source names key
+        #vdn_key <- setNames(snames, snames[c(2, 1, 4, 3)])
+        ## 
+
+        ## 1. data.frame-like (is.data.frame/inherits, one column defining patches/polygons/"Sources" per row/interval, columns with patches names defining vDep per row/interval
+        #vds <- nodep[, .(rn, Sensor, Source)]
+        #vds[, Spatial := nodep[, vdn_key[Source]]]
+        ## spatial, zones, sources, select, regions
+        #vds[, id := .I]
+        #vdadd <- dcast(vds, id + rn + Sensor + Source + Spatial ~ Spatial, value.var = 'Spatial', fun.aggregate = function(x) 0.0)
+        ## check:
+        ##   - empty row entry
+        #vdadd[sample.int(.N, 10), Spatial := '']
+
+        ## define vDep via columns & set vDep to either vDep or 0
+        #vDepSpatialList <- list(
+        #    # list with vDep == 0
+        #    vdadd,
+        #    # Sources object
+        #    Sources
+        #) 
+
+        ## run deposition
+        #dep <- deposition(nodep, vDep = 'vDep', vDepSpatial = vDepSpatialList, ncores = 1)
+
+
 #******
 # V. Parallelism
 #******

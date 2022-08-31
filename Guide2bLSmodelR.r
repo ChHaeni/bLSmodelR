@@ -404,6 +404,30 @@ library(bLSmodelR)
         ## run deposition
         #dep <- deposition(nodep, vDep = 'vDep', vDepSpatial = vDepSpatialList, ncores = 1)
 
+        # # 2. vector of columns including NA
+        # xx <- copy(nodep)
+        # # provide character vector with column names
+        # # vdadd <- setNames(paste0('test_', snames), snames)
+        # vdadd <- snames
+        # # add columns in Run
+        # # xx[, paste0('test_', snames) := lapply(snames, function(x) {
+        # xx[, (snames) := lapply(snames, function(x) {
+        #     out <- rep(NA_real_, .N)
+        #     out[which(vdn_key[Source] == x)] <- 0.0
+        #     out
+        #         })]
+
+        # # define vDep via columns & set vDep to either vDep or 0
+        # vDepSpatialList <- list(
+        #     # list with vDep == 0
+        #     vdadd,
+        #     # Sources object
+        #     Sources
+        # ) 
+
+        # # run deposition
+        # dep <- deposition(xx, vDep = 'vDep', vDepSpatial = vDepSpatialList, ncores = 1)
+
 
 #******
 # V. Parallelism

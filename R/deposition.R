@@ -273,12 +273,16 @@ deposition <- function(x,vDep,rn=NULL,Sensor=NULL,Source=NULL,vDepSpatial=NULL,n
 	Out <- merge(Run, Out, by.x = "vd_index", by.y = "vd_index_Dep")
 	Out[, vd_index := NULL]
 
+    # pass old attributes
+    # TODO: add function bls_attributes -> CalcSteps, CatPath, Catalogs,
+    #           ModelInput, Version, ModelRunTime, vDep
+    for (att in c('CalcSteps', 'CatPath', 'Catalogs', 'ModelInput', 'Version', 'ModelRunTime')) {
+        setattr(Out, att, attr(Run, att))
+    }
+
+    # add new attributes
 	setattr(Out,"vDep",list(vDep=vDep,vDepSpatial=vDepSpatial))
 	setattr(Out,"class",c("deposition",class(Out)))
-	# rm(Run,ModelInput,Catalogs,pSens)
-	# {xalt <- matrix(0,2,3)
-	# xneu <- gc()
-	# while(abs(xalt[2,3]-xneu[2,3])>0){xalt<-xneu;xneu <- gc()}
-	# }
+
 	return(Out)
 }

@@ -92,7 +92,7 @@ combineSources <- function(res, comb_list = NULL, weight_units = c("m/A/t", "m/t
           fct = if(fct_exists) sum(fct) else NULL
           )
         # depositon:
-        if (inherits(result, 'deposition')) {
+        if (inherits(res, 'deposition')) {
             out[, ':='(
                   # CE_Dep
                   CE_Dep = avgCE_sources(CE_Dep, CE_wts),
@@ -111,7 +111,7 @@ combineSources <- function(res, comb_list = NULL, weight_units = c("m/A/t", "m/t
                   # wCE_se_Dep
                   wCE_se_Dep = avgCE_sources_se(wCE_se_Dep, CE_wts),
                   # UCE_Dep
-                  UCE_Dep = avgCE_sources(UCE_Dep, CE_wts),
+                  UCE_Dep = avgCE_sources(UCE_Dep, CE_wts)
                 )]
         }
         # all lo und hi nachrechnen...

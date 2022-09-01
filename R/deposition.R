@@ -275,6 +275,7 @@ deposition <- function(x,vDep,rn=NULL,Sensor=NULL,Source=NULL,vDepSpatial=NULL,n
 
 	setattr(Out,"vDep",list(vDep=vDep,vDepSpatial=vDepSpatial))
 	setattr(Out,"class",c("deposition",class(Out)))
+    setattr(Out, 'Version', '4.2+')
 	# rm(Run,ModelInput,Catalogs,pSens)
 	# {xalt <- matrix(0,2,3)
 	# xneu <- gc()

@@ -171,7 +171,7 @@ deposition <- function(x,vDep,rn=NULL,Sensor=NULL,Source=NULL,vDepSpatial=NULL,n
                 }
             }
             # attach to Run -> cbind
-            Run <- cbind(Run, list2DF(vds1))
+            Run <- cbind(Run, vds1)
             # replace vDepSpatial[[1]]
             vDepSpatial[[1]] <- setNames(nms, nms)
         } else {

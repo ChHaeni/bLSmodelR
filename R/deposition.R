@@ -155,6 +155,9 @@ deposition <- function(x,vDep,rn=NULL,Sensor=NULL,Source=NULL,vDepSpatial=NULL,n
         } else if (is.list(vds1)) {
             # old option
             # check names:
+            if (is.null(nms)) {
+                stop("First list element of argument 'vDepSpatial' must be named")
+            }
             if(!all(nms %in% unique(vDepSpatial[[2]][,1]))){
                 stop(paste(nms[!(nms %in% unique(vDepSpatial[[2]][,1]))],collapse=", "),": area not defined!")
             }

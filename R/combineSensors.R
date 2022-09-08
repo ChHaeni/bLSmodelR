@@ -1,6 +1,7 @@
 combineSensors <- function(result, comb_list = NULL, conc_column = NULL, add = FALSE){
 
     # convert old versions 
+    has_dep <- inherits(result, 'deposition')
     res <- copy(result)
     setDT(res)
     if(is.null(attr(res, "Version"))){
@@ -114,7 +115,7 @@ combineSensors <- function(result, comb_list = NULL, conc_column = NULL, add = F
                     UCE = sum(UCE * wts)
                 )
                 # depositon:
-                if (inherits(result, 'deposition')) {
+                if (has_dep) {
                     out[, ':='(
                         # CE_Dep
                         CE_Dep = sum(CE_Dep * wts),

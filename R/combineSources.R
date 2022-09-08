@@ -2,13 +2,13 @@ combineSources <- function(res, comb_list = NULL, weight_units = c("m/A/t", "m/t
 
   # convert old versions 
   sres <- as.character(substitute(res))
+  has_dep <- inherits(res, 'deposition')
   res <- copy(res)
   setDT(res)
   if(is.null(attr(res, "Version"))){
     warning(paste0("Object '", sres[min(length(sres), 2)], "' has not yet been converted to version 4.2+"))
     convert(res)
   }
-
 
   if(is.null(comb_list)){
     uSources <- res[, unique(Source)]
@@ -92,7 +92,7 @@ combineSources <- function(res, comb_list = NULL, weight_units = c("m/A/t", "m/t
           fct = if(fct_exists) sum(fct) else NULL
           )
         # depositon:
-        if (inherits(res, 'deposition')) {
+        if (has_dep) {
             out[, ':='(
                   # CE_Dep
                   CE_Dep = avgCE_sources(CE_Dep, CE_wts),

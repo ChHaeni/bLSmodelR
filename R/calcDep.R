@@ -49,12 +49,12 @@
             # get vDepSpatial column names
             nms_Spatial <- names(vdSpatial[[1]])
             # get corresponding vDep and Sources obj.
-            vd_Spatial <- Row[, I(mget(vdSpatial[[1]]))]
+            vd_Spatial <- Run[, I(mget(vdSpatial[[1]]))]
         } else {
             # get vDepSpatial column names
             nms_Spatial <- unlist(strsplit(Row[, get(vdSpatial[[1]])], split = ','))
             # get corresponding vDep and Sources obj.
-            vd_Spatial <- Row[, I(mget(nms_Spatial))]
+            vd_Spatial <- Run[, I(mget(nms_Spatial))]
         }
         # get corresponding Sources
 		Src_Spatial <- lapply(nms_Spatial,function(x,y)y[y[,1] %in% x,],y=vdSpatial[[2]])

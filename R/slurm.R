@@ -502,21 +502,40 @@ find_partition <- function(memory, ...) {
     part <- get_sopt(dts, 'p', 'partition', alternative = NULL)
     # check for number of nodes in partition
     Nodes <- get_sopt(dts, 'N', 'nodes', alternative = NULL)
+    # check if numeric
+    if (!is.null(Nodes)) {
+        suppressWarnings(Nodes <- as.integer(Nodes))
+        if (is.na(Nodes)) {
+            stop('slurm option -n/--nodes must be an integer')
+        }
+    }
     # read partition table
     ni <- data.table::fread(cmd = ni_call)
-    # check memory
-    ni_mem <- ni[!(State %in% 'alloc') & (MFree * 1e3) >= memory]
-    if (nrow(ni_mem) == 0) {
-        stop({find_partition(); paste0('No partition with enough memory available.')})
-    }
     # any partitions to exclude?
     exclude_partitions <- getOption('bls.slurm.exclude.partition', '')
     # check if it is a vector
     if (!is.character(exclude_partitions) || length(exclude_partitions) == 0) {
         stop('option "bls.slurm.exclude.partition" should be a character vector!')
     }
+    ni <- ni[!(Part %in% exclude_partitions)]
+    # subset part if not null
+    if (!is.null(part)) {
+        ni <- ni[Part %in% part]
+        if (nrow(ni) == 0) {
+            stop({find_partition(); paste0('partition ', part, ' is not available')})
+        }
+    }
+    # check memory
+    ni_mem <- ni[(State %in% c('idle', 'mix')) & (MFree * 1e3) >= memory]
+    if (nrow(ni_mem) == 0) {
+        if (is.null(part)) {
+            stop({find_partition(); paste0('No partition with enough memory available.')})
+        } else {
+            stop({find_partition(); paste0('Partition ', part, ' doesn\'t have nodes with enough memory available.')})
+        }
+    }
     # summarize
-    ni_sum <- ni_mem[!(Part %in% exclude_partitions), {
+    ni_sum <- ni_mem[, {
         Cav <- unique(CIdle)
         rbindlist(lapply(Cav, function(cav) {
             # print node names if colored below
@@ -546,12 +565,14 @@ find_partition <- function(memory, ...) {
             out <- out[1, ]
         } else {
             # check if nodes number is equal
-            if (out[, any(ind <- nodes == Nodes)]) {
-                out <- out[ind][which.max(cpus_per_task),]
-            } else {
-                # else error
-                stop({find_partition(part); paste0('Specified partition "', part, '" has not specified number of nodes available.')})
-            }
+            out <- out[, {
+                if (any(ind <- nodes == Nodes)) {
+                    .SD[ind][which.max(cpus_per_task),]
+                } else {
+                    # else error
+                    stop({find_partition(part); paste0('Specified partition "', part, '" has not specified number of nodes available.')})
+                }
+            }]
         }
     }
     # print system call with selected nodes highlighted

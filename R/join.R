@@ -42,7 +42,7 @@ join.Sources <- function(...){
         )
     return(Out)
 }
-join.bLSresult <- function(...,asDT=TRUE){
+join.bLSresult <- function(..., asDT = TRUE, keep.rn = FALSE){
     allargs <- list(...)
     allargs <- allargs[sapply(allargs,inherits,what="bLSresult")]
     checkDF <- !sapply(allargs,is.data.table)
@@ -55,10 +55,12 @@ join.bLSresult <- function(...,asDT=TRUE){
     }
     # change rn and convert to 4.2+
     for(i in seq_along(allargs)){
-        allargs[[i]][, rn := paste0(i, "_", rn)]
-        attr(allargs[[i]], "Catalogs")[, rn := paste0(i, "_", rn)]
-        attr(allargs[[i]], "CalcSteps")[, rn := paste0(i, "_", rn)]
-        row.names(attr(allargs[[i]], "ModelInput")$"Interval") <- paste0(i, "_", row.names(attr(allargs[[i]], "ModelInput")$"Interval"))
+        if (!keep.rn) {
+            allargs[[i]][, rn := paste0(i, "_", rn)]
+            attr(allargs[[i]], "Catalogs")[, rn := paste0(i, "_", rn)]
+            attr(allargs[[i]], "CalcSteps")[, rn := paste0(i, "_", rn)]
+            row.names(attr(allargs[[i]], "ModelInput")$"Interval") <- paste0(i, "_", row.names(attr(allargs[[i]], "ModelInput")$"Interval"))
+        }
         allargs[[i]] <- convert(allargs[[i]])
     }
     out <- rbindlist(allargs,fill = TRUE)

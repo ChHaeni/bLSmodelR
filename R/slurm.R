@@ -562,7 +562,7 @@ find_partition <- function(memory, ...) {
         }
         # nodes specified or not?
         if (is.null(Nodes)) {
-            out <- out[1, ]
+            out <- out[which.max(cpus), ]
         } else {
             # check if nodes number is equal
             out <- out[, {

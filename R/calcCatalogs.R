@@ -3,9 +3,6 @@
 	
 	cindex <- SncRun[,which(Cat.calc)]
 
-	### precalculations
-	SncRun[ ,rebuild := Cat.calc&Cat.exists]
-
 	if(!length(cindex)&InputList[["Model"]][["TDonly"]]){
 		cat("All TD catalogs existing...\n")
 	}
@@ -120,11 +117,6 @@
 			SncRun[i,Cat.exists:=TRUE]
 		}
 	}
-
-	if(InputList[["Model"]][["overwriteTD"]]){
-		rebuildCatListFile(C.Path,SncRun[(rebuild),Cat.Name])
-	}
-	SncRun[,rebuild:=NULL]
 
 	return(invisible(SncRun))	
 }

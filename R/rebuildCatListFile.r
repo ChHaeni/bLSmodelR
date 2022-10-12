@@ -1,97 +1,99 @@
-rebuildCatListFile <- function(C.Path,File=character(0),fromScratch=FALSE){
-	
+rebuildCatListFile <- function(C.Path, fromScratch = FALSE) {
     # check if cats exist & list them
-	Existing <- dir(C.Path,pattern="Cat_Zm.*_[0-9]{14}$")
-	ExistingFull <- paste(C.Path,Existing,sep="/")
-    # define path to CatListqs file
-	CatfileOrig <- paste0(C.Path,"/.CatListqs")
-    # define path to temporary CatListqs file
-	Catfile <- tempfile(paste0('CatListqs', sample(1e5, 1)), tmpdir = getwd())
-    # check if file exists
-	if(fromScratch || !file.exists(CatfileOrig)){
-		if (file.exists(Catfile)) file.remove(Catfile)
-        # remove old CatList file
-        if (file.exists(previousCatList <- file.path(C.Path, '.CatList'))) file.remove(previousCatList)
-	} else {
-        file.copy(CatfileOrig, Catfile, overwrite = TRUE)
-    }
-
-	if(length(Existing) > 0){
-		if(file.exists(Catfile)){
+	Existing <- dir(C.Path, pattern = "Cat_Zm.*_[0-9]{14}$")
+    # define path to CatList file
+	Catfile <- paste0(C.Path, "/.cats")
+    # check length of Existing
+	if (length(Existing) > 0) {
+        # full path names
+        ExistingFull <- paste(C.Path, Existing, sep = "/")
+        # get CatList (read file)
+		if (file.exists(Catfile)) {
             # try to read file
-			CatList <- try(read.table(Catfile,header=TRUE,as.is=TRUE,colClasses=c("character",rep("numeric",13))))
+            CatList <- try(qread(Catfile, strict = TRUE), silent = TRUE)
             # if fails (issues on prime), try again
             if (inherits(CatList, 'try-error')) {
                 # try again
-                cat('Trying to copy file again...\n')
-                file.copy(CatfileOrig, Catfile, overwrite = TRUE)
-                CatList <- try(read.table(Catfile,header=TRUE,as.is=TRUE,colClasses=c("character",rep("numeric",13))))
+                cat('Trying to read file again...\n')
+                CatList <- try(qread(Catfile, strict = TRUE), silent = TRUE)
                 # improved error message upon failure
                 if (inherits(CatList, 'try-error')) {
-                    stop('rebuildCatListFile: reading temporary CatList file ', Catfile, ' fails!')
+                    stop('rebuildCatListFile: reading file ', Catfile, ' fails!')
                 }
             }
 			# check erroneous
-			CatList <- CatList[grepl("Cat_Zm.*_[0-9]{14}$",CatList[,1]),]
+			CatList <- CatList[grepl("Cat_Zm.*_[0-9]{14}$", Name)]
 			# remove duplicates
-			CatList <- CatList[!(CatList[,1] %in% unique(CatList[duplicated(CatList[,1]),1])),]
+			CatList <- unique(CatList, by = 'Name')
 		} else {
-			CatList <- as.data.frame(c(list(a=character(0)),rep(list(a=numeric(0)),13)),stringsAsFactors=FALSE)
-			colnames(CatList) <- c("Name","N0","ZSens","Ustar","L","Zo","Su_Ustar","Sv_Ustar","bw","C0","kv","A","alpha","MaxFetch")
+			CatList <- as.data.table(c(list(a = character(0), b = as.POSIXct(character(0), tz = 'GMT')), rep(list(a = numeric(0)), 13)), stringsAsFactors = FALSE)
+			setnames(CatList, c("Name", "mtime", "N0", "ZSens", "Ustar", "L", "Zo", "Su_Ustar", "Sv_Ustar", "bw", "C0", "kv", "A", "alpha", "MaxFetch"))
         }
-		CatNames <- CatList[,1] %w/o% File
-		if(!all(CatNames%in%Existing)){
-			CatList <- CatList[CatNames%in%Existing,]
-			write.table(CatList,file=Catfile,row.names=FALSE,col.names=TRUE)
-		}
-		if(!all(exCat <- Existing%in%CatNames)){
-			CatAdd <- data.frame(matrix(NA,nrow=sum(!exCat),ncol=ncol(CatList)),stringsAsFactors=FALSE)
-			colnames(CatAdd) <- colnames(CatList)
-			for(i in seq_along(ExCat <- ExistingFull[!exCat])){
-				Cat <- try(qs::qread(ExCat[i], strict = TRUE), silent = TRUE)
+        # exclude any non-existing
+        CatList <- CatList[Name %chin% Existing]
+        # set Name as key
+        setkey(CatList, Name)
+        # exclude modified
+        CatList <- CatList[mtime == file.mtime(file.path(C.Path, Name))]
+        # check catalogs not in CatList
+		if (any(checkCat <- CatList[, !(Existing %chin% Name)])){
+            # create CatAdd to append at bottom
+            nr <- sum(checkCat)
+			CatAdd <- setNames(
+                as.data.frame(c(list(a = character(nr), b = as.POSIXct(rep(Sys.time(), nr), tz = 'GMT')), rep(list(a = numeric(nr)), 13)), stringsAsFactors = FALSE),
+			    c("Name", "mtime", "N0", "ZSens", "Ustar", "L", "Zo", "Su_Ustar", "Sv_Ustar", "bw", "C0", "kv", "A", "alpha", "MaxFetch"))
+            # get check index
+            check_index <- which(checkCat)
+			for(j in seq_along(check_index)){
+                # get i
+                i <- check_index[j]
+                # read catalog
+				Cat <- try(qs::qread(ExistingFull[i], strict = TRUE), silent = TRUE)
                 # convert from old serialization?
                 if (inherits(Cat, 'try-error')) {
-                    Cat <- try(readRDS(ExCat[i]))
+                    Cat <- try(readRDS(ExistingFull[i]))
                     if (inherits(Cat, 'try-error')) {
                         # file corrupt
-                        file.remove(ExCat[i])
+                        file.remove(ExistingFull[i])
                     } else {
-                        Head <- unlist(strsplit(attr(Cat,"header"),"\n"))[-1]
-                        Whead <- matrix(as.numeric(gsub(".*[=] ","",Head)),nrow=1)
-                        CatAdd[i,-1] <- Whead
-                        CatAdd[i,1] <- basename(ExCat[i])
-                        qs::qsave(Cat, ExCat[i], 'balanced')
+                        # save with new qs format
+                        qs::qsave(Cat, ExistingFull[i], 'balanced')
                     }
-                } else {
-                    Head <- unlist(strsplit(attr(Cat,"header"),"\n"))[-1]
-                    Whead <- matrix(as.numeric(gsub(".*[=] ","",Head)),nrow=1)
-                    CatAdd[i,-1] <- Whead
-                    CatAdd[i,1] <- basename(ExCat[i])
                 }
+                Head <- unlist(strsplit(attr(Cat, "header"), "\n"))[-1]
+                Whead <- matrix(as.numeric(gsub(".*[=] ", "", Head)), nrow=1)
+                CatAdd[j, -(1:2)] <- Whead
+                # get file modified
+                CatAdd[j, 2] <- file.mtime(ExistingFull[i])
+                # get file name
+                CatAdd[j, 1] <- Existing[i]
 			}
-			CatList <- na.omit(rbind(CatList,CatAdd))
-			write.table(CatList,file=Catfile,row.names=FALSE,col.names=TRUE)
+            # bind together
+			CatList <- na.omit(rbind(CatList, CatAdd))
 		}
-        # copy first and then rename
-        Catfile_tmp <- paste0(CatfileOrig, '_tmp')
-        # check if first copy exists, wait until copy has been removed (or max 20 secs)
+        # try to write - if error retry for 20 seconds
+        try_write <- qsave(CatList, Catfile, preset = 'uncompressed')
+        # loop on error
         time_now <- Sys.time()
-        while (file.exists(Catfile_tmp) && as.numeric(Sys.time() - time_now, units = 'secs') < 60) {
+        while(inherits(try_write, 'try-error')) {
+            # check 20 secs
+            if (as.numeric(Sys.time() - time_now, units = 'secs') >= 20) {
+                stop("rebuildCatListFile: can't write file ", Catfile,
+                    "\nerror message: ", conditionMessage(attr(try_write, 'condition')))
+            }
             # wait to continue...
             Sys.sleep(1)
+            # try again
+            try_write <- qsave(CatList, Catfile, preset = 'uncompressed')
         }
-        # copy file
-        file.copy(Catfile, Catfile_tmp, overwrite = TRUE)
-        # remove original
-        if (file.exists(CatfileOrig)) file.remove(CatfileOrig)
-        # rename to original
-        file.rename(Catfile_tmp, CatfileOrig)
 	} else {
-		CatList <- as.data.frame(c(list(a=character(0)),rep(list(a=numeric(0)),13)),stringsAsFactors=FALSE)
-		colnames(CatList) <- c("Name","N0","ZSens","Ustar","L","Zo","Su_Ustar","Sv_Ustar","bw","C0","kv","A","alpha","MaxFetch")
+        ## no catalogs exist
+		CatList <- as.data.frame(c(list(a=character(0)), rep(list(a=numeric(0)), 13)), stringsAsFactors=FALSE)
+		colnames(CatList) <- c("Name", "N0", "ZSens", "Ustar", "L", "Zo", "Su_Ustar", "Sv_Ustar", "bw", "C0", "kv", "A", "alpha", "MaxFetch")
+        # remove file if it exists
+		if (file.exists(Catfile)) file.remove(Catfile)
 	}
-    # remove temporary file
-    if (file.exists(Catfile)) file.remove(Catfile)
+    # return invisible
 	invisible(CatList)
 }
 

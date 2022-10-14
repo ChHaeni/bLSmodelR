@@ -129,17 +129,7 @@ runbLS <- function(ModelInput,Cat.Path=NULL,TDonly=NULL,ncores=NULL,writeCsv=FAL
 
 	ModelInput[["Model"]] <- Model
 
-	Intervals <- prepareIntervals(ModelInput,Cat.Path,TRUE)
-	
-	# Probleme auf NC mit untenstehender paralellisierung!
-	# if(parl && Intervals[, floor(sum(Cat.calc) / ncores) > 2]){
-	# 	# calculate TDs:
-	# 	cat("\nCalculating TD Catalogs...\n")
-	# 	lbList <- clusterApplyLB(cl, lapply(Intervals[,which(Cat.calc)], function(i) Intervals[i, ]), .calcCatalogs, InputList = ModelInput, C.Path = Cat.Path, parl = FALSE)
-	# 	Intervals[(Cat.calc), names(Intervals) := rbindlist(lbList)]
-	# } else {
-	# 	.calcCatalogs(Intervals,ModelInput,Cat.Path,parl)
-	# }
+	Intervals <- prepareIntervals(ModelInput, Cat.Path, TRUE, ncores = cl)
 	
 	.calcCatalogs(Intervals,ModelInput,Cat.Path,parl)
 

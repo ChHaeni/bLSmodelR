@@ -94,52 +94,40 @@ runbLS <- function(ModelInput,Cat.Path=NULL,TDonly=NULL,ncores=NULL,writeCsv=FAL
 
 	ncores <- Model[["ncores"]]
 	
-	if(sfIsRunning()){
-		parl <- TRUE
-		cl <- sfGetCluster()
-		sfClusterSetupRNG(seed=sample.int(1E9,6,TRUE))
-		hosts <- sapply(cl,"[","host")
-		if(length(unique(hosts))==1&length(C.Path)==1){
-			C.Path <- rep(list(C.Path),length(hosts))
-			names(C.Path) <- hosts
-		}
-		for(i in 1:length(hosts)){
-			eval(parse(text=paste0("clusterEvalQ(cl[i],C.Path <- \"",C.Path[[hosts[[i]]]],"\")")))
-		}
-		### check access:
-		write.table("",file=paste0(Cat.Path,"/testNodes"))
-		readTest <- try(sfClusterEval(read.table(paste0(C.Path,"/testNodes"))))
-		file.remove(paste0(Cat.Path,"/testNodes"))
-		if(inherits(readTest,"try-error")){
-			stop("\n\tCat.Path must be accessible to all nodes!\n\tIn case you did not choose to save your Catalog Files,\n\tsupply a shared Catalog folder anyway.\n\tTemporary catalogs need to be saved there...\n")
-		}
+	if (parl <- inherits(ncores, 'cluster')) {
+        # get clusters
+		cl <- ncores
+        # get number of cores, but set ncores to 1 to keep running at end
+        Model[['ncores']] <- length(cl)
 		ncores <- 1
-	}
-	if(ncores > 1){
+	} else if (parl <- ncores > 1) {
 		on.exit(
 			{
-			sfStop()
-			},add=TRUE
+		    parallel::stopCluster(cl)
+			}, add = TRUE
 		)
-		sfInit(parallel=TRUE,cpus=ncores,type="SOCK")
-		sfClusterSetupRNG(seed=sample.int(1E9,6,TRUE))
-		gwd <- getwd()
-		sfExport("gwd","C.Path")
-		invisible(sfClusterCall(setwd,gwd))
-		invisible(sfClusterEval(data.table::setDTthreads(1)))
-		parl <- TRUE
-		cl <- sfGetCluster()
-	} else if(ncores != 1) {
+        # set up PSOCK clusters
+        cl <- parallel::makePSOCKcluster(ncores)
+        # set data.table threads to ncores on master
+        data.table::setDTthreads(ncores)
+	} else if (ncores != 1) {
 		stop("Number of cores must be bigger or equal to 1!")
 	} else {
 		parl <- FALSE
 	}
-	
-	data.table::setDTthreads(ncores)
+
+    if (parl) {
+        # setup RNG stream
+        parallel::clusterSetRNGStream(cl, sample.int(1e9, 6, TRUE))
+        # set wd
+		gwd <- getwd()
+        parallel::clusterExport(cl, c('gwd', 'C.Path'))
+        parallel::clusterCall(cl, setwd, gwd)
+        # set data.table threads to 1 on slaves
+        parallel::clusterEval(data.table::setDTthreads(1L))
+    }
 
 	ModelInput[["Model"]] <- Model
-
-
 
 	Intervals <- prepareIntervals(ModelInput,Cat.Path,TRUE)
 	
@@ -294,7 +282,7 @@ runbLS <- function(ModelInput,Cat.Path=NULL,TDonly=NULL,ncores=NULL,writeCsv=FAL
 
 	on.exit({
 		RNGkind(kind=RNG[1])
-		if(!is.na(ncores) && ncores>1)sfStop()
+		if(!is.na(ncores) && ncores>1) parallel::stopCluster(cl)
 		if(tempCats){
 			new_dir <- dir(Cat.Path,pattern="Cat|Header",full.names=TRUE)
 			remove.me <- new_dir %w/o% dir_CatPath

@@ -233,10 +233,10 @@ deposition <- function(x,vDep,rn=NULL,Sensor=NULL,Source=NULL,vDepSpatial=NULL,n
             # run parallel
             cat("Parallel computing deposition corrected C/E...\nThis will take a moment...\n")
             if(vdSpat){
-                OutList <- snow::clusterApply(cl,RunList,.calcDep_Wrapper,Catalogs,
+                OutList <- parallel::clusterApply(cl,RunList,.calcDep_Wrapper,Catalogs,
                     Cat.Path,ModelInput[["Sources"]],pSens$"Calc.Sensors",vDep,vDepSpatial, "spatial")
             } else {
-                OutList <- snow::clusterApply(cl,RunList,.calcDep_Wrapper,Catalogs,
+                OutList <- parallel::clusterApply(cl,RunList,.calcDep_Wrapper,Catalogs,
                     Cat.Path,ModelInput[["Sources"]],pSens$"Calc.Sensors",vDep,vDepSpatial)
             }
 

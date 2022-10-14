@@ -4,7 +4,6 @@
         e = parent.env(environment()),
         f = function(env){
             eval(env, {
-                snowfall::sfStop()
                 bLSmodelR::cleanTemporary()
             })
         },

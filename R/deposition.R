@@ -202,20 +202,20 @@ deposition <- function(x,vDep,rn=NULL,Sensor=NULL,Source=NULL,vDepSpatial=NULL,n
 	# vDepList <- as.data.frame(vDepList)
 
 	setkey(Run,rn,Sensor)
-	if(sfIsRunning()){ncores <- length(sfGetCluster())}
 
-	if(parl <- (ncores!=1 & N>1)){
+	if (parl <- (inherits(ncores, 'cluster') || (ncores != 1 && N > 1))) {
 
 
-		if(!sfIsRunning()){
-			on.exit(sfStop())
-			if(ncores<1)ncores <- parallel::detectCores(TRUE,FALSE)
-			sfInit(TRUE,ncores)
-			invisible(sfClusterEval(data.table::setDTthreads(1)))
-			setDTthreads(ncores)
+        if (inherits(ncores, 'cluster')) {
+            cl <- ncores
+            ncores <- length(cl)
+        } else {
+			on.exit(parallel::stopCluster(cl))
+			if (ncores < 1) ncores <- parallel::detectCores(TRUE, FALSE)
+            cl <- parallel::makePSOCKcluster(ncores)
+			data.table::setDTthreads(ncores)
 		}
-
-		cl <- sfGetCluster()
+        parallel::clusterEvalQ(cl, data.table::setDTthreads(1L))
 
         # get N_TD > 0
         ntd_g0 <- Run[, which(N_TD > 0)]

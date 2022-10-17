@@ -70,14 +70,13 @@ export(depoSlurm)
 
 importFrom(Rcpp, evalCpp)
 importFrom(tcltk,tclvalue,tkgetSaveFile,tk_choose.files,tk_choose.dir)
-importFrom(parallel,detectCores)
 
 importFrom(sp,Polygon,Polygons,SpatialPolygons)
 importFrom(rgeos,gIntersection)
 importFrom(utils,head,tail)
 importFrom(RgoogleMaps,XY2LatLon,LatLon2XY.centered)
 importFrom(geosphere,distGeo)
-import(snow,snowfall,rlecuyer,data.table,maptools)
+import(parallel,rlecuyer,data.table,maptools)
 
 importFrom("grDevices", "x11")
 importFrom("graphics", "plot")                                       

@@ -135,7 +135,7 @@ runbLS <- function(ModelInput,Cat.Path=NULL,TDonly=NULL,ncores=NULL,writeCsv=FAL
 
 	if(!ModelInput[["Model"]][["TDonly"]]){
 		
-		Out <- .calcOutput(Intervals,ModelInput,Cat.Path)
+		Out <- .calcOutput(Intervals, ModelInput, Cat.Path, cl)
 		Intervals <- attr(Out,"CalcSteps")
 		Out[,":="(
 			Cat.Name = NULL,

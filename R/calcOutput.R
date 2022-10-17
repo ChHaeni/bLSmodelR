@@ -1,10 +1,4 @@
-.calcOutput <- function(SncRun,InputList,C.Path){
-
-	if(parl <- sfIsRunning()){
-		cl <- sfGetCluster()
-	} else {
-		cl <- NULL
-	}
+.calcOutput <- function(SncRun, InputList, C.Path, cl = NULL) {
 
 	### procSensors:
 	InputList$Sensors <- procSensors(InputList[["Sensors"]])
@@ -43,7 +37,7 @@
 
 	SncRun[, seed := sample.int(1E9, .N)]
 		
-	if(parl&(nk>1)){
+	if (!is.null(cl) & (nk > 1)) {
 
 		# sort by LineSensor/PointSensor:
 		sort_nindex <- character(nk)

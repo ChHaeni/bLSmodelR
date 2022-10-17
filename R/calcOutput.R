@@ -60,7 +60,6 @@
 		ilist <- lapply(strsplit(Key[,V1],",",fixed=TRUE),as.numeric)
 		SncList <- lapply(ilist,function(x,y)y[x,], as.data.frame(SncRun))
 
-		# sfExport("InputList","Srcs","C.Path",local=TRUE)
 		cat("\n***********\n")
 		cat("Parallel computing CE ratios.\n")
 		cat("\n\t-> This might take some time depending on the calculation load!!! <-\n\n")

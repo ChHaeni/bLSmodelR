@@ -97,11 +97,8 @@ calc_fct <- function(res, ncores = NULL, SourceSplit = NULL,
     # call parallel
     InList <- lapply(seq_len(nrow(Calc)), function(x, y) y[x, ], y = as.data.frame(Calc))
     parallel::clusterExport(cl, c("SourceSplit", "SourcesList", "C_sens"), envir = environment())
-    fct <- unlist(parallel::clusterApplyLB(cl, InList, .fct, 
+    fct <- unlist(.clusterApplyLB(cl, InList, .fct, 
       C_Path = Cat_Path, parallel = TRUE))
-    # fct <- unlist(parallel::clusterApplyLB(cl, InList, .fct, 
-    #   SouSp = SourceSplit, SouLi = SourcesList, c_sens = C_sens, 
-    #   C_Path = Cat_Path))
     parallel::stopCluster(cl)
     on.exit()
   } else {

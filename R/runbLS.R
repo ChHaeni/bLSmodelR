@@ -121,7 +121,7 @@ runbLS <- function(ModelInput,Cat.Path=NULL,TDonly=NULL,ncores=NULL,writeCsv=FAL
         parallel::clusterSetRNGStream(cl, sample.int(1e9, 6, TRUE))
         # set wd
 		gwd <- getwd()
-        parallel::clusterExport(cl, c('gwd', 'C.Path'))
+        parallel::clusterExport(cl, c('gwd', 'C.Path'), envir = environment())
         parallel::clusterCall(cl, setwd, gwd)
         # set data.table threads to 1 on slaves
         parallel::clusterEval(data.table::setDTthreads(1L))

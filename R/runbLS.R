@@ -94,13 +94,13 @@ runbLS <- function(ModelInput,Cat.Path=NULL,TDonly=NULL,ncores=NULL,writeCsv=FAL
 
 	ncores <- Model[["ncores"]]
 	
-	if (parl <- inherits(ncores, 'cluster')) {
+	if (inherits(ncores, 'cluster')) {
         # get clusters
 		cl <- ncores
         # get number of cores, but set ncores to 1 to keep running at end
         Model[['ncores']] <- length(cl)
 		ncores <- 1
-	} else if (parl <- ncores > 1) {
+	} else if (ncores > 1) {
 		on.exit(
 			{
 		    parallel::stopCluster(cl)
@@ -113,10 +113,10 @@ runbLS <- function(ModelInput,Cat.Path=NULL,TDonly=NULL,ncores=NULL,writeCsv=FAL
 	} else if (ncores != 1) {
 		stop("Number of cores must be bigger or equal to 1!")
 	} else {
-		parl <- FALSE
+        cl <- NULL
 	}
 
-    if (parl) {
+    if (!is.null(cl)) {
         # setup RNG stream
         parallel::clusterSetRNGStream(cl, sample.int(1e9, 6, TRUE))
         # set wd
@@ -131,7 +131,7 @@ runbLS <- function(ModelInput,Cat.Path=NULL,TDonly=NULL,ncores=NULL,writeCsv=FAL
 
 	Intervals <- prepareIntervals(ModelInput, Cat.Path, TRUE, ncores = cl)
 	
-	.calcCatalogs(Intervals,ModelInput,Cat.Path,parl)
+	.calcCatalogs(Intervals, ModelInput, Cat.Path, cl)
 
 	if(!ModelInput[["Model"]][["TDonly"]]){
 		

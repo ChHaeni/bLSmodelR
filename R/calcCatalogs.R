@@ -1,4 +1,4 @@
-.calcCatalogs <- function(SncRun,InputList,C.Path, parl){
+.calcCatalogs <- function(SncRun, InputList, C.Path, cl = NULL) {
 
 	
 	cindex <- SncRun[,which(Cat.calc)]
@@ -13,8 +13,6 @@
 		Calc.names <- grep("^Calc.",names(SncRun),value=TRUE)
 		names(Orig.names) <- Orig.names <- gsub("^Calc.","",Calc.names)
 		Orig.names[c("ZSens","Su_Ustar","Sv_Ustar")] <- c("SensorHeight","sUu","sVu")
-
-		if(parl)cl <- sfGetCluster()
 
 		for(i in cindex){
 			
@@ -67,11 +65,9 @@
 			cat("~~~~~~~~\n")
 			# calculate TDs:
 			cat("\nCalculating TDs...\n")
-			if(parl){
-
-				# cat("This might take a few minutes...\n")
-				pindex <- sfClusterSplit(uvwind)
-				pList <- clusterApply(cl,pindex,coreModelWrapper,uvw[,"u0"],uvw[,"v0"],uvw[,"w0"],SnRun)
+			if (!is.null(cl)) {
+                pindex <- parallel::clusterSplit(cl, uvwind)
+				pList <- parallel::clusterApply(cl, pindex, coreModelWrapper, uvw[, "u0"], uvw[, "v0"], uvw[, "w0"], SnRun)
 				attCat <- attributes(Catalog)
 				for(p in 1:length(pindex)){
 					Catalog <- rbind(Catalog,list(as.integer(pindex[[p]][pList[[p]]$Traj_IDOut]),pList[[p]]$TimeOut,pList[[p]]$xOut,pList[[p]]$yOut,pList[[p]]$wTDOut))
@@ -90,21 +86,6 @@
 			if(Catalog[wTD<InputList[["Model"]][["wTDcutoff"]],.N])Catalog[wTD<InputList[["Model"]][["wTDcutoff"]],wTD:=InputList[["Model"]][["wTDcutoff"]]]
 			
 			cat("\ndone\n")
-
-			# rm("uvw")
-			# if(parl){
-			# 	dummy <- sfClusterCall(fun=function()
-			# 	{xalt <- matrix(0,2,3)
-			# 	xneu <- gc()
-			# 	while(abs(xalt[2,3]-xneu[2,3])>0){xalt<-xneu;xneu <- gc()}
-			# 	}
-			# 	)
-			# } else {
-			# 	{xalt <- matrix(0,2,3)
-			# 	xneu <- gc()
-			# 	while(abs(xalt[2,3]-xneu[2,3])>0){xalt<-xneu;xneu <- gc()}
-			# 	}
-			# }
 
 			# write catalog:
 			if(InputList[["Model"]][["overwriteTD"]]&&SnRun[,Cat.exists]){

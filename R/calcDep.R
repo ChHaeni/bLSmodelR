@@ -1,17 +1,33 @@
-.calcDep_Wrapper <- function(RunList,Catalogs,C.Path,Sources,CSnsrs,vd,vdSpatial,type = ""){
-	setDT(RunList)
-	setkey(RunList, rn, Sensor)
-	out <- vector("list", RunList[,.N])
-	if(type == "spatial"){
-		for(rl in seq_along(out)){
-			out[[rl]] <- .calcDep_Spatial(RunList[rl, ],Catalogs,C.Path,Sources,CSnsrs,vd,vdSpatial)
+.calcDep_Wrapper <- function(input_file, spatial = FALSE) {
+    # TODO: wrap try around?
+    input_list <- qs::qread(input_file, strict = TRUE)
+    # TODO: wrap try around?
+    file.remove(input_file)
+	setDT(input_list[['RunList']])
+	setkey(input_list[['RunList']], rn, Sensor)
+	out <- vector("list", input_list[['RunList']][,.N])
+	if (spatial) {
+		for (rl in seq_along(out)) {
+			out[[rl]] <- .calcDep_Spatial(
+                input_list[['RunList']][rl, ], input_list[['Catalogs']], input_list[['Cat.Path']], 
+                input_list[['Sources']], input_list[['Sensors']], input_list[['vDep']], 
+                input_list[['vDepSpatial']]
+            )
 		}
 	} else {
-		for(rl in seq_along(out)){
-			out[[rl]] <- .calcDep(RunList[rl, ],Catalogs,C.Path,Sources,CSnsrs,vd,vdSpatial)
+		for (rl in seq_along(out)) {
+			out[[rl]] <- .calcDep(
+                input_list[['RunList']][rl, ], input_list[['Catalogs']], input_list[['Cat.Path']], 
+                input_list[['Sources']], input_list[['Sensors']], input_list[['vDep']], 
+                input_list[['vDepSpatial']]
+            )
 		}
 	}
-	rbindlist(out)[, vd_index := RunList[, vd_index]]
+	out <- data.table::rbindlist(out)[, vd_index := input_list[['RunList']][, vd_index]]
+    # TODO: wrap try around?
+    qs::qsave(out, res_file <- sub('parbls_input_', 'parbls_result_', input_file), preset = 'uncompressed')
+    # return result file path (and try error states?)
+    return(res_file)
 }
 
 .calcDep_Spatial <- function(Run,Catalogs,C.Path,Sources,CSnsrs,vd,vdSpatial){#,fdinside,vdinside){

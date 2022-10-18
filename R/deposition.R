@@ -210,8 +210,8 @@ deposition <- function(x,vDep,rn=NULL,Sensor=NULL,Source=NULL,vDepSpatial=NULL,n
             cl <- ncores
             ncores <- length(cl)
         } else {
-			on.exit(parallel::stopCluster(cl))
 			if (ncores < 1) ncores <- parallel::detectCores(TRUE, FALSE)
+			on.exit(parallel::stopCluster(cl), add = TRUE)
             cl <- parallel::makePSOCKcluster(ncores)
 			data.table::setDTthreads(ncores)
 		}
@@ -225,22 +225,49 @@ deposition <- function(x,vDep,rn=NULL,Sensor=NULL,Source=NULL,vDepSpatial=NULL,n
             # sort by N_TD
             ntd_order <- Run[ntd_g0, order(N_TD)]
 
+            ### try to qsave/qread, instead of direct traffic?
+            # get temporary file name
+            # NOTE: what if tempdir is not accessable (e.g. PRIME?)
+            t_file <- tempfile(pattern = 'parbls_input_')
+
             # distribute to clusters
-            RunList <- lapply(seq_along(cl), function(x, run) {
-                    run[seq.int(from = x, to = nrow(run), by = length(cl)), ]
+            InputFiles <- lapply(seq_along(cl), function(x, run) {
+                    # file name
+                    f_name <- paste0(t_file, '_', x)
+                    # qsave to tempfile
+                    qs::qsave(list(
+                            RunList = run[seq.int(from = x, to = nrow(run), by = length(cl)), ],
+                            Catalogs = Catalogs, 
+                            Cat.Path = Cat.Path, 
+                            Sources = ModelInput[['Sources']], 
+                            Sensors = pSens$'Calc.Sensors', 
+                            vDep = vDep, 
+                            vDepSpatial = vDepSpatial), 
+                        file = f_name,
+                        preset = 'uncompressed'
+                    )
+                    # return file name
+                    f_name
                 }, run = as.data.frame(Run[ntd_g0[ntd_order], ]))
 
             # run parallel
             cat("Parallel computing deposition corrected C/E...\nThis will take a moment...\n")
             if(vdSpat){
-                OutList <- parallel::clusterApply(cl,RunList,.calcDep_Wrapper,Catalogs,
-                    Cat.Path,ModelInput[["Sources"]],pSens$"Calc.Sensors",vDep,vDepSpatial, "spatial")
+                ResFiles <- parallel::clusterApply(cl, InputFiles, .calcDep_Wrapper, spatial = TRUE)
+                # OutList <- parallel::clusterApply(cl,RunList,.calcDep_Wrapper,Catalogs,
+                #     Cat.Path,ModelInput[["Sources"]],pSens$"Calc.Sensors",vDep,vDepSpatial, "spatial")
             } else {
-                OutList <- parallel::clusterApply(cl,RunList,.calcDep_Wrapper,Catalogs,
-                    Cat.Path,ModelInput[["Sources"]],pSens$"Calc.Sensors",vDep,vDepSpatial)
+                ResFiles <- parallel::clusterApply(cl, InputFiles, .calcDep_Wrapper)
+                # OutList <- parallel::clusterApply(cl,RunList,.calcDep_Wrapper,Catalogs,
+                #     Cat.Path,ModelInput[["Sources"]],pSens$"Calc.Sensors",vDep,vDepSpatial)
             }
 
-            # bind together
+            # read files
+            OutList <- lapply(ResFiles, qs::qread)
+            # clean up
+            file.remove(unlist(ResFiles))
+
+            # bind together (we do not need to order because of merge)
             Out <- rbind(
                 # N_TD > 0 from clusters
                 rbindlist(OutList),

@@ -57,7 +57,7 @@ run_sbatch <- function(slurm, rscript, wait) {
         slurm$tmp_dir, 
         rscript,
         'job-name' = slurm$job_name,
-        partition = slurm$part[, Part],
+        partition = slurm$part[, sub('[*]', '', Part)],
         nodes = slurm$part[, nodes],
         'cpus-per-task' = slurm$part[, cpus_per_task],
         dots

@@ -111,7 +111,7 @@ runbLS <- function(ModelInput,Cat.Path=NULL,TDonly=NULL,ncores=NULL,writeCsv=FAL
         # set data.table threads to ncores on master
         data.table::setDTthreads(ncores)
 	} else if (ncores != 1) {
-		stop("Number of cores must be bigger or equal to 1!")
+		stop("Number of cores must be greater or equal to 1!")
 	} else {
         cl <- NULL
 	}

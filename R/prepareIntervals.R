@@ -65,11 +65,16 @@ prepareIntervals <- function(InputList,C.Path=NULL,asDT=TRUE,simpleNames=TRUE,nc
 	setkey(IntExt,Sensor,rn)
 	####
 
-    if (parl <- inherits(ncores, 'cluster')) {
+    cl <- NULL
+    if (is.null(ncores)) {
+        ncores <- 1
+    } else if (inherits(ncores, 'cluster')) {
         cl <- ncores
-    } else if (parl <- ncores > 1) {
+    } else if (ncores > 1) {
 		on.exit(parallel::stopCluster(cl))
         cl <- parallel::makePSOCKcluster(ncores)
+    } else if (ncores != 1) {
+		stop("Number of cores must be greater or equal to 1!")
     }
 
 	# optimize MaxFetch
@@ -77,7 +82,7 @@ prepareIntervals <- function(InputList,C.Path=NULL,asDT=TRUE,simpleNames=TRUE,nc
 		cat("* Optimizing 'MaxFetch'...\n")
 		if(is.null(InputList[["Sources"]]))stop("No sources supplied, can not optimize MaxFetch!")
 
-		if(parl & IntExt[,sum(MaxFetch < 0) > ncores]){
+		if(!is.null(cl) && IntExt[,sum(MaxFetch < 0) > ncores]){
             ind <- parallel::clusterSplit(cl, IntExt[, which(MaxFetch < 0)])
 			mf <- rbindlist(parallel::clusterApply(cl, lapply(ind, function(x, y)y[x, ], y = IntExt), 
                     .MaxFetchWrapper, p_Sens = pSens, Input_List = InputList))[, MaxFetch]
@@ -158,7 +163,7 @@ prepareIntervals <- function(InputList,C.Path=NULL,asDT=TRUE,simpleNames=TRUE,nc
 			# create Cat_Sensor_Swustar
 			CList[,Cat_Sensor_Swustar := round(calcsigmaW(1,Cat_ZSens/Cat_L,Cat_bw),3)]
 
-			if(parl && nrow(IntExt) >= length(cl)){
+			if(!is.null(cl) && nrow(IntExt) >= length(cl)){
 				# t1p <- Sys.time()
 				# split index
                 ind <- parallel::clusterSplit(cl, seq.int(nrow(IntExt)))
@@ -297,7 +302,7 @@ prepareIntervals <- function(InputList,C.Path=NULL,asDT=TRUE,simpleNames=TRUE,nc
 			CatList[,Zeile := seq.int(.N)]
 			setkey(CatList,Name)
 
-			if(parl && IntExt[,sum(!Cat.exists)] >= length(cl)){
+			if(!is.null(cl) && IntExt[,sum(!Cat.exists)] >= length(cl)){
 				# t1p <- Sys.time()
 				# split index
                 ind <- parallel::clusterSplit(cl, seq.int(IntExt[,sum(!Cat.exists)]))

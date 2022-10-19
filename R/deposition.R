@@ -203,7 +203,7 @@ deposition <- function(x,vDep,rn=NULL,Sensor=NULL,Source=NULL,vDepSpatial=NULL,n
 
 	setkey(Run,rn,Sensor)
 
-	if (parl <- (inherits(ncores, 'cluster') || (ncores != 1 && N > 1))) {
+	if (inherits(ncores, 'cluster') || (ncores != 1 && N > 1)) {
 
 
         if (inherits(ncores, 'cluster')) {

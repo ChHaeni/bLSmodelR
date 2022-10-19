@@ -1,4 +1,4 @@
-runbLS <- function(ModelInput,Cat.Path=NULL,TDonly=NULL,ncores=NULL,writeCsv=FALSE,asDT=TRUE,simpleNames=asDT){
+runbLS <- function(ModelInput, Cat.Path = NULL, ncores = NULL, TDonly = NULL, asDT = TRUE, simpleNames = asDT) {
 
 	cat("\n**********************************************\n")
 	cat("\nLocal Date/Time: ",format(Start <- Sys.time(),format="%d-%m-%Y %H:%M:%S"),"\n")
@@ -30,7 +30,7 @@ runbLS <- function(ModelInput,Cat.Path=NULL,TDonly=NULL,ncores=NULL,writeCsv=FAL
 
 	Model <- ModelInput[["Model"]]
 
-	if(Model[["TDwrite"]]|Model[["TDread"]]){
+	if (Model[["TDwrite"]] || Model[["TDread"]]) {
 		Cat.Path <- switch(class(Cat.Path),
 			"character" = {
 				if(!dir.exists(Cat.Path)){
@@ -45,33 +45,11 @@ runbLS <- function(ModelInput,Cat.Path=NULL,TDonly=NULL,ncores=NULL,writeCsv=FAL
 		if(is.na(Cat.Path)){cat("\n- tcltk interface canceled -\n");return(invisible(NULL))}
 	} 
 	
-	if(Model[["TDonly"]]){
-		if(writeCsv)cat("TDonly is TRUE, no output file will be saved!\n")
-		writeCsv <- FALSE
-	}
-	if((writeCsv==TRUE|class(writeCsv)=="character"|!Model[["TDonly"]])&is.null(ModelInput[["Sources"]])){
-		stop("No Source Area specified!\n")
-	}
 	if(!is.null(ModelInput[["Sources"]])){
 		ModelInput[["Sources"]] <- procSources(ModelInput[["Sources"]])
-	}
-
-	switch(class(writeCsv),
-		"logical" = {
-			if(writeCsv){
-				cat("Select Output File...\n")
-				Out.File <- tclvalue(tkgetSaveFile(initialfile = paste0("bLS_Output_",format(Sys.time(),"%y%m%d_%H%M"),".csv"), title = "Save Output..."))
-			} else {
-				Out.File <- ""
-			}
-		},
-		"character" = {
-			Out.File <- writeCsv
-			writeCsv <- TRUE
-		},
-		stop("Can not interpret writeCsv argument!\n")
-		)
-
+	} else if (!Model[['TDonly']]) {
+		stop("No Source Area specified!\n")
+    }
 
 	tempCats <- FALSE
 	if(!Model[["TDwrite"]]){
@@ -154,14 +132,6 @@ runbLS <- function(ModelInput,Cat.Path=NULL,TDonly=NULL,ncores=NULL,writeCsv=FAL
 
 		setorder(Out,rn,Sensor,Source)
 		setkey(Intervals,rn,Sensor)
-
-		if(writeCsv){
-			cat("Writing Output to File:\n",Out.File,"\n")
-			terr <- try(write.table(Out,file=Out.File,sep=";",na="",row.names=FALSE,append=FALSE))
-			if(inherits(terr,"try-error")){
-				cat("\n > Output File could not be saved! <\n")
-			}
-		}
 
 		Catalogs <- Intervals[,{
 			ps <- unlist(strsplit(Calc.Sensor,","))

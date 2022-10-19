@@ -275,7 +275,7 @@ write_runbLS_script <- function(tmpdir, cpath, ncores, mem_lim = NULL) {
             if (is.null(mem_lim)) {
                 paste0('res <- runbLS(inlist, "', cpath, '", ncores = ', ncores, ')')
             } else {
-                paste0('res <- runbLS(inlist, "', cpath, '", ncores = ', ncores, ', memory_limit = ', mem_lim, ')')
+                paste0('res <- runbLS(inlist, "', cpath, '", ncores = ', ncores, ', memory_limit = "', mem_lim, '")')
             },
             # save result; get index from int%i.rds
             'saveRDS(res, sub("/int([0-9]{1,2}[.]rds)", "/res\\\\1", ifile))'
@@ -314,7 +314,7 @@ write_deposition_script <- function(tmpdir, ncores, mem_lim = NULL) {
                     ncores, '), dep_args[c("vDep", "vDepSpatial")]))')
             } else {
                 paste0('res <- do.call(deposition, c(list(x = bls_result, ncores = ', 
-                    ncores, ', memory_limit = ', mem_lim, '), dep_args[c("vDep", "vDepSpatial")]))')
+                    ncores, ', memory_limit = "', mem_lim, '"), dep_args[c("vDep", "vDepSpatial")]))')
             },
             # save result; get index from int%i.rds
             'saveRDS(res, sub("/int([0-9]{1,2}[.]rds)", "/res\\\\1", ifile))'

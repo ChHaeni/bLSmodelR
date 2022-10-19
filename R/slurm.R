@@ -94,6 +94,10 @@ run_sbatch <- function(slurm, rscript, wait) {
             sleep_secs <- sleep_secs + 1
         }
         cat('\njob finished.\n')
+        # job summary
+        cat('\n')
+        seff(job_id)
+        cat('\n')
         # collect and return results
         res <- collect_results(slurm$tmp_dir)
         # duration of job?
@@ -641,3 +645,25 @@ collect_results <- function(job_dir, check.res = TRUE) {
     # return
     res
 }
+
+seff <- function(job_id, colorize = TRUE) {
+    seff_out <- system(paste('seff', job_id), intern = TRUE)
+    if (colorize && length(attr(seff_out, 'status')) == 0) {
+        # check state COMPLETED(?)
+        state <- sub('State: ([a-zA-Z0-9_.-]+) .*$', '\\1', seff_out[4])
+        if (state == 'COMPLETED') {
+            state <- '\033[38;5;82m~~~ SLURM JOB COMPLETED ~~~\033[0m'
+            fin <- '\033[38;5;82m~~~~~~~~~~~~~~~~~\033[0m'
+        } else {
+            state <- paste0('\033[38;5;196m~~~ SLURM JOB ', state, ' ~~~\033[0m')
+            fin <- '\033[38;5;196m~~~~~~~~~~~~~~~~~\033[0m'
+        }
+        cat(c(state, seff_out, fin), sep = '\n')
+    } else {
+        cat(seff_out, sep = '\n')
+    }
+    invisible(seff_out)
+}
+
+
+

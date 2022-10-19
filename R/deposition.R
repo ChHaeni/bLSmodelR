@@ -253,13 +253,15 @@ deposition <- function(x,vDep,rn=NULL,Sensor=NULL,Source=NULL,vDepSpatial=NULL,n
             # run parallel
             cat("Parallel computing deposition corrected C/E...\nThis will take a moment...\n")
             if(vdSpat){
-                ResFiles <- parallel::clusterApply(cl, InputFiles, .calcDep_Wrapper, spatial = TRUE)
-                # OutList <- parallel::clusterApply(cl,RunList,.calcDep_Wrapper,Catalogs,
-                #     Cat.Path,ModelInput[["Sources"]],pSens$"Calc.Sensors",vDep,vDepSpatial, "spatial")
+                ResFiles <- try(parallel::clusterApply(cl, InputFiles, .calcDep_Wrapper, spatial = TRUE), silent = TRUE)
             } else {
-                ResFiles <- parallel::clusterApply(cl, InputFiles, .calcDep_Wrapper)
-                # OutList <- parallel::clusterApply(cl,RunList,.calcDep_Wrapper,Catalogs,
-                #     Cat.Path,ModelInput[["Sources"]],pSens$"Calc.Sensors",vDep,vDepSpatial)
+                ResFiles <- try(parallel::clusterApply(cl, InputFiles, .calcDep_Wrapper), silent = TRUE)
+            }
+            # check try-error
+            if (inherits(ResFiles, 'try-error')) {
+                parallel::stopCluster(cl)
+                stop('parallel computing returned the following error message:\n',
+                    attr(ResFiles, 'condition')[['message']])
             }
 
             # read files

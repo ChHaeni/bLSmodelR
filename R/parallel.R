@@ -118,9 +118,10 @@
                 input = "")
         }
         else {
-            #~~~~ memory limit
+            #~~~~ memory limit (also clean up memory as much as possible)
             if (!is.null(memory_limit))
-                cmd <- paste0('export R_MAX_VSIZE=', memory_limit, ' && ', cmd)
+                cmd <- paste0('export R_MAX_VSIZE=', memory_limit, 
+                    ' && export R_GC_MEM_GROW=0 && ', cmd)
             #~~~~ memory limit
             cmd <- paste(rep(cmd, length(cl)), collapse = " & ")
             system(cmd, wait = FALSE)

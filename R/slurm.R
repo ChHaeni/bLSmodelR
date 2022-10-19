@@ -1,5 +1,5 @@
 # runbLSlurm main function
-runbLSlurm <- function(input_list, cat_path, ..., wait = TRUE) {
+runbLSlurm <- function(input_list, cat_path, ..., memory_limit = NULL, wait = TRUE) {
     
     # print usage without arguments
     if ((missing(input_list) || missing(cat_path) || missing(...))) {
@@ -39,7 +39,7 @@ runbLSlurm <- function(input_list, cat_path, ..., wait = TRUE) {
     saveRDS(input_list, file.path(slurm$tmp_dir, 'input_list.rds'))
 
     # create script with argument
-    rscript_file <- write_runbLS_script(slurm$tmp_dir, cat_path, slurm$part[, cpus_per_task])
+    rscript_file <- write_runbLS_script(slurm$tmp_dir, cat_path, slurm$part[, cpus_per_task], mem_lim = memory_limit)
 
     # create sbatch file, run slurm job & return result
     run_sbatch(slurm = slurm, rscript = rscript_file, wait = wait)
@@ -256,7 +256,7 @@ split_int <- function(int, p){
 
 # write R scripts
 # runbLS
-write_runbLS_script <- function(tmpdir, cpath, ncores) {
+write_runbLS_script <- function(tmpdir, cpath, ncores, mem_lim = NULL) {
     # get tmpfile name
     tmp <- tempfile(pattern = 'Rscript', tmpdir = tmpdir, fileext = '.R')
     # write R script to tmp file
@@ -272,7 +272,11 @@ write_runbLS_script <- function(tmpdir, cpath, ncores) {
             # add int to inlist
             'inlist$Interval <- int',
             # run model
-            paste0('res <- runbLS(inlist, "', cpath, '", ncores = ', ncores, ')'),
+            if (is.null(mem_lim)) {
+                paste0('res <- runbLS(inlist, "', cpath, '", ncores = ', ncores, ')')
+            } else {
+                paste0('res <- runbLS(inlist, "', cpath, '", ncores = ', ncores, ', memory_limit = ', mem_lim, ')')
+            },
             # save result; get index from int%i.rds
             'saveRDS(res, sub("/int([0-9]{1,2}[.]rds)", "/res\\\\1", ifile))'
         ), 
@@ -285,7 +289,7 @@ write_runbLS_script <- function(tmpdir, cpath, ncores) {
     tmp
 }
 # depostion
-write_deposition_script <- function(tmpdir, ncores) {
+write_deposition_script <- function(tmpdir, ncores, mem_lim = NULL) {
     # get tmpfile name
     tmp <- tempfile(pattern = 'Rscript', tmpdir = tmpdir, fileext = '.R')
     # write R script to tmp file
@@ -305,8 +309,13 @@ write_deposition_script <- function(tmpdir, ncores) {
             'attr(bls_result, "Catalogs") <- dep_args[["Catalogs"]]',
             'attr(bls_result, "Cat.Path") <- dep_args[["Cat.Path"]]',
             # run deposition
-            paste0('res <- do.call(deposition, c(list(x = bls_result, ncores = ', 
-                ncores, '), dep_args[c("vDep", "vDepSpatial")]))'),
+            if (is.null(mem_lim)) {
+                paste0('res <- do.call(deposition, c(list(x = bls_result, ncores = ', 
+                    ncores, '), dep_args[c("vDep", "vDepSpatial")]))')
+            } else {
+                paste0('res <- do.call(deposition, c(list(x = bls_result, ncores = ', 
+                    ncores, ', memory_limit = ', mem_lim, '), dep_args[c("vDep", "vDepSpatial")]))')
+            },
             # save result; get index from int%i.rds
             'saveRDS(res, sub("/int([0-9]{1,2}[.]rds)", "/res\\\\1", ifile))'
         ), 
@@ -319,7 +328,8 @@ write_deposition_script <- function(tmpdir, ncores) {
     tmp
 }
 
-depoSlurm <- function(x, vDep, ..., rn = NULL, Sensor = NULL, Source = NULL, vDepSpatial = NULL, wait = TRUE) {
+depoSlurm <- function(x, vDep, ..., rn = NULL, Sensor = NULL, Source = NULL, vDepSpatial = NULL,
+    memory_limit = NULL, wait = TRUE) {
 
     # convert old versions 
     sx <- as.character(substitute(x))
@@ -392,7 +402,7 @@ depoSlurm <- function(x, vDep, ..., rn = NULL, Sensor = NULL, Source = NULL, vDe
     )
     
     # create script with argument
-    rscript_file <- write_deposition_script(slurm$tmp_dir, slurm$part[, cpus_per_task])
+    rscript_file <- write_deposition_script(slurm$tmp_dir, slurm$part[, cpus_per_task], mem_lim = memory_limit)
 
     # create sbatch file, run slurm job & return result
     run_sbatch(slurm = slurm, rscript = rscript_file, wait = wait)

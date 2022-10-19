@@ -1,4 +1,5 @@
-deposition <- function(x,vDep,rn=NULL,Sensor=NULL,Source=NULL,vDepSpatial=NULL,ncores=1){#,fracDepInside=0,vDepInside=0,ncores=1){
+deposition <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL, 
+    vDepSpatial = NULL, ncores = 1, memory_limit = NULL) {
 
 	# argument names better!
 	RNG <- RNGkind(kind="L'Ecuyer-CMRG")
@@ -212,7 +213,7 @@ deposition <- function(x,vDep,rn=NULL,Sensor=NULL,Source=NULL,vDepSpatial=NULL,n
         } else {
 			if (ncores < 1) ncores <- parallel::detectCores(TRUE, FALSE)
 			on.exit(parallel::stopCluster(cl), add = TRUE)
-            cl <- parallel::makePSOCKcluster(ncores)
+            cl <- .makePSOCKcluster(ncores, memory_limit = memory_limit)
 			data.table::setDTthreads(ncores)
 		}
         parallel::clusterEvalQ(cl, data.table::setDTthreads(1L))

@@ -9,7 +9,7 @@ Run \sQuote{bLSmodelR} using the specified model input.
 }
 \usage{
 runbLS(ModelInput, Cat.Path = NULL, ncores = NULL, TDonly = NULL, 
-  asDT = TRUE, simpleNames = asDT)
+  asDT = TRUE, simpleNames = asDT, memory_limit = NULL)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -30,6 +30,9 @@ logical. If \code{TRUE}, the Output will be a \code{data.table}. The default \co
 }
   \item{simpleNames}{
 logical. Use simple column names for Output, if \code{TRUE}. Default \code{FALSE} provides more descriptive column names.
+}
+  \item{memory_limit}{
+character. Maximal vector heap size (memory limit) specified via 'R_MAX_VSIZE' (see also \code{?Memory}). This has only an effect if R is running in a bash environment.
 }
 }
 \details{

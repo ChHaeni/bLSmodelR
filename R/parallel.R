@@ -43,7 +43,52 @@
 }
 
 ### fix memory limit
-.makePSOCKcluster <- function (names, memory_limit = NA, ...) {
+.makePSOCKcluster <- function (names, memory_limit = NULL, ...) {
+    # check memory limit
+    if (!is.null(memory_limit)) {
+        stopifnot(length(memory_limit) == 1)
+        if (is.numeric(memory_limit)) {
+            # convert to Mb
+            memory_limit <- as.integer(memory_limit * 1e-6)
+            # check lower limit of 100 Mb
+            if (memory_limit < 100) stop('Memory limit cannot be below 100Mb')
+            # convert to string
+            memory_limit <- paste0(memory_limit, 'Mb')
+        } else {
+            # check character
+            if (!is.character(memory_limit)) stop('memory limit must be specified as string (e.g. "10Gb")')
+            # get number & unit
+            num <- as.numeric(sub('^([0-9.]*)\\s*[a-zA-Z]*$', '\\1', memory_limit))
+            unit <- tolower(sub('^[0-9.]*\\s*([a-zA-Z]*)$', '\\1', memory_limit))
+            # check number & unit
+            if (is.na(num)) stop('memory limit must be specified in a format like e.g. "10Gb"')
+            if (!(unit %in% c('', 'b', 'kb', 'mb', 'gb', 'tb'))) 
+                stop('memory limit units should be one of "Kb", "Mb", "Gb" or "Tb"')
+            memory_limit <- switch(paste0('x', unit)
+                , 'x' =
+                , 'xb' = {
+                    if (num < 100e6) stop('Memory limit cannot be below 100Mb')
+                    paste0(as.integer(num * 1e-6), 'Mb')
+                }
+                , 'xkb' = {
+                    if (num < 100e3) stop('Memory limit cannot be below 100Mb')
+                    paste0(num, 'Kb')
+                }
+                , 'xmb' = {
+                    if (num < 100) stop('Memory limit cannot be below 100Mb')
+                    paste0(num, 'Mb')
+                }
+                , 'xgb' = {
+                    if (num < 100e-3) stop('Memory limit cannot be below 100Mb')
+                    paste0(num, 'Gb')
+                }
+                , 'xtb' = {
+                    if (num < 100e-6) stop('Memory limit cannot be below 100Mb')
+                    paste0(num, 'Tb')
+                }
+                )
+        }
+    }
     options <- parallel:::addClusterOptions(parallel:::defaultClusterOptions, list(...))
     manual <- parallel:::getClusterOption("manual", options)
     homogeneous <- parallel:::getClusterOption("homogeneous", options)
@@ -74,7 +119,7 @@
         }
         else {
             #~~~~ memory limit
-            if (!missing(memory_limit))
+            if (!is.null(memory_limit))
                 cmd <- paste0('export R_MAX_VSIZE=', memory_limit, ' && ', cmd)
             #~~~~ memory limit
             cmd <- paste(rep(cmd, length(cl)), collapse = " & ")

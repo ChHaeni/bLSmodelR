@@ -2,7 +2,8 @@
 calc_fct <- function(res, ncores = NULL, SourceSplit = NULL, 
   dxy = 1, # in m
   tolerance = 1e-5, # digits for rounding
-  checkArea = TRUE
+  checkArea = TRUE,
+  memory_limit = NULL
   ){
   
   if(!is.null(ncores)) setDTthreads(ncores)
@@ -87,7 +88,7 @@ calc_fct <- function(res, ncores = NULL, SourceSplit = NULL,
   if(!is.null(ncores) && ncores > 1){
     # showConnections(T)
     # getConnection(3)
-    cl <- parallel::makePSOCKcluster(ncores)
+    cl <- .makePSOCKcluster(ncores, memory_limit = memory_limit)
     on.exit(parallel::stopCluster(cl))
     parallel::clusterEvalQ(cl, {
       # library(data.table)

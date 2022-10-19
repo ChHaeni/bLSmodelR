@@ -1,4 +1,5 @@
-runbLS <- function(ModelInput, Cat.Path = NULL, ncores = NULL, TDonly = NULL, asDT = TRUE, simpleNames = asDT) {
+runbLS <- function(ModelInput, Cat.Path = NULL, ncores = NULL, TDonly = NULL, 
+    asDT = TRUE, simpleNames = asDT, memory_limit = NULL) {
 
 	cat("\n**********************************************\n")
 	cat("\nLocal Date/Time: ",format(Start <- Sys.time(),format="%d-%m-%Y %H:%M:%S"),"\n")
@@ -85,7 +86,7 @@ runbLS <- function(ModelInput, Cat.Path = NULL, ncores = NULL, TDonly = NULL, as
 			}, add = TRUE
 		)
         # set up PSOCK clusters
-        cl <- parallel::makePSOCKcluster(ncores)
+        cl <- .makePSOCKcluster(ncores, memory_limit = memory_limit)
         # set data.table threads to ncores on master
         data.table::setDTthreads(ncores)
 	} else if (ncores != 1) {

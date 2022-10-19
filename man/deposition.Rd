@@ -8,7 +8,7 @@ Dry Deposition Post-Processing
 Run the \sQuote{bLSmodelR} dry deposition post-processing function.
 }
 \usage{
-deposition(x, vDep, rn = NULL, Sensor = NULL, Source = NULL, vDepSpatial = NULL, ncores = 1)
+deposition(x, vDep, rn = NULL, Sensor = NULL, Source = NULL, vDepSpatial = NULL, ncores = 1, memory_limit = NULL)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -32,6 +32,9 @@ a \code{list} with two entries (this argument is still experimental!). First \co
 }
   \item{ncores}{
 integer. Number of cores used for parallel processing. 
+}
+  \item{memory_limit}{
+character. Maximal vector heap size (memory limit) specified via 'R_MAX_VSIZE' (see also \code{?Memory}). This has only an effect if R is running in a bash environment.
 }
 }
 % \details{

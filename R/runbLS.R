@@ -100,8 +100,11 @@ runbLS <- function(ModelInput, Cat.Path = NULL, ncores = NULL, TDonly = NULL,
         parallel::clusterSetRNGStream(cl, sample.int(1e9, 6, TRUE))
         # set wd
 		gwd <- getwd()
-        parallel::clusterExport(cl, c('gwd', 'C.Path'), envir = environment())
+        parallel::clusterExport(cl, 'gwd', envir = environment())
         parallel::clusterCall(cl, setwd, gwd)
+        if (getOption('.bls_record_mem', FALSE)) {
+            parallel::clusterEvalQ(cl, options('.bls_record_mem' = TRUE))
+        }
         # set data.table threads to 1 on slaves
         parallel::clusterEvalQ(cl, data.table::setDTthreads(1L))
     }
@@ -115,6 +118,7 @@ runbLS <- function(ModelInput, Cat.Path = NULL, ncores = NULL, TDonly = NULL,
 	if(!ModelInput[["Model"]][["TDonly"]]){
 		
 		Out <- .calcOutput(Intervals, ModelInput, Cat.Path, cl)
+        gc_mem <- attr(Out, 'gc_mem')
 		Intervals <- attr(Out,"CalcSteps")
 		Out[,":="(
 			Cat.Name = NULL,
@@ -169,6 +173,7 @@ runbLS <- function(ModelInput, Cat.Path = NULL, ncores = NULL, TDonly = NULL,
 
 		cat("Finished Run!\nLocal Date/Time: ",format(End <- Sys.time(),format="%d-%m-%Y %H:%M:%S"),"\nDuration of model run:",sprintf("%1.1f",dur <- End - Start),attr(dur,"units"),"\n****************************************************\n****************************************************\n")
 		setattr(Out,"ModelRunTime",dur)
+        setattr(Out, 'gc_mem', gc_mem)
 
 	} else {
 		### prep output:

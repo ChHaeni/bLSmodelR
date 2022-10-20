@@ -181,3 +181,77 @@
 		}
 	,by=.(Sensor,Source)]		
 }
+
+### add helpers to log memory usage on slurm/parallel workers
+.get_object_sizes <- function(envir = parent.frame()) {
+    objs <- ls(envir = envir)
+    obj.sizes <- lapply(objs, function(x) {
+        object.size(get(x, envir = envir))
+                })
+    objs_size <- unlist(lapply(obj.sizes, format,
+            units = 'auto', standard = 'SI'))
+    total_size <- format(structure(
+            sum(unlist(obj.sizes)), class = 'object_size'),
+            units = 'auto', standard = 'SI')
+    structure(data.frame(
+        obj = c(objs, '===', 'total:'),
+        size = c(objs_size, '===', total_size)
+    ), total = sum(unlist(obj.sizes)))
+}
+.record_object_sizes <- function(start = FALSE, reset = FALSE) {
+    if (start) {
+        otab_old <- structure(0, total = 0)
+    } else {
+        otab_old <- getOption('.bls_obj_sizes', 
+            default = structure(0, total = 0))
+    }
+    obj_table <- .get_object_sizes(parent.frame())
+    if (attr(otab_old, 'total') > attr(obj_table, 'total')) {
+        obj_table <- otab_old
+    }
+    if (reset) {
+        options('.bls_obj_sizes' = NULL)
+    } else {
+        options('.bls_obj_sizes' = obj_table)
+    }
+    invisible(obj_table)
+}
+.record_gc_mem <- function(start = FALSE, reset = FALSE) {
+    if (start) options('.bls_gc_mem' = NULL)
+    new_gc <- gc(TRUE)
+    old_gc <- getOption('.bls_gc_mem', matrix(0, nrow = 2, ncol = 6))
+    for (i in c(2, 4, 6)) {
+        if (new_gc[2, i] < old_gc[2, i]) {
+            new_gc[, i - 0:1] <- old_gc[, i - 0:1]
+        }
+    }
+    if (reset) {
+        options('.bls_gc_mem' = NULL)
+    } else {
+        options('.bls_gc_mem' = new_gc)
+    }
+    invisible(new_gc)
+}
+.start_recording <- function() {
+    options(
+        '.bls_record_mem' = TRUE
+        )
+}
+.stop_recording <- function() {
+    options(
+        '.bls_record_mem' = NULL
+        )
+}
+.record_now <- function(start = FALSE, reset = FALSE) {
+    if (getOption('.bls_record_mem', FALSE)) {
+        return(
+            invisible(
+                list(
+                    gc_mem = .record_gc_mem(start, reset),
+                    object_sizes = .record_object_sizes(start, reset)
+                )
+            )
+        )
+    }
+    invisible()
+}

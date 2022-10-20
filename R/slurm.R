@@ -1,5 +1,6 @@
 # runbLSlurm main function
-runbLSlurm <- function(input_list, cat_path, ..., memory_limit = NULL, wait = TRUE) {
+runbLSlurm <- function(input_list, cat_path, ..., 
+    memory_limit = NULL, record_mem = FALSE, wait = TRUE) {
     
     # print usage without arguments
     if ((missing(input_list) || missing(cat_path) || missing(...))) {
@@ -19,6 +20,10 @@ runbLSlurm <- function(input_list, cat_path, ..., memory_limit = NULL, wait = TR
         \r\t             can collect the results via the function "collect_results".\n')
         return(invisible(NULL))
     }
+
+    # memory recording?
+    options('.bls_record_mem' = isTRUE(record_mem))
+    on.exit(options('.bls_record_mem' = NULL), add = TRUE)
 
     # remove NA values in Interval data.frame
     isna <- as.logical(rowSums(is.na(input_list$Interval[, 1:13])))
@@ -263,6 +268,8 @@ write_runbLS_script <- function(tmpdir, cpath, ncores, mem_lim = NULL) {
     writeLines(
         c(
             'library(bLSmodelR)',
+            # memory recording?
+            paste0('options(".bls_record_mem" = ', getOption('.bls_record_mem', FALSE)),
             # format of file: int%i.rds
             'ifile <- commandArgs(TRUE)',
             # read intervals
@@ -296,6 +303,8 @@ write_deposition_script <- function(tmpdir, ncores, mem_lim = NULL) {
     writeLines(
         c(
             'library(bLSmodelR)',
+            # memory recording?
+            paste0('options(".bls_record_mem" = ', getOption('.bls_record_mem', FALSE)),
             # format of file: int%i.rds
             'ifile <- commandArgs(TRUE)',
             # read intervals
@@ -329,7 +338,11 @@ write_deposition_script <- function(tmpdir, ncores, mem_lim = NULL) {
 }
 
 depoSlurm <- function(x, vDep, ..., rn = NULL, Sensor = NULL, Source = NULL, vDepSpatial = NULL,
-    memory_limit = NULL, wait = TRUE) {
+    memory_limit = NULL, record_mem = FALSE, wait = TRUE) {
+
+    # memory recording?
+    options('.bls_record_mem' = isTRUE(record_mem))
+    on.exit(options('.bls_record_mem' = NULL), add = TRUE)
 
     # convert old versions 
     sx <- as.character(substitute(x))
@@ -483,6 +496,7 @@ clean_ntasks <- function(x) {
 }
 
 # find partition
+# TODO: switch to --mem-per-cpu !!! and export seff
 find_partition <- function(memory, ...) {
     # ni call
     ni_call <- 'ni'

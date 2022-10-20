@@ -1,6 +1,9 @@
 .calcCE <- function(SubRun,InputList,Srcs,C.Path){
 
 
+    # record gc/mem
+    .record_now(start = TRUE)
+
 	# SubRun <- SncRun[ilist,]
 	# zu beginn on.exit(fehlerangabe!?)
 	setDT(SubRun)
@@ -140,12 +143,11 @@
 			}
 			cat(paste0("\r[",paste0(rep(">",20),collapse=""),"] 100%\n"))
 		}
+        # record gc/mem
+        .record_now()
 	}
 	rm(Catalog)
-	# {xalt <- matrix(0,2,3)
-	# xneu <- gc()
-	# while(abs(xalt[2,3]-xneu[2,3])>0){xalt<-xneu;xneu <- gc()}
-	# }
+
 	cat("\nCalculating Source contributions\n\n")
 
 	# TD_Time_avg
@@ -231,10 +233,6 @@
 		Out[i,wCE_se := wCE_se_add]
 
 	}
-	# {xalt <- matrix(0,2,3)
-	# xneu <- gc()
-	# while(abs(xalt[2,3]-xneu[2,3])>0){xalt<-xneu;xneu <- gc()}
-	# }
 	# Upper/Lower
 	qt_lo <- Out[, qt(0.025, N0 - 1)]
 	qt_hi <- Out[, qt(0.975, N0 - 1)]
@@ -248,6 +246,9 @@
 		wCE_lo = wCE + qt_lo * wCE_se,
 		wCE_hi = wCE + qt_hi * wCE_se
 		)]
+    # record gc/mem
+    gc_mem <- .record_now(reset = TRUE)
+    setattr(Out, 'gc_mem', gc_mem)
 
 	return(Out)
 

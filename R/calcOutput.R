@@ -83,8 +83,12 @@
 
 		}
 	}
+
 	Out <- rbindlist(OutList)
 	setattr(Out,"CalcSteps",SncRun)
+    # add gc/memory attribute
+    gc_mem <- lapply(OutList, attr, 'gc_mem')
+    setattr(Out, 'gc_mem', gc_mem)
 
 	invisible(Out)
 }

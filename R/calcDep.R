@@ -1,4 +1,6 @@
 .calcDep_Wrapper <- function(input_file, spatial = FALSE) {
+    # record gc/mem
+    .record_now(start = TRUE)
     # TODO: wrap try around?
     input_list <- qs::qread(input_file, strict = TRUE)
     # TODO: wrap try around?
@@ -13,6 +15,8 @@
                 input_list[['Sources']], input_list[['Sensors']], input_list[['vDep']], 
                 input_list[['vDepSpatial']]
             )
+            # record gc/mem
+            .record_now()
 		}
 	} else {
 		for (rl in seq_along(out)) {
@@ -21,9 +25,14 @@
                 input_list[['Sources']], input_list[['Sensors']], input_list[['vDep']], 
                 input_list[['vDepSpatial']]
             )
+            # record gc/mem (TODO: record inside .calcDep/.calcDep_Spatial functions?)
+            .record_now()
 		}
 	}
 	out <- data.table::rbindlist(out)[, vd_index := input_list[['RunList']][, vd_index]]
+    # record gc/mem
+    gc_mem <- .record_now(reset = TRUE)
+    setattr(out, 'gc_mem', gc_mem)
     # TODO: wrap try around?
     qs::qsave(out, res_file <- sub('parbls_input_', 'parbls_result_', input_file), preset = 'uncompressed')
     # return result file path (and try error states?)

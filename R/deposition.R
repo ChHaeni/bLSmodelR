@@ -270,6 +270,9 @@ deposition <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL,
             # clean up
             file.remove(unlist(ResFiles))
 
+            # get gc/memory attribute
+            gc_mem <- lapply(OutList, attr, 'gc_mem')
+
             # bind together (we do not need to order because of merge)
             Out <- rbind(
                 # N_TD > 0 from clusters
@@ -282,7 +285,7 @@ deposition <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL,
 
             # all N_TD == 0
             Out <- Run[, .(CE, CE_se, uCE, uCE_se, vCE, vCE_se, wCE, wCE_se, UCE, vd_index)]
-
+            gc_mem <- NULL
         }
 
 	} else {
@@ -300,6 +303,8 @@ deposition <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL,
 			}			
 		}
 		Out <- rbindlist(OutList)[, vd_index := seq_len(N)]
+        # get gc/memory attribute
+        gc_mem <- lapply(OutList, attr, 'gc_mem')
 	}
 
 	setnames(Out,paste0(names(Out),"_Dep"))
@@ -316,6 +321,7 @@ deposition <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL,
     # add new attributes
 	setattr(Out,"vDep",list(vDep=vDep,vDepSpatial=vDepSpatial))
 	setattr(Out,"class",c("deposition",class(Out)))
+    setattr(Out, 'gc_mem', gc_mem)
 
 	return(Out)
 }

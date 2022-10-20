@@ -1,6 +1,4 @@
 .calcDep_Wrapper <- function(input_file, spatial = FALSE) {
-    # record gc/mem
-    .record_now(start = TRUE)
     # TODO: wrap try around?
     input_list <- qs::qread(input_file, strict = TRUE)
     # TODO: wrap try around?
@@ -15,8 +13,6 @@
                 input_list[['Sources']], input_list[['Sensors']], input_list[['vDep']], 
                 input_list[['vDepSpatial']]
             )
-            # record gc/mem
-            .record_now()
 		}
 	} else {
 		for (rl in seq_along(out)) {
@@ -25,21 +21,22 @@
                 input_list[['Sources']], input_list[['Sensors']], input_list[['vDep']], 
                 input_list[['vDepSpatial']]
             )
-            # record gc/mem (TODO: record inside .calcDep/.calcDep_Spatial functions?)
-            .record_now()
 		}
 	}
+    # gather mem usage
+    cpu_mem <- .gather_mem(out)
 	out <- data.table::rbindlist(out)[, vd_index := input_list[['RunList']][, vd_index]]
-    # record gc/mem
-    gc_mem <- .record_now(reset = TRUE)
-    setattr(out, 'gc_mem', gc_mem)
+    setattr(out, 'cpu_mem', cpu_mem)
     # TODO: wrap try around?
     qs::qsave(out, res_file <- sub('parbls_input_', 'parbls_result_', input_file), preset = 'uncompressed')
     # return result file path (and try error states?)
     return(res_file)
 }
 
-.calcDep_Spatial <- function(Run,Catalogs,C.Path,Sources,CSnsrs,vd,vdSpatial){#,fdinside,vdinside){
+.calcDep_Spatial <- function(Run, Catalogs, C.Path, Sources, CSnsrs, vd, vdSpatial) {
+
+    # record gc/mem
+    .record_now(start = TRUE)
 
 	# on.exit(browser())
 	vd_index <- Run[, vd_index]
@@ -159,10 +156,7 @@
 
 		# rm(Catalogs,CSnsrs,Ctlg,Src,uvw,Run,Row)
 		
-		# {xalt <- matrix(0,2,3)
-		# xneu <- gc()
-		# while(abs(xalt[2,3]-xneu[2,3])>0){xalt<-xneu;xneu <- gc()}
-		# }
+        .record_now()
 
 		# browser()
 
@@ -251,16 +245,17 @@
 		)		
 	}
 
-	# rm(Ci,uvwU,uvwV,uvwW,CEs)
-	# {xalt <- matrix(0,2,3)
-	# xneu <- gc()
-	# while(abs(xalt[2,3]-xneu[2,3])>0){xalt<-xneu;xneu <- gc()}
-	# }
+    # record gc/mem
+    setattr(Out, 'cpu_mem', .record_now(reset = TRUE))
+
 	return(Out)	
 }
 
-.calcDep <- function(Run,Catalogs,C.Path,Sources,CSnsrs,vd,vdSpatial){#,fdinside,vdinside){
+.calcDep <- function(Run, Catalogs, C.Path, Sources, CSnsrs, vd, vdSpatial) {
 
+
+    # record gc/mem
+    .record_now(start = TRUE)
 
 	# on.exit(browser())
 
@@ -353,10 +348,7 @@
 
 		# rm(Catalogs,CSnsrs,Ctlg,Src,uvw,Run,Row)
 		
-		# {xalt <- matrix(0,2,3)
-		# xneu <- gc()
-		# while(abs(xalt[2,3]-xneu[2,3])>0){xalt<-xneu;xneu <- gc()}
-		# }
+        .record_now()
 
 		# browser()
 
@@ -446,10 +438,8 @@
 		)		
 	}
 
-	# rm(Ci,uvwU,uvwV,uvwW,CEs)
-	# {xalt <- matrix(0,2,3)
-	# xneu <- gc()
-	# while(abs(xalt[2,3]-xneu[2,3])>0){xalt<-xneu;xneu <- gc()}
-	# }
+    # record gc/mem
+    setattr(Out, 'cpu_mem', .record_now(reset = TRUE))
+
 	return(Out)	
 }

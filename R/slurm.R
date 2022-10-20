@@ -22,8 +22,8 @@ runbLSlurm <- function(input_list, cat_path, ...,
     }
 
     # memory recording?
-    options('.bls_record_mem' = isTRUE(record_mem))
-    on.exit(options('.bls_record_mem' = NULL), add = TRUE)
+    .set_recording(record_mem)
+    on.exit(.stop_recording(), add = TRUE)
 
     # remove NA values in Interval data.frame
     isna <- as.logical(rowSums(is.na(input_list$Interval[, 1:13])))
@@ -269,7 +269,7 @@ write_runbLS_script <- function(tmpdir, cpath, ncores, mem_lim = NULL) {
         c(
             'library(bLSmodelR)',
             # memory recording?
-            paste0('options(".bls_record_mem" = ', getOption('.bls_record_mem', FALSE)),
+            paste0('.set_recording(', .is_recording(), ')'),
             # format of file: int%i.rds
             'ifile <- commandArgs(TRUE)',
             # read intervals
@@ -304,7 +304,7 @@ write_deposition_script <- function(tmpdir, ncores, mem_lim = NULL) {
         c(
             'library(bLSmodelR)',
             # memory recording?
-            paste0('options(".bls_record_mem" = ', getOption('.bls_record_mem', FALSE)),
+            paste0('.set_recording(', .is_recording(), ')'),
             # format of file: int%i.rds
             'ifile <- commandArgs(TRUE)',
             # read intervals
@@ -341,8 +341,8 @@ depoSlurm <- function(x, vDep, ..., rn = NULL, Sensor = NULL, Source = NULL, vDe
     memory_limit = NULL, record_mem = FALSE, wait = TRUE) {
 
     # memory recording?
-    options('.bls_record_mem' = isTRUE(record_mem))
-    on.exit(options('.bls_record_mem' = NULL), add = TRUE)
+    .set_recording(record_mem)
+    on.exit(.stop_recording(), add = TRUE)
 
     # convert old versions 
     sx <- as.character(substitute(x))

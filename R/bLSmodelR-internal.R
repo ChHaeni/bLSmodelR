@@ -216,21 +216,44 @@
 #     }
 #     invisible(obj_table)
 # }
-.record_gc_mem <- function(start = FALSE, reset = FALSE) {
-    if (start) options('.bls_gc_mem' = NULL)
-    new_gc <- gc()
-    old_gc <- getOption('.bls_gc_mem', matrix(0, nrow = 2, ncol = 6))
-    for (i in c(2, 4, 6)) {
-        if (new_gc[2, i] < old_gc[2, i]) {
-            new_gc[, i - 0:1] <- old_gc[, i - 0:1]
+# .record_gc_mem <- function(start = FALSE, reset = FALSE) {
+#     if (start) options('.bls_gc_mem' = NULL)
+#     new_gc <- gc()
+#     old_gc <- getOption('.bls_gc_mem', matrix(0, nrow = 2, ncol = 6))
+#     for (i in c(2, 4, 6)) {
+#         if (new_gc[2, i] < old_gc[2, i]) {
+#             new_gc[, i - 0:1] <- old_gc[, i - 0:1]
+#         }
+#     }
+#     if (reset) {
+#         options('.bls_gc_mem' = NULL)
+#     } else {
+#         options('.bls_gc_mem' = new_gc)
+#     }
+#     invisible(new_gc)
+# }
+.record_mem <- function(start = FALSE, reset = FALSE) {
+    if (start) options('.bls_memory' = NULL)
+    # possible alternatives:
+    ps <- unlist(strsplit(system(paste0('ps -u$USER -o comm,rss,vsz,pid | grep "\\<', Sys.getpid(), '"$'), intern = TRUE), split = ' +'))
+    # check process name
+    stopifnot(ps[1] == 'R')
+    # get RSS and vsize
+    new_mem <- paste(new_num <- c(rss = as.numeric(ps[2]) / 1024, vsz = as.numeric(ps[3]) / 1024), 'MiB')
+    # get old mem
+    old_mem <- getOption('.bls_memory', rep('0 MiB', 2))
+    old_num <- as.numeric(sub(' MiB', '', old_mem))
+    for (i in 1:2) {
+        if (old_num[i] > new_num[i]) {
+            new_mem[i] <- old_mem[i]
         }
     }
     if (reset) {
-        options('.bls_gc_mem' = NULL)
+        options('.bls_memory' = NULL)
     } else {
-        options('.bls_gc_mem' = new_gc)
+        options('.bls_memory' = new_mem)
     }
-    invisible(new_gc)
+    invisible(c(ps[4], new_mem))
 }
 .start_recording <- function() {
     options(
@@ -242,6 +265,12 @@
         '.bls_record_mem' = NULL
         )
 }
+.is_recording <- function() {
+    getOption('.bls_record_mem', FALSE)
+}
+.set_recording <- function(x) {
+    options('.bls_record_mem' = isTRUE(x))
+}
 .record_now <- function(start = FALSE, reset = FALSE, envir = parent.frame()) {
     if (getOption('.bls_record_mem', FALSE)) {
         # return(
@@ -252,7 +281,68 @@
         #         )
         #     )
         # )
-        return(.record_gc_mem(start, reset))
+        return(.record_mem(start, reset))
     }
     invisible()
+}
+.gather_mem <- function(out_list) {
+    mem_list <- lapply(out_list, attr, 'cpu_mem')
+    mem <- rbindlist(lapply(mem_list, as.list))
+    if (nrow(mem) == 0) return(invisible())
+    if (names(mem)[1] == 'pid') return(mem)
+    mem[, {
+        num2 <- as.numeric(sub(' MiB', '', V2))
+        num3 <- as.numeric(sub(' MiB', '', V3))
+        out <- setNames(
+                sprintf(
+                    '%1.1f MiB',
+                    c(
+                        rss_avg = mean(num2),
+                        rss_max = max(num2),
+                        vsz_avg = mean(num3),
+                        vsz_max = max(num3)
+                    )
+                ),
+                c('rss_avg', 'rss_max', 'vsz_avg', 'vsz_max')
+            )
+        as.list(out)
+    }, by = .(pid = V1)]
+}
+
+memory_usage <- function(res, show = TRUE) {
+    mem <- attr(res, 'cpu_mem')
+    if (is.null(mem)) return(invisible())
+    num <- mem[, lapply(.SD, function(x) as.numeric(sub(' MiB', '', x)))]
+    out <- num[, .(
+        n_cpus = .N,
+        rss_cpu = max(rss_max),
+        vsz_cpu = max(vsz_max),
+        rss_avg = sum(rss_avg),
+        rss_max = sum(rss_max),
+        vsz_avg = sum(vsz_avg),
+        vsz_max = sum(vsz_max)
+        )]
+    fs <- function(x) format(structure(x * 1024 ^ 2, class = 'object_size'),
+        units = 'auto', standard = 'SI')
+    msg <- out[, paste0(
+        '~~~~~ memory usage ~~~~~\n',
+        n_cpus, ' CPUs\n',
+        '\n',
+        'per CPU\n',
+        '-------\n',
+        'RSS max:   ', fs(rss_cpu), '\n',
+        'VSZ max:   ', fs(vsz_cpu), '\n',
+        '\n',
+        'total\n',
+        '-----\n',
+        'RSS avg:   ', fs(rss_avg), '\n',
+        'RSS max:   ', fs(rss_max), '\n',
+        'VSZ avg:   ', fs(vsz_avg), '\n',
+        'VSZ max:   ', fs(vsz_max), '\n',
+        '~~~~~~~~~~~~~~~~~~~~~~~~\n'
+        )]
+    if (show) {
+        cat(msg)
+    }
+    invisible(structure(out, msg = msg))
 }

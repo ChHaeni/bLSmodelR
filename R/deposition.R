@@ -216,6 +216,9 @@ deposition <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL,
             cl <- .makePSOCKcluster(ncores, memory_limit = memory_limit)
 			data.table::setDTthreads(ncores)
 		}
+        if (.is_recording()) {
+            parallel::clusterEvalQ(cl, bLSmodelR:::.start_recording())
+        }
         parallel::clusterEvalQ(cl, data.table::setDTthreads(1L))
 
         # get N_TD > 0
@@ -271,7 +274,7 @@ deposition <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL,
             file.remove(unlist(ResFiles))
 
             # get gc/memory attribute
-            gc_mem <- lapply(OutList, attr, 'gc_mem')
+            cpu_mem <- .gather_mem(OutList)
 
             # bind together (we do not need to order because of merge)
             Out <- rbind(
@@ -285,7 +288,7 @@ deposition <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL,
 
             # all N_TD == 0
             Out <- Run[, .(CE, CE_se, uCE, uCE_se, vCE, vCE_se, wCE, wCE_se, UCE, vd_index)]
-            gc_mem <- NULL
+            cpu_mem <- NULL
         }
 
 	} else {
@@ -304,7 +307,7 @@ deposition <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL,
 		}
 		Out <- rbindlist(OutList)[, vd_index := seq_len(N)]
         # get gc/memory attribute
-        gc_mem <- lapply(OutList, attr, 'gc_mem')
+        cpu_mem <- .gather_mem(OutList)
 	}
 
 	setnames(Out,paste0(names(Out),"_Dep"))
@@ -321,7 +324,7 @@ deposition <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL,
     # add new attributes
 	setattr(Out,"vDep",list(vDep=vDep,vDepSpatial=vDepSpatial))
 	setattr(Out,"class",c("deposition",class(Out)))
-    setattr(Out, 'gc_mem', gc_mem)
+    setattr(Out, 'cpu_mem', cpu_mem)
 
 	return(Out)
 }

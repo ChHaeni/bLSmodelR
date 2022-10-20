@@ -247,8 +247,8 @@
 		wCE_hi = wCE + qt_hi * wCE_se
 		)]
     # record gc/mem
-    gc_mem <- .record_now(reset = TRUE)
-    setattr(Out, 'gc_mem', gc_mem)
+    cpu_mem <- .record_now(reset = TRUE)
+    setattr(Out, 'cpu_mem', cpu_mem)
 
 	return(Out)
 

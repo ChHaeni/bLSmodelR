@@ -309,7 +309,7 @@
     }, by = .(pid = V1)]
 }
 
-memory_usage <- function(res, show = TRUE) {
+memory_usage <- function(res, show = TRUE, slurm = NULL) {
     mem <- attr(res, 'cpu_mem')
     if (is.null(mem)) return(invisible())
     num <- mem[, lapply(.SD, function(x) as.numeric(sub(' MiB', '', x)))]
@@ -324,6 +324,8 @@ memory_usage <- function(res, show = TRUE) {
         )]
     fs <- function(x) format(structure(x * 1024 ^ 2, class = 'object_size'),
         units = 'auto', standard = 'SI')
+    browser()
+    isnull <- is.null(slurm)
     msg <- out[, paste0(
         '~~~~~ memory usage ~~~~~\n',
         n_cpus, ' CPUs\n',

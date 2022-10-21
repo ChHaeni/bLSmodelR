@@ -101,12 +101,12 @@ run_sbatch <- function(slurm, rscript, wait) {
         cat('\njob finished.\n')
         # job summary
         cat('\n')
-        seff(job_id)
+        seff(job_id, no_mem_cpu = TRUE)
         cat('\n')
         # collect and return results
         res <- collect_results(slurm$tmp_dir)
         # memory usage
-        memory_usage(res)
+        memory_usage(res, slurm = slurm)
         # duration of job?
         dur <- Sys.time() - current_time
         cat('Time since sending job: ', round(dur, 2), attr(dur, 'units'), '\n')
@@ -181,7 +181,7 @@ write_sbatch <- function(tmpdir, rscript, ...) {
 }
 
 # prepare slurm arguments and directory
-prep_slurm <- function(..., ntasks = 1, cpu_mem_min) {
+prep_slurm <- function(..., ntasks = 1, cpu_mem_min = 0) {
     # get dot arguments
     dots <- list(...)
     # check if list of options has been provided
@@ -622,6 +622,8 @@ find_partition <- function(memory, cpu_mem_min = 0, ...) {
     # print system call with selected nodes highlighted
     patterns <- out[, paste(c(paste0(unlist(node_names), '.*'), '$'), collapse = '|')]
     system(paste0(ni_call, ' | grep --color -E \'', patterns, '\''))
+    # add total memory and minimum per cpu
+    out[, ':='(total_memory = memory * nodes, minimum_mem_given = cpu_mem_min)]
     # return selected as data.table
     out
 }
@@ -690,9 +692,15 @@ collect_results <- function(job_dir, check.res = TRUE) {
     res
 }
 
-seff <- function(job_id, colorize = TRUE) {
+seff <- function(job_id, colorize = TRUE, no_mem_cpu = FALSE) {
     seff_out <- system(paste('seff', job_id), intern = TRUE)
     if (colorize && length(attr(seff_out, 'status')) == 0) {
+        # remove memory and cpu part
+        if (no_mem_cpu) {
+            seff_show <- seff_out[-c(7, 8, 10, 11)]
+        } else {
+            seff_show <- seff_out
+        }
         # check state COMPLETED(?)
         state <- sub('State: ([a-zA-Z0-9_.-]+) .*$', '\\1', seff_out[4])
         if (state == 'COMPLETED') {
@@ -702,7 +710,7 @@ seff <- function(job_id, colorize = TRUE) {
             state <- paste0('\033[38;5;196m~~~ SLURM JOB ', state, ' ~~~\033[0m')
             fin <- '\033[38;5;196m~~~~~~~~~~~~~~~~~\033[0m'
         }
-        cat(c(state, seff_out, fin), sep = '\n')
+        cat(c(state, seff_show, fin), sep = '\n')
     } else {
         cat(seff_out, sep = '\n')
     }

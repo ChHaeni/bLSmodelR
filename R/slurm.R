@@ -269,7 +269,7 @@ write_runbLS_script <- function(tmpdir, cpath, ncores, mem_lim = NULL) {
         c(
             'library(bLSmodelR)',
             # memory recording?
-            paste0('.set_recording(', .is_recording(), ')'),
+            paste0('bLSmodelR:::.set_recording(', .is_recording(), ')'),
             # format of file: int%i.rds
             'ifile <- commandArgs(TRUE)',
             # read intervals
@@ -304,7 +304,7 @@ write_deposition_script <- function(tmpdir, ncores, mem_lim = NULL) {
         c(
             'library(bLSmodelR)',
             # memory recording?
-            paste0('.set_recording(', .is_recording(), ')'),
+            paste0('bLSmodelR:::.set_recording(', .is_recording(), ')'),
             # format of file: int%i.rds
             'ifile <- commandArgs(TRUE)',
             # read intervals

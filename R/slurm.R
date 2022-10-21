@@ -105,8 +105,8 @@ run_sbatch <- function(slurm, rscript, wait) {
         cat('\n')
         # collect and return results
         res <- collect_results(slurm$tmp_dir)
-        # check memory usage
-        browser()
+        # memory usage
+        memory_usage(res)
         # duration of job?
         dur <- Sys.time() - current_time
         cat('Time since sending job: ', round(dur, 2), attr(dur, 'units'), '\n')
@@ -681,6 +681,10 @@ collect_results <- function(job_dir, check.res = TRUE) {
         # set keys again
         setkey(attr(res, 'CalcSteps'), rn, Sensor)
         setkey(attr(res, 'Catalogs'), rn, Sensor, PointSensor)
+    }
+    # get memory usage
+    if (.is_recording()) {
+        setattr(res, 'cpu_mem', .gather_mem(res_list))
     }
     # return
     res

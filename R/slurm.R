@@ -704,6 +704,10 @@ seff <- function(job_id, colorize = TRUE) {
     }
     invisible(seff_out)
 }
-
+squeue <- function(user = '$USER', options = '') {
+    sq <- system(paste0('squeue -u', user, ' ', options), intern = TRUE)
+    cat(sq, sep = '\n')
+    invisible(sq)
+}
 
 

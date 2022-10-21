@@ -322,25 +322,33 @@ memory_usage <- function(res, show = TRUE, slurm = NULL) {
         vsz_avg = sum(vsz_avg),
         vsz_max = sum(vsz_max)
         )]
-    fs <- function(x) format(structure(x * 1024 ^ 2, class = 'object_size'),
+    fs <- function(x, base = 1024) format(structure(x * base ^ 2, class = 'object_size'),
         units = 'auto', standard = 'SI')
-    browser()
-    isnull <- is.null(slurm)
+    has_slurm <- !is.null(slurm)
     msg <- out[, paste0(
         '~~~~~ memory usage ~~~~~\n',
+        if (has_slurm) {
+            paste(slurm$part[, nodes], 'Nodes\n')
+        },
         n_cpus, ' CPUs\n',
         '\n',
         'per CPU\n',
-        '-------\n',
-        'RSS max:   ', fs(rss_cpu), '\n',
-        'VSZ max:   ', fs(vsz_cpu), '\n',
+        '=======\n',
+        if (has_slurm) {
+            paste0('threshold (min):   ', fs(slurm$part[, minimum_mem_given], 1000), '\n')
+        },
+        'RSS max:           ', fs(rss_cpu), '\n',
+        'VSZ max:           ', fs(vsz_cpu), '\n',
         '\n',
         'total\n',
-        '-----\n',
-        'RSS avg:   ', fs(rss_avg), '\n',
-        'RSS max:   ', fs(rss_max), '\n',
-        'VSZ avg:   ', fs(vsz_avg), '\n',
-        'VSZ max:   ', fs(vsz_max), '\n',
+        '=====\n',
+        if (has_slurm) {
+            paste0('available:         ', fs(slurm$part[, total_memory], 1000), '\n')
+        },
+        'RSS avg:           ', fs(rss_avg), '\n',
+        'RSS max:           ', fs(rss_max), '\n',
+        'VSZ avg:           ', fs(vsz_avg), '\n',
+        'VSZ max:           ', fs(vsz_max), '\n',
         '~~~~~~~~~~~~~~~~~~~~~~~~\n'
         )]
     if (show) {

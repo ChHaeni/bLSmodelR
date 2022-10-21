@@ -1,6 +1,6 @@
 # runbLSlurm main function
 runbLSlurm <- function(input_list, cat_path, ..., 
-    memory_limit = NULL, record_mem = FALSE, wait = TRUE) {
+    cpu_mem_min = 0, memory_limit = NULL, record_mem = FALSE, wait = TRUE) {
     
     # print usage without arguments
     if ((missing(input_list) || missing(cat_path) || missing(...))) {
@@ -31,7 +31,7 @@ runbLSlurm <- function(input_list, cat_path, ...,
     if (any(isna)) cat('Removed', sum(isna), 'rows due to NA values\n')
 
     # extract slurm options and prepare job directory
-    slurm <- prep_slurm(..., ntasks = NROW(input_list$Interval))
+    slurm <- prep_slurm(..., ntasks = NROW(input_list$Interval), cpu_mem_min = cpu_mem_min)
 
     # split Intervals and save to rds files
     il <- split_int(input_list$Interval, slurm$part)
@@ -179,7 +179,7 @@ write_sbatch <- function(tmpdir, rscript, ...) {
 }
 
 # prepare slurm arguments and directory
-prep_slurm <- function(..., ntasks = 1) {
+prep_slurm <- function(..., ntasks = 1, cpu_mem_min) {
     # get dot arguments
     dots <- list(...)
     # check if list of options has been provided
@@ -202,7 +202,7 @@ prep_slurm <- function(..., ntasks = 1) {
     #    partition name (-p --partition)
     #    number of nodes (-N --nodes)
     #    cpus per task
-    part <- find_partition(mem, ntasks, dots)
+    part <- find_partition(mem, ntasks, dots, cpu_mem_min = cpu_mem_min)
     # create temporary directory
     #    check if -D --chdir exists
     #    otherwise default to $HOME/.slurm/$jobname
@@ -338,7 +338,7 @@ write_deposition_script <- function(tmpdir, ncores, mem_lim = NULL) {
 }
 
 depoSlurm <- function(x, vDep, ..., rn = NULL, Sensor = NULL, Source = NULL, vDepSpatial = NULL,
-    memory_limit = NULL, record_mem = FALSE, wait = TRUE) {
+    cpu_mem_min = 0, memory_limit = NULL, record_mem = FALSE, wait = TRUE) {
 
     # memory recording?
     .set_recording(record_mem)
@@ -389,7 +389,7 @@ depoSlurm <- function(x, vDep, ..., rn = NULL, Sensor = NULL, Source = NULL, vDe
     }
 
     # extract slurm options and prepare job directory
-    slurm <- prep_slurm(..., ntasks = Run[, .N])
+    slurm <- prep_slurm(..., ntasks = Run[, .N], cpu_mem_min = cpu_mem_min)
 
     # split Intervals and save to rds files
     il <- split_int(Run, slurm$part)
@@ -497,7 +497,7 @@ clean_ntasks <- function(x) {
 
 # find partition
 # TODO: switch to --mem-per-cpu !!! and export seff
-find_partition <- function(memory, ...) {
+find_partition <- function(memory, cpu_mem_min = 0, ...) {
     # ni call
     ni_call <- 'ni'
     # capture dots
@@ -507,7 +507,7 @@ find_partition <- function(memory, ...) {
         dts <- unlist(dts, recursive = FALSE)
     }
     # print table without arguments
-    if (missing(memory) && length(dts) == 0) {
+    if (missing(memory) && missing(cpu_mem_min) && length(dts) == 0) {
         return(system('ni'))
     } else if (is.na(suppressWarnings(as.numeric(sub('[A-Z]$', '', memory))))) {
         pattern <- paste0('.*', memory, '.*|$')
@@ -562,9 +562,22 @@ find_partition <- function(memory, ...) {
             stop({find_partition(); paste0('Partition ', part, ' doesn\'t have nodes with enough memory available.')})
         }
     }
+    # get max cpus
+    if (is.character(cpu_mem_min)) {
+        mem <- suppressWarnings(as.numeric(sub('(T|G|M|K)(b|B)?$', '', cpu_mem_min)))
+        cpu_mem_min <- mem * switch(sub('.*(T|G|M|K)(b|B)?$', '\\1', cpu_mem_min)
+            , 'T' = 1e6
+            , 'G' = 1e3
+            , 'M' = 1
+            , 'K' = 1e-3
+            , stop('Memory unit not recognized')
+        )
+    }
+    max_cpus <- memory / cpu_mem_min
     # summarize
     ni_sum <- ni_mem[, {
         Cav <- unique(CIdle)
+        if (is.finite(max_cpus)) Cav[Cav > max_cpus] <- as.integer(max_cpus)
         rbindlist(lapply(Cav, function(cav) {
             # print node names if colored below
             ind <- CIdle >= cav
@@ -573,10 +586,11 @@ find_partition <- function(memory, ...) {
                 node_names = list(Node[ind]),
                 nodes = Nodes,
                 cpus = Nodes * cav,
-                cpus_per_task = cav
+                cpus_per_task = cav,
+                mem_per_cpu = round(memory / cav, 1)
             )
         }))
-    }, by = Part][nodes <= ntasks]
+    }, by = Part][nodes <= ntasks & mem_per_cpu > cpu_mem_min]
     # check partition
     if (is.null(part)) {
         # exclude alloc

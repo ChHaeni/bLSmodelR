@@ -105,6 +105,8 @@ run_sbatch <- function(slurm, rscript, wait) {
         cat('\n')
         # collect and return results
         res <- collect_results(slurm$tmp_dir)
+        # check memory usage
+        browser()
         # duration of job?
         dur <- Sys.time() - current_time
         cat('Time since sending job: ', round(dur, 2), attr(dur, 'units'), '\n')

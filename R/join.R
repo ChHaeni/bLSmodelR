@@ -55,13 +55,14 @@ join.bLSresult <- function(..., asDT = TRUE, keep.rn = FALSE){
     }
     # change rn and convert to 4.2+
     for(i in seq_along(allargs)){
+        x <- copy(allargs[[i]])
         if (!keep.rn) {
-            allargs[[i]][, rn := paste0(i, "_", rn)]
-            attr(allargs[[i]], "Catalogs")[, rn := paste0(i, "_", rn)]
-            attr(allargs[[i]], "CalcSteps")[, rn := paste0(i, "_", rn)]
-            row.names(attr(allargs[[i]], "ModelInput")$"Interval") <- paste0(i, "_", row.names(attr(allargs[[i]], "ModelInput")$"Interval"))
+            x[, rn := paste0(i, "_", rn)]
+            attr(x, "Catalogs")[, rn := paste0(i, "_", rn)]
+            attr(x, "CalcSteps")[, rn := paste0(i, "_", rn)]
+            row.names(attr(x, "ModelInput")$"Interval") <- paste0(i, "_", row.names(attr(x, "ModelInput")$"Interval"))
         }
-        allargs[[i]] <- convert(allargs[[i]])
+        allargs[[i]] <- convert(x)
     }
     out <- rbindlist(allargs,fill = TRUE)
     setattr(out, "Version", "4.2+")

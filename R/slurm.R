@@ -579,7 +579,10 @@ find_partition <- function(memory, cpu_mem_min = 0, ...) {
     # summarize
     ni_sum <- ni_mem[, {
         Cav <- unique(CIdle)
-        if (is.finite(max_cpus)) Cav[Cav > max_cpus] <- as.integer(max_cpus)
+        if (is.finite(max_cpus)) {
+            Cav[Cav > max_cpus] <- as.integer(max_cpus)
+            Cav <- unique(Cav)
+        }
         rbindlist(lapply(Cav, function(cav) {
             # print node names if colored below
             ind <- CIdle >= cav
@@ -592,7 +595,7 @@ find_partition <- function(memory, cpu_mem_min = 0, ...) {
                 mem_per_cpu = round(memory / cav, 1)
             )
         }))
-    }, by = Part][nodes <= ntasks & mem_per_cpu > cpu_mem_min]
+    }, by = Part][nodes <= ntasks]
     # check partition
     if (is.null(part)) {
         # exclude alloc

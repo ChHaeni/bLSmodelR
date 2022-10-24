@@ -11,15 +11,14 @@ rebuildCatListFile <- function(C.Path, fromScratch = FALSE) {
 		if (file.exists(Catfile)) {
             # try to read file
             CatList <- try(qread(Catfile, strict = TRUE), silent = TRUE)
-            # if fails (issues on prime), try again
-            if (inherits(CatList, 'try-error')) {
-                # try again
-                cat('Trying to read file again...\n')
+            # try again on error
+            tic <- Sys.time()
+            while (inherits(CatList, 'try-error') && as.numeric(Sys.time() - tic, units = 'secs') < 20) {
                 CatList <- try(qread(Catfile, strict = TRUE), silent = TRUE)
-                # improved error message upon failure
-                if (inherits(CatList, 'try-error')) {
-                    stop('rebuildCatListFile: reading file ', Catfile, ' fails!')
-                }
+            }
+            # improved error message upon failure
+            if (inherits(CatList, 'try-error')) {
+                stop('rebuildCatListFile: reading file ', Catfile, ' fails!')
             }
 			# check erroneous
 			CatList <- CatList[grepl("Cat_Zm.*_[0-9]{14}$", Name)]

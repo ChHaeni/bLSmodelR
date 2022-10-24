@@ -498,7 +498,7 @@ clean_ntasks <- function(x) {
 }
 
 # find partition
-# TODO: switch to --mem-per-cpu !!! and export seff
+# TODO: filter to show mix/idle only
 find_partition <- function(memory, cpu_mem_min = 0, ...) {
     # ni call
     ni_call <- 'ni'

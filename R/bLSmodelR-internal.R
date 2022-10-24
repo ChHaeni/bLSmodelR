@@ -335,7 +335,10 @@ memory_usage <- function(res, show = TRUE, slurm = NULL) {
         'per CPU\n',
         '=======\n',
         if (has_slurm) {
-            paste0('threshold (min):   ', fs(slurm$part[, minimum_mem_given], 1000), '\n')
+            paste0(
+                'available:         ', fs(slurm$part[, total_memory / nodes / cpus], 1000), '\n',
+                'threshold (min):   ', fs(slurm$part[, minimum_mem_given], 1000), '\n'
+            )
         },
         'RSS max:           ', fs(rss_cpu), '\n',
         'VSZ max:           ', fs(vsz_cpu), '\n',
@@ -343,7 +346,8 @@ memory_usage <- function(res, show = TRUE, slurm = NULL) {
         'total\n',
         '=====\n',
         if (has_slurm) {
-            paste0('available:         ', fs(slurm$part[, total_memory], 1000), '\n')
+            paste0('available:         ', fs(slurm$part[, total_memory], 1000), '  (', 
+                slurm$part[, nodes],' \u00D7 ', fs(slurm$part[, total_memory / nodes], 1000) ,')\n')
         },
         'RSS avg:           ', fs(rss_avg), '\n',
         'RSS max:           ', fs(rss_max), '\n',

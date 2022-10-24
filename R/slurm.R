@@ -513,7 +513,7 @@ find_partition <- function(memory, ..., cpu_mem_min = 0, show_state = c('idle', 
     exclude_partitions <- getOption('bls.slurm.exclude.partition', '')
     add_cmd <- ''
     if (length(show_state) > 0) {
-        cat('only show state: ', paste(show_state, collapse = ', '), '\n')
+        cat('only showing state: ', paste(show_state, collapse = ', '), '\n')
         add_cmd <- paste0(add_cmd, " | grep --color=never -E '", paste(c(show_state, 'Node'), collapse = '|'), "'")
     }
     if (length(exclude_partitions) > 0) {

@@ -325,19 +325,22 @@ memory_usage <- function(res, show = TRUE, slurm = NULL) {
     fs <- function(x, base = 1024) format(structure(x * base ^ 2, class = 'object_size'),
         units = 'auto', standard = 'SI')
     has_slurm <- !is.null(slurm)
-    browser()
     msg <- out[, paste0(
         '~~~~~ memory usage ~~~~~\n',
         if (has_slurm) {
-            paste(slurm$part[, nodes], 'Nodes\n')
+            paste0(
+                slurm$part[, nodes], ' Nodes\n',
+                n_cpus, ' CPUs (available: ', slurm$part[, cpus], ')\n'
+            )
+        } else {
+            paste0(n_cpus, ' CPUs\n')
         },
-        n_cpus, ' CPUs\n',
         '\n',
         'per CPU\n',
         '=======\n',
         if (has_slurm) {
             paste0(
-                'available:         ', fs(slurm$part[, total_memory / nodes / cpus], 1000), '\n',
+                'available:         ', fs(slurm$part[, total_memory / n_cpus], 1000), '\n',
                 'threshold (min):   ', fs(slurm$part[, minimum_mem_given], 1000), '\n'
             )
         },

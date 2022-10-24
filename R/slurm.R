@@ -499,7 +499,7 @@ clean_ntasks <- function(x) {
 
 # find partition
 # TODO: filter to show mix/idle only
-find_partition <- function(memory, cpu_mem_min = 0, ...) {
+find_partition <- function(memory, ..., cpu_mem_min = 0, show_state = c('idle', 'mix')) {
     # ni call
     ni_call <- 'ni'
     # capture dots
@@ -508,12 +508,28 @@ find_partition <- function(memory, cpu_mem_min = 0, ...) {
     if (any(sapply(dts, is.list))) {
         dts <- unlist(dts, recursive = FALSE)
     }
+    # any partitions to exclude?
+    cat('checking partitions\n')
+    exclude_partitions <- getOption('bls.slurm.exclude.partition', '')
+    add_cmd <- ''
+    if (length(show_state) > 0) {
+        cat('only show state: ', paste(show_state, collapse = ', '), '\n')
+        add_cmd <- paste0(add_cmd, " | grep --color=never -E '", paste(c(show_state, 'Node'), collapse = '|'), "'")
+    }
+    if (length(exclude_partitions) > 0) {
+        cat('excluding: ', paste(exclude_partitions, collapse = ','), '\n')
+        add_cmd <- paste0(add_cmd, " | grep -Ev '", paste(exclude_partitions, collapse = '|'), "'")
+    }
     # print table without arguments
     if (missing(memory) && missing(cpu_mem_min) && length(dts) == 0) {
-        return(system('ni'))
+        if (add_cmd != '') {
+            return(system(paste0(ni_call, add_cmd)))
+        } else {
+            return(system(ni_call))
+        }
     } else if (is.na(suppressWarnings(as.numeric(sub('[A-Z]$', '', memory))))) {
         pattern <- paste0('.*', memory, '.*|$')
-        return(system(paste0('ni | grep --color -E \'', pattern, '\'')))
+        return(system(paste0(ni_call, add_cmd, ' | grep --color -E \'', pattern, '\'')))
     }
     # check ntasks
     ntasks <- get_sopt(dts, 'n', 'ntasks', alternative = Inf)
@@ -541,8 +557,6 @@ find_partition <- function(memory, cpu_mem_min = 0, ...) {
     }
     # read partition table
     ni <- data.table::fread(cmd = ni_call)
-    # any partitions to exclude?
-    exclude_partitions <- getOption('bls.slurm.exclude.partition', '')
     # check if it is a vector
     if (!is.character(exclude_partitions) || length(exclude_partitions) == 0) {
         stop('option "bls.slurm.exclude.partition" should be a character vector!')
@@ -624,7 +638,7 @@ find_partition <- function(memory, cpu_mem_min = 0, ...) {
     }
     # print system call with selected nodes highlighted
     patterns <- out[, paste(c(paste0(unlist(node_names), '.*'), '$'), collapse = '|')]
-    system(paste0(ni_call, ' | grep --color -E \'', patterns, '\''))
+    system(paste0(ni_call, add_cmd, ' | grep --color -E \'', patterns, '\''))
     # add total memory and minimum per cpu
     out[, ':='(total_memory = memory * nodes, minimum_mem_given = cpu_mem_min)]
     # return selected as data.table

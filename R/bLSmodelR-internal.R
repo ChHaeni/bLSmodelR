@@ -325,6 +325,7 @@ memory_usage <- function(res, show = TRUE, slurm = NULL) {
     fs <- function(x, base = 1024) format(structure(x * base ^ 2, class = 'object_size'),
         units = 'auto', standard = 'SI')
     has_slurm <- !is.null(slurm)
+    browser()
     msg <- out[, paste0(
         '~~~~~ memory usage ~~~~~\n',
         if (has_slurm) {

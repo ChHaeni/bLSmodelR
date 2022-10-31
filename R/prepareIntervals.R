@@ -70,6 +70,7 @@ prepareIntervals <- function(InputList,C.Path=NULL,asDT=TRUE,simpleNames=TRUE,nc
         ncores <- 1
     } else if (inherits(ncores, 'cluster')) {
         cl <- ncores
+        ncores <- length(cl)
     } else if (ncores > 1) {
 		on.exit(parallel::stopCluster(cl))
         cl <- parallel::makePSOCKcluster(ncores)

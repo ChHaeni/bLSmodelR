@@ -204,31 +204,34 @@ deposition <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL,
 
 	setkey(Run,rn,Sensor)
 
-	if (inherits(ncores, 'cluster') || (ncores != 1 && N > 1)) {
+    # get N_TD > 0
+    index_g0 <- Run[, which(N_TD > 0)]
+    # get N > 0
+    n_g0 <- length(index_g0)
 
+    # only run if any row need to be calculated
+    if (n_g0 > 0) {
 
-        if (inherits(ncores, 'cluster')) {
-            cl <- ncores
-            ncores <- length(cl)
-        } else {
-			if (ncores < 1) ncores <- parallel::detectCores(TRUE, FALSE)
-			on.exit(parallel::stopCluster(cl), add = TRUE)
-            cl <- .makePSOCKcluster(ncores, memory_limit = memory_limit)
-			data.table::setDTthreads(ncores)
-		}
-        if (.is_recording()) {
-            parallel::clusterEvalQ(cl, bLSmodelR:::.start_recording())
-        }
-        parallel::clusterEvalQ(cl, data.table::setDTthreads(1L))
+        if (inherits(ncores, 'cluster') || (ncores != 1 && n_g0 > 1)) {
 
-        # get N_TD > 0
-        ntd_g0 <- Run[, which(N_TD > 0)]
-
-        if (length(ntd_g0) > 0) {
+            if (inherits(ncores, 'cluster')) {
+                cl <- ncores
+                ncores <- length(cl)
+            } else {
+                if (ncores < 1) ncores <- parallel::detectCores(TRUE, FALSE)
+                # restrict ncores to max. necessary
+                ncores <- min(ncores, n_g0)
+                on.exit(parallel::stopCluster(cl), add = TRUE)
+                cl <- .makePSOCKcluster(ncores, memory_limit = memory_limit)
+                data.table::setDTthreads(ncores)
+            }
+            if (.is_recording()) {
+                parallel::clusterEvalQ(cl, bLSmodelR:::.start_recording())
+            }
+            parallel::clusterEvalQ(cl, data.table::setDTthreads(1L))
 
             # sort by N_TD
-            ntd_order <- Run[ntd_g0, order(N_TD)]
-
+            ntd_order <- Run[index_g0, order(N_TD)]
             ### try to qsave/qread, instead of direct traffic?
             # get temporary file name
             # NOTE: what if tempdir is not accessable (e.g. PRIME?)
@@ -252,7 +255,7 @@ deposition <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL,
                     )
                     # return file name
                     f_name
-                }, run = as.data.frame(Run[ntd_g0[ntd_order], ]))
+                }, run = as.data.frame(Run[index_g0[ntd_order], ]))
 
             # run parallel
             cat("Parallel computing deposition corrected C/E...\nThis will take a moment...\n")
@@ -267,15 +270,12 @@ deposition <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL,
                 stop('parallel computing returned the following error message:\n',
                     attr(ResFiles, 'condition')[['message']])
             }
-
             # read files
             OutList <- lapply(ResFiles, qs::qread)
             # clean up
             file.remove(unlist(ResFiles))
-
             # get gc/memory attribute
             cpu_mem <- .gather_mem(OutList)
-
             # bind together (we do not need to order because of merge)
             Out <- rbind(
                 # N_TD > 0 from clusters
@@ -286,29 +286,28 @@ deposition <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL,
 
         } else {
 
-            # all N_TD == 0
-            Out <- Run[, .(CE, CE_se, uCE, uCE_se, vCE, vCE_se, wCE, wCE_se, UCE, vd_index)]
-            cpu_mem <- NULL
+            OutList <- vector(n_g0,mode="list")
+            if(vdSpat){
+                for(i in seq_len(n_g0)){
+                    cat(i,"/",n_g0,":\n")
+                    OutList[[i]] <- .calcDep_Spatial(Run[index_g0[i],],Catalogs,Cat.Path,ModelInput[["Sources"]],pSens$"Calc.Sensors",vDep,vDepSpatial)
+                }
+            } else {
+                for(i in seq_len(n_g0)){
+                    cat(i,"/",n_g0,":\n")
+                    OutList[[i]] <- .calcDep(Run[index_g0[i],],Catalogs,Cat.Path,ModelInput[["Sources"]],pSens$"Calc.Sensors",vDep,vDepSpatial)
+                }			
+            }
+            Out <- rbindlist(OutList)[, vd_index := index_g0]
+            # get gc/memory attribute
+            cpu_mem <- .gather_mem(OutList)
         }
 
-	} else {
-
-		OutList <- vector(N,mode="list")
-		if(vdSpat){
-			for(i in seq_len(N)){
-				cat(i,"/",N,":\n")
-				OutList[[i]] <- .calcDep_Spatial(Run[i,],Catalogs,Cat.Path,ModelInput[["Sources"]],pSens$"Calc.Sensors",vDep,vDepSpatial)
-			}
-		} else {
-			for(i in seq_len(N)){
-				cat(i,"/",N,":\n")
-				OutList[[i]] <- .calcDep(Run[i,],Catalogs,Cat.Path,ModelInput[["Sources"]],pSens$"Calc.Sensors",vDep,vDepSpatial)
-			}			
-		}
-		Out <- rbindlist(OutList)[, vd_index := seq_len(N)]
-        # get gc/memory attribute
-        cpu_mem <- .gather_mem(OutList)
-	}
+    } else {
+        # all N_TD == 0
+        Out <- Run[, .(CE, CE_se, uCE, uCE_se, vCE, vCE_se, wCE, wCE_se, UCE, vd_index)]
+        cpu_mem <- NULL
+    }
 
 	setnames(Out,paste0(names(Out),"_Dep"))
 	Out <- merge(Run, Out, by.x = "vd_index", by.y = "vd_index_Dep")

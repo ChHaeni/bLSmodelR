@@ -19,7 +19,8 @@
 			SonicList[[i]][, Sensor := SensorNames[i]]
 		}
 	}
-	SncRun <- rbindlist(SonicList)
+    # check is.null (sensor names may be missing)
+	SncRun <- rbindlist(SonicList[!sapply(SonicList, is.null)])
 	setattr(SncRun,"class",c("SncExt","data.table","data.frame"))
 	Key <- SncRun[,paste0(.I,collapse=","),by=.(Sensor,rn)]
 

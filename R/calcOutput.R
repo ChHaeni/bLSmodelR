@@ -9,13 +9,15 @@
 	SonicList <- vector(length(SensorNames),mode="list")
 	splitSensor <- strsplit(SncRun[,Sensor],",",fixed=TRUE)
 	for(i in seq_along(SensorNames)){
-		SensSearch <- paste(paste0("\\b", unlist(strsplit(InputList$Sensors$PS_list[[SensorNames[i]]], ",")), "\\b"), collapse = "|")
-		ind <- SncRun[, grep(SensSearch, Sensor)]
+        # use exact matching
+        sensor_points <- unlist(strsplit(InputList$Sensors$PS_list[[SensorNames[i]]], split = ',', fixed = TRUE))
+        find_points <- lapply(splitSensor, function(x) x %in% sensor_points)
+		ind <- which(unlist(lapply(find_points, any)))
 		if(length(ind) > 0){
 			SonicList[[i]] <- SncRun[ind,]
-			SonicList[[i]][, Calc.Sensor := sapply(splitSensor[ind],function(x){
-				paste0(grep(SensSearch, x, value = TRUE), collapse = ",")
-			})]				
+            SonicList[[i]][, Calc.Sensor := paste(unique(unlist(lapply(ind, function(x) {
+                splitSensor[[x]][find_points[[x]]]
+            }))), collapse = ',')]
 			SonicList[[i]][, Sensor := SensorNames[i]]
 		}
 	}

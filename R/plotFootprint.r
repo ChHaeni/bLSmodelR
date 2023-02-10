@@ -10,7 +10,7 @@ plotFootprint <- function(x, SensorName, rn = NULL, MyMap = NULL, type = c("CE",
     xlim = c(-100, 100), ylim = c(-100, 100), add = FALSE, alpha = 0.3, axs = c("r", "i"), 
     main = NULL, asp = 1, fill = TRUE, sub = NULL, bg.col = NULL, addSource = TRUE, 
     showMax = FALSE, showSensor = TRUE, dispSname = showSensor,  N0 = NULL, lpos = NULL, 
-    showPerc = FALSE, leg.bg.col = grey(0.9), cpal = NULL, decPlaces = 0, sigNums = 1, 
+    showPerc = FALSE, leg.bg.col = grey(0.9), cpal = NULL, lty = 1, lwd = 1, decPlaces = 0, sigNums = 1, 
     addWR = FALSE, WRpos = 2, WRfrac = 20, WRscale = 1, xy_transform = NULL, transformArgs = NULL, 
     useSTRtree = TRUE, avoidGEOS = FALSE, addSB = FALSE, SBpos = 3, StaticMapArgs = NULL,
     showLegend = TRUE,  verbose = FALSE){
@@ -379,7 +379,7 @@ plotFootprint <- function(x, SensorName, rn = NULL, MyMap = NULL, type = c("CE",
 
     if(fill)fillcol <- paste0(cpal,alphachar) else fillcol <- NA
 
-    sp::plot(SpPclip,col=fillcol,border=cpal,add=TRUE)
+    sp::plot(SpPclip, col = fillcol, border = cpal, lty = lty, lwd = lwd, add = TRUE)
     box()
 
     mi <- which(xy==max(xy),arr.ind=T)

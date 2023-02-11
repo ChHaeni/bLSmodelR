@@ -345,27 +345,23 @@ plotFootprint <- function(x, SensorName, rn = NULL, MyMap = NULL, type = c("CE",
                         })
     }
 
-    clP <- lapply(clRot,function(x)sp::Polygon(cbind(x$x,x$y)))
-    clPs <- lapply(uclFac,function(x,y,z,a,b)maptools::checkPolygonsHoles(sp::Polygons(y[z==x],as.character(x)),useSTRtree=a,avoidGEOS=b),y=clP,z=clFac,a=useSTRtree,b=avoidGEOS)
-    clSp <- sp::SpatialPolygons(clPs,as.integer(uclFac))
+    if (fill) {
+        clP <- lapply(clRot,function(x)sp::Polygon(cbind(x$x,x$y)))
+        clPs <- lapply(uclFac,function(x,y,z,a,b)maptools::checkPolygonsHoles(sp::Polygons(y[z==x],as.character(x)),useSTRtree=a,avoidGEOS=b),y=clP,z=clFac,a=useSTRtree,b=avoidGEOS)
+        clSp <- sp::SpatialPolygons(clPs,as.integer(uclFac))
 
-    # if(is.null(xlim)&is.null(ylim)){
-    # 	xyr <- rotate(cbind(x=range(xm),y=range(ym)),Angle=WDmean+180)
-    # 	xlim <- range(xyr[,1]) + range(SensorPosition[,2])
-    # 	ylim <- range(xyr[,2]) + range(SensorPosition[,3])
-    # }
+        # Loesung:
+        mlt <- switch(axs[1],
+            "i"=1.08,
+            1
+        )
+        xlim2 <- xlimOriginal - diff(xlimOriginal)*(1-1/mlt)/2;ylim2 <- ylimOriginal - diff(ylimOriginal)*(1-1/mlt)/2
+        c1 <- sp::Polygon(cbind(c(xlim2[1],xlim2[2],xlim2[2],xlim2[1], xlim2[1]),c(ylim2[1],ylim2[1],ylim2[2],ylim2[2],ylim2[1])))
+        c2 <- sp::Polygons(list(c1), "sclip")
+        Pclip <- sp::SpatialPolygons(list(c2))
 
-    # Loesung:
-    mlt <- switch(axs[1],
-        "i"=1.08,
-        1
-    )
-    xlim2 <- xlimOriginal - diff(xlimOriginal)*(1-1/mlt)/2;ylim2 <- ylimOriginal - diff(ylimOriginal)*(1-1/mlt)/2
-    c1 <- sp::Polygon(cbind(c(xlim2[1],xlim2[2],xlim2[2],xlim2[1], xlim2[1]),c(ylim2[1],ylim2[1],ylim2[2],ylim2[2],ylim2[1])))
-    c2 <- sp::Polygons(list(c1), "sclip")
-    Pclip <- sp::SpatialPolygons(list(c2))
-
-    SpPclip <- rgeos::gIntersection(clSp, Pclip, byid = TRUE)
+        SpPclip <- rgeos::gIntersection(clSp, Pclip, byid = TRUE)
+    }
 
     alphachar <- as.hexmode(round(alpha*255))
 
@@ -377,10 +373,20 @@ plotFootprint <- function(x, SensorName, rn = NULL, MyMap = NULL, type = c("CE",
 
     if(!add){abline(h=aty,lty="dotted",col="lightgrey");abline(v=atx,lty="dotted",col="lightgrey")}
 
-    if(fill)fillcol <- paste0(cpal,alphachar) else fillcol <- NA
-
-    sp::plot(SpPclip, col = fillcol, border = cpal, lty = lty, lwd = lwd, add = TRUE)
-    box()
+    if (fill) {
+        fillcol <- paste0(cpal, alphachar)
+        sp::plot(SpPclip, col = fillcol, border = cpal, lty = lty, lwd = lwd, add = TRUE)
+        box()
+    } else {
+        for (icl in clRot) {
+            ibreak <- which(icl$level == brks)
+            lines(icl$x, icl$y, 
+                col = cpal[(ibreak - 1) %% length(cpal) + 1], 
+                lty = lty[(ibreak - 1) %% length(lty) + 1], 
+                lwd = lwd[(ibreak - 1) %% length(lwd) + 1]
+            )
+        }
+    }
 
     mi <- which(xy==max(xy),arr.ind=T)
     if(showMax){

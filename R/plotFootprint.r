@@ -400,12 +400,23 @@ plotFootprint <- function(x, SensorName, rn = NULL, MyMap = NULL, type = c("CE",
         if(showPerc){
             ltex <- sprintf(paste0("%2.",decPlaces,"f%%"),rev(brks)/max(xy)*100)
             ltex <- paste0(">",ltex)
-            temp <- legend(lpos,legend=rep(" ",length(ltex)),title="% of max.",text.width=strwidth(paste0("00",if(decPlaces>0){paste0(".",paste0(rep("0",decPlaces),collapse=""))}else{""}," %")),fill=paste0(rev(cpal),alphachar),border=rev(cpal),bg=leg.bg.col)
+            if (fill) {
+                temp <- legend(lpos,legend=rep(" ",length(ltex)),title="% of max.",text.width=strwidth(paste0("00",if(decPlaces>0){paste0(".",paste0(rep("0",decPlaces),collapse=""))}else{""}," %")),fill=paste0(rev(cpal),alphachar),border=rev(cpal),bg=leg.bg.col)
+            } else {
+                temp <- legend(lpos, legend = rep(" ", length(ltex)), title = "% of max.",
+                    text.width = strwidth(paste0("00", 
+                            if (decPlaces > 0) paste0(".", paste0(rep("0", decPlaces), collapse = "")) else "", " %")), 
+                    col = rev(cpal), bg = leg.bg.col, lty = rev(lty), lwd = rev(lwd))
+            }
             text(temp$rect$left + temp$rect$w, temp$text$y,ltex, pos = 2)
         } else {
             ltex <- signif(rev(brks),sigNums)
             ltex <- paste0(">",ltex)
-            legend(lpos,legend=ltex,xjust=0,fill=paste0(rev(cpal),alphachar),border=rev(cpal),bg=leg.bg.col)
+            if (fill) {
+                legend(lpos, legend = ltex, xjust = 0, fill = paste0(rev(cpal), alphachar), border = rev(cpal), bg = leg.bg.col)
+            } else {
+                legend(lpos, legend = ltex, xjust = 0, col = rev(cpal), bg = leg.bg.col, lty = rev(lty), lwd = rev(lwd))
+            }
         }
     }
     if(addWR)addWindrose(WDmean,pos=WRpos,frac=WRfrac,scF=WRscale)

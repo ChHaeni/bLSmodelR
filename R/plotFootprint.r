@@ -6,7 +6,7 @@
 
 plotFootprint <- function(x, SensorName, rn = NULL, MyMap = NULL, type = c("CE", "wCE", "uCE"), 
     use.avg = FALSE, use.sym = FALSE, use.var = TRUE, wTDcutoff = NULL, origin = NULL, 
-    dx = 2, dy = dx, breaks = function(x) quantile(c(0, max(x)), c(0.01, 0.1, 0.5, 0.9)), 
+    dx = 2, dy = dx, levels = c(0.01, 0.1, 0.5, 0.9), breaks = function(x) quantile(c(0, max(x)), levels),
     xlim = c(-100, 100), ylim = c(-100, 100), add = FALSE, alpha = 0.3, axs = c("r", "i"), 
     main = NULL, asp = 1, fill = TRUE, sub = NULL, bg.col = NULL, fp_only = FALSE, addSource = !fp_only, 
     showMax = FALSE, showSensor = !fp_only, dispSname = showSensor,  N0 = NULL, lpos = NULL, 

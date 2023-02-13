@@ -41,9 +41,24 @@ plotFootprint <- function(x, SensorName, rn = NULL, MyMap = NULL, type = c("CE",
         ylimOriginal <- x$ylimOriginal
         xm <- x$xm
         ym <- x$ym
+        if (!is.null(origin)) {
+            old_ll <- data.frame(x = ym[1], y = xm[1])
+            # transf to origin
+            new_ll <- rotate(old_ll, Angle = -WDmean)
+            # shift origin
+            new_ll <- sweep(new_ll, 2, rev(origin))
+            # transf back
+            new_ll <- rotate(new_ll, Angle = WDmean)
+            # shift xm & ym
+            xm <- xm - old_ll[[2]] + new_ll[[2]]
+            ym <- ym - old_ll[[1]] + new_ll[[1]]
+            # shift xlimOriginal & ylimOriginal
+            xlimOriginal <- xlimOriginal - origin[1]
+            ylimOriginal <- ylimOriginal - origin[2]
+        }
         xy <- x$xy
         if(!add){
-            stop("only add=TRUE supported when providing a footprint object")
+            stop("argument 'add' must be TRUE when providing a footprint object")
         }
     } else {
         # convert old versions 

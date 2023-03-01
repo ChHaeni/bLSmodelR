@@ -79,6 +79,10 @@ runbLS <- function(ModelInput, Cat.Path = NULL, ncores = NULL, TDonly = NULL,
         # get number of cores, but set ncores to 1 to keep running at end
         Model[['ncores']] <- length(cl)
 		ncores <- 1
+        if (!is.null(memory_limit)) {
+            warning('argument "memory_limit" has been provided,\nbut memory limitation',
+                ' is not possible on already running workers.')
+        }
 	} else if (ncores > 1) {
 		on.exit(
 			{
@@ -93,6 +97,10 @@ runbLS <- function(ModelInput, Cat.Path = NULL, ncores = NULL, TDonly = NULL,
 		stop("Number of cores must be greater or equal to 1!")
 	} else {
         cl <- NULL
+        if (!is.null(memory_limit)) {
+            warning('argument "memory_limit" has been provided,\nbut memory limitation',
+                ' is only possible when setting up workers for parallel processing.')
+        }
 	}
 
     if (!is.null(cl)) {

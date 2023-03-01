@@ -44,6 +44,17 @@
 
 ### fix memory limit
 .makePSOCKcluster <- function (names, memory_limit = NULL, ...) {
+    # check names
+    local <- is.numeric(names) || (is.character(names) && identical(names, 
+        rep("localhost", length(names))))
+    if (is.numeric(names)) {
+        names <- as.integer(names[1L])
+        if (is.na(names) || names < 1L) 
+            stop("numeric 'names' must be >= 1")
+        names <- rep("localhost", names)
+    }
+    parallel:::.check_ncores(length(names))
+    cl <- vector("list", length(names))
     # check memory limit
     if (!is.null(memory_limit)) {
         stopifnot(length(memory_limit) == 1)
@@ -52,8 +63,11 @@
             memory_limit <- as.integer(memory_limit * 1e-6)
             # check lower limit of 100 Mb
             if (memory_limit < 100) stop('Memory limit cannot be below 100Mb')
+            # get number and unit for summary printing
+            num <- memory_limit
+            unit <- 'Mb'
             # convert to string
-            memory_limit <- paste0(memory_limit, 'Mb')
+            memory_limit <- paste0(memory_limit, unit)
         } else {
             # check character
             if (!is.character(memory_limit)) stop('memory limit must be specified as string (e.g. "10Gb")')
@@ -88,6 +102,12 @@
                 }
                 )
         }
+        # be verbose
+        num_per_node <- paste0(sprintf('%1.2g', num / length(cl)), unit)
+        cat('\n~~~~ memory limit ~~~~\n')
+        cat('Memory is limited to', memory_limit, 'for a total of', length(cl), 'subprocesses.\n')
+        cat('This results in', num_per_node, 'memory per subprocess.\n')
+        cat('~~~~~~~~~~~~~~~~~~~~~~\n\n')
     }
     options <- parallel:::addClusterOptions(parallel:::defaultClusterOptions, list(...))
     manual <- parallel:::getClusterOption("manual", options)
@@ -95,16 +115,6 @@
     setup_strategy <- match.arg(parallel:::getClusterOption("setup_strategy", 
         options), c("sequential", "parallel"))
     setup_timeout <- parallel:::getClusterOption("setup_timeout", options)
-    local <- is.numeric(names) || (is.character(names) && identical(names, 
-        rep("localhost", length(names))))
-    if (is.numeric(names)) {
-        names <- as.integer(names[1L])
-        if (is.na(names) || names < 1L) 
-            stop("numeric 'names' must be >= 1")
-        names <- rep("localhost", names)
-    }
-    parallel:::.check_ncores(length(names))
-    cl <- vector("list", length(names))
     if (!manual && homogeneous && local && setup_strategy == 
         "parallel") {
         port <- parallel:::getClusterOption("port", options)

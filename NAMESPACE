@@ -155,6 +155,10 @@ S3method(rotate,matrix)
 S3method(rotate,Sensors)
 S3method(rotate,Sources)
 
+export(rename_sensor)
+S3method(rename_sensor, Sensors)
+S3method(rename_sensor, InputList)
+S3method(rename_sensor, bLSresult)
 
 
 importFrom("grDevices", "cm", "colorRampPalette", "contourLines","graphics.off", "grey")

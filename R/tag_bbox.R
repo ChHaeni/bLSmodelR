@@ -21,6 +21,7 @@ tag_bbox.matrix <- function(catalog, tag_polygon) {
 	]
 }
 tag_bbox.data.table <- function(catalog, tag_polygon) {
+    stopifnot(all(c('x', 'y') %in% names(tag_polygon)))
 	catalog[(bbox_inside), bbox_inside := (
 		x <= tag_polygon[, max(x)] & 
 		x >= tag_polygon[, min(x)] & 

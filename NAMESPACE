@@ -145,9 +145,9 @@ export(join.bLSresult)
 S3method(join,deposition)
 export(join.deposition)
 
-S3method(tagNear,data.table)
-S3method(tagNear,list)
-S3method(tagNear,matrix)
+S3method(tag_bbox, data.table)
+S3method(tag_bbox, list)
+S3method(tag_bbox, matrix)
 
 S3method(rotate,data.table)
 S3method(rotate,default)

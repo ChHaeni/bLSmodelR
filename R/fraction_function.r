@@ -181,7 +181,7 @@ calc_fct <- function(res, ncores = NULL, SourceSplit = NULL,
           y = y + Sens_xy[2]
           )]
         # get IDs inside, initial inside has to be TRUE
-        tagNear(Cat, apply(SouLi[[Source[1]]][,2:3], 2, range))
+        tag_bbox(Cat, apply(SouLi[[Source[1]]][,2:3], 2, range))
         Cat[, inside0 := inside]
         # initialize all_check
         all_check <- 0
@@ -192,7 +192,7 @@ calc_fct <- function(res, ncores = NULL, SourceSplit = NULL,
             # copy from original inside
             Cat[, inside := inside0]
             # tag near
-            tagNear(Cat[(inside)], .(x, y))
+            tag_bbox(Cat[(inside)], .(x, y))
             C_sub <- Cat[(inside), .(x, y)]
             any(as.logical(.Call("pip", C_sub[, x], C_sub[, y], C_sub[, .N], x, y, length(x), PACKAGE = "bLSmodelR")))
           }, by = .(tile, polygon)]

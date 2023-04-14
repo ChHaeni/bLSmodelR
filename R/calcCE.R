@@ -92,7 +92,7 @@
 		cat(paste0("\nMatching catalog: ",SubRun[Row,Cat.Name],"\n*****\n",attr(Catalog,"header"),"*****\n\n"))
 		
 		cat("\nGet TD inside source areas:\n")
-		tagNear(Catalog,Srange)
+		tag_bbox(Catalog,Srange)
 		Catalog[,inside0:=inside]
 		Catalog[,rn:=.I]
 
@@ -111,14 +111,14 @@
 				Sensor <- combs[cmb,2]
 				SourceAreaRelative <- copy(Scalc[Source])[,":="(x=x-SensorPositions[Sensor,1],y=y-SensorPositions[Sensor,2])]
 				Catalog[,inside:=inside0]
-				tagNear(Catalog,SourceAreaRelative)
+				tag_bbox(Catalog,SourceAreaRelative)
 				
 				if(Catalog[,any(inside)]){
 					# tag Inside Source
 					Catalog[,inside1:=inside]
 					TDinside <- SourceAreaRelative[,
 					{
-						tagNear(Catalog[,inside:=inside1],.(x=x,y=y))
+						tag_bbox(Catalog[,inside:=inside1],.(x=x,y=y))
 						cbind(ID=Catalog[(inside),rn],pnt.in.poly(Catalog[(inside),cbind(x,y)],cbind(x,y)))
 					},by=pid][,sum(pip),by=ID]
 

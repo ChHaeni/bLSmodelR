@@ -31,6 +31,11 @@ tag_inside <- function(catalog, sources, origin = c(0, 0),
     }
     
     if (!is.numeric(origin)) {
+        if (!all(c('x-Coord (m)', 'y-Coord (m)') %in% names(origin))) {
+            stop('Argument "origin" must be either a numeric vector of length 2 OR a ',
+                ' matrix-like object containing a SINGLE ROW as well as COLUMN NAMES ',
+                '"x-Coord (m)" and "y-Coord (m)"')
+        }
         origin <- unlist(origin[, c('x-Coord (m)', 'y-Coord (m)'), drop = TRUE])
     }
 

@@ -128,24 +128,24 @@
 
 					if (TDinside[, any(V1 > 0)]) {
 						setkey(Catalog, rn)
-						Catalog[TDinside, tag_inside := V1 > 0]
+						Catalog[TDinside, td_inside := V1 > 0]
 
 						# calc CE
-						Ci[[Source]][[Sensor]] <- Catalog[(tag_inside),
+						Ci[[Source]][[Sensor]] <- Catalog[(td_inside),
                             .(CE = sum(2 / wTD))
                             , by = Traj_ID]
 						# Max_Dist etc.
 						setkey(Catalog, Traj_ID)
                         browser()
                         # TODO: was macht minTime???
-						Cat <- Catalog[Catalog[(tag_inside), 
+						Cat <- Catalog[Catalog[(td_inside), 
                                 .(minTime = min(Time))
                                 , by = Traj_ID]][Time >= minTime, ]
 						Out[Source,":="(
 							Max_Dist = max(Max_Dist,rotateCatalog(Cat,SubRun[Row,WD],back=TRUE)[,-min(x)],na.rm=TRUE),
-							N_TD = N_TD + Catalog[,sum(tag_inside)],
-							TD_Time_avg = sum(TD_Time_avg,Catalog[(tag_inside),-mean(Time)],na.rm=TRUE),
-							TD_Time_max = max(TD_Time_max,Catalog[(tag_inside),-min(Time)],na.rm=TRUE),
+							N_TD = N_TD + Catalog[,sum(td_inside)],
+							TD_Time_avg = sum(TD_Time_avg,Catalog[(td_inside),-mean(Time)],na.rm=TRUE),
+							TD_Time_max = max(TD_Time_max,Catalog[(td_inside),-min(Time)],na.rm=TRUE),
 							N_Sensor = N_Sensor + 1
 							)]
 					}

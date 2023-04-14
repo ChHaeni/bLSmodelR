@@ -9,14 +9,14 @@
 #' tag touchdowns inside source areas
 #'
 #' tag touchdowns inside source areas. Adds columns
-#'  "tag_inside" and "source_names" to the TDcat object
+#'  "td_inside" and "source_names" to the TDcat object
 #'
 #' @param catalog A TDcat object, i.e., a bLSmodelR TD catalog of class TDcat.
 #' @param sources An object of class "Sources".
 #' @param origin Coordinates of the touchdown catalogs origin (sensor position) in 
 #'  the coordinates of the "Sources" object.
 #' @param tag_id Should polygon IDs be part of the source name? (Default: FALSE)
-#' @return The provided TDcat object with two columns named "tag_inside", indicating if
+#' @return The provided TDcat object with two columns named "td_inside", indicating if
 #'  touchdowns are inside the sources or not (TRUE/FALSE), and "source_names", indicating
 #'  the name of the corresponding source where the touchdown hits inside.
 tag_inside <- function(catalog, sources, origin = c(0, 0),
@@ -40,7 +40,7 @@ tag_inside <- function(catalog, sources, origin = c(0, 0),
     }
 
 	catalog[, ':='(
-        tag_inside = FALSE,
+        td_inside = FALSE,
         source_names = ''
         )]
 	sources_relative <- data.table(sources)
@@ -56,7 +56,7 @@ tag_inside <- function(catalog, sources, origin = c(0, 0),
 	if (catalog[, any(bbox_inside)]) {
 		# tag Inside Source
         if (tag_id) {
-            td_inside <- sources_relative[, {
+            tds_inside <- sources_relative[, {
                 cbind(
                     ID = catalog[(bbox_inside), rn], 
                     pnt.in.poly(catalog[(bbox_inside), cbind(x, y)], cbind(x, y))
@@ -65,7 +65,7 @@ tag_inside <- function(catalog, sources, origin = c(0, 0),
             paste0(paste(area, pid, sep = "/"), collapse = ",")
             , by = ID]	
         } else {
-            td_inside <- sources_relative[, {
+            tds_inside <- sources_relative[, {
                 cbind(
                     ID = catalog[(bbox_inside), rn], 
                     pnt.in.poly(catalog[(bbox_inside), cbind(x, y)], cbind(x, y))
@@ -74,10 +74,12 @@ tag_inside <- function(catalog, sources, origin = c(0, 0),
             paste0(area, collapse = ",")
             , by = ID]					
         }
-        catalog[td_inside, ':='(
-            tag_inside = TRUE,
-            source_names = V1
-            )]
+        if (nrow(tds_inside) > 0) {
+            catalog[tds_inside, ':='(
+                td_inside = TRUE,
+                source_names = V1
+                )]
+        }
 	}
 	catalog[, ":="(bbox_inside = NULL, rn = NULL)]
 

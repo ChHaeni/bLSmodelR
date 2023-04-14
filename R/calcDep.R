@@ -131,7 +131,7 @@
 			tag_inside(Ctlg,Src,CSnsrs[chmatch(Row[i,PointSensor], CSnsrs[, "Point Sensor Name"]),])
 			setkey(Ctlg,Traj_ID)
 			# browser()
-			Ctlg[,tagInsideQ := tag_inside]
+			Ctlg[,tagInsideQ := td_inside]
 
 			if(Ctlg[,any(tagInsideQ)]){
 
@@ -141,7 +141,7 @@
 				Ctlg[,vDep := vdep]
 				for(j in nms_Spatial){
 					tag_inside(Ctlg,Src_Spatial[[j]],CSnsrs[chmatch(Row[i,PointSensor],CSnsrs[, "Point Sensor Name"]),])
-					Ctlg[(tag_inside),vDep := vd_Spatial[[j]]]
+					Ctlg[(td_inside),vDep := vd_Spatial[[j]]]
 				}
 
 				Ctlg[,":="(
@@ -331,16 +331,16 @@
 			tag_inside(Ctlg,Src,CSnsrs[chmatch(Row[i,PointSensor],CSnsrs[, "Point Sensor Name"]),])
 			setkey(Ctlg,Traj_ID)
 			
-			if(Ctlg[,any(tag_inside)]){	
+			if(Ctlg[,any(td_inside)]){	
 
-				# N_TD_sum <- N_TD_sum + Ctlg[,sum(tag_inside)]		
+				# N_TD_sum <- N_TD_sum + Ctlg[,sum(td_inside)]		
 				
 				Ctlg[,":="(
 					wTD2 = 2/wTD
-					)][,dep:=1][(!tag_inside), dep := exp(-vdep*wTD2)
+					)][,dep:=1][(!td_inside), dep := exp(-vdep*wTD2)
 				]
 
-				Ci[[i]] <- Ctlg[Traj_ID %in% Traj_ID[(tag_inside)],.(CE = sum(as.numeric(tag_inside)*cumprod(dep)*wTD2)),by=Traj_ID]
+				Ci[[i]] <- Ctlg[Traj_ID %in% Traj_ID[(td_inside)],.(CE = sum(as.numeric(td_inside)*cumprod(dep)*wTD2)),by=Traj_ID]
 
 			}
 		}

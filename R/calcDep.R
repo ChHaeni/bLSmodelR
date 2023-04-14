@@ -128,10 +128,10 @@
 				UVW[[cName]] <- uvw
 			}
 
-			tagInside(Ctlg,Src,CSnsrs[chmatch(Row[i,PointSensor], CSnsrs[, "Point Sensor Name"]),])
+			tag_inside(Ctlg,Src,CSnsrs[chmatch(Row[i,PointSensor], CSnsrs[, "Point Sensor Name"]),])
 			setkey(Ctlg,Traj_ID)
 			# browser()
-			Ctlg[,tagInsideQ := tagInside]
+			Ctlg[,tagInsideQ := tag_inside]
 
 			if(Ctlg[,any(tagInsideQ)]){
 
@@ -140,8 +140,8 @@
 				### spatially inhomogeneous vdep:
 				Ctlg[,vDep := vdep]
 				for(j in nms_Spatial){
-					tagInside(Ctlg,Src_Spatial[[j]],CSnsrs[chmatch(Row[i,PointSensor],CSnsrs[, "Point Sensor Name"]),])
-					Ctlg[(tagInside),vDep := vd_Spatial[[j]]]
+					tag_inside(Ctlg,Src_Spatial[[j]],CSnsrs[chmatch(Row[i,PointSensor],CSnsrs[, "Point Sensor Name"]),])
+					Ctlg[(tag_inside),vDep := vd_Spatial[[j]]]
 				}
 
 				Ctlg[,":="(
@@ -328,19 +328,19 @@
 				UVW[[cName]] <- uvw
 			}
 
-			tagInside(Ctlg,Src,CSnsrs[chmatch(Row[i,PointSensor],CSnsrs[, "Point Sensor Name"]),])
+			tag_inside(Ctlg,Src,CSnsrs[chmatch(Row[i,PointSensor],CSnsrs[, "Point Sensor Name"]),])
 			setkey(Ctlg,Traj_ID)
 			
-			if(Ctlg[,any(tagInside)]){	
+			if(Ctlg[,any(tag_inside)]){	
 
-				# N_TD_sum <- N_TD_sum + Ctlg[,sum(tagInside)]		
+				# N_TD_sum <- N_TD_sum + Ctlg[,sum(tag_inside)]		
 				
 				Ctlg[,":="(
 					wTD2 = 2/wTD
-					)][,dep:=1][(!tagInside), dep := exp(-vdep*wTD2)
+					)][,dep:=1][(!tag_inside), dep := exp(-vdep*wTD2)
 				]
 
-				Ci[[i]] <- Ctlg[Traj_ID %in% Traj_ID[(tagInside)],.(CE = sum(as.numeric(tagInside)*cumprod(dep)*wTD2)),by=Traj_ID]
+				Ci[[i]] <- Ctlg[Traj_ID %in% Traj_ID[(tag_inside)],.(CE = sum(as.numeric(tag_inside)*cumprod(dep)*wTD2)),by=Traj_ID]
 
 			}
 		}

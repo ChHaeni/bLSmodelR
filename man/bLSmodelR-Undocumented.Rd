@@ -25,7 +25,7 @@
 \alias{setDT}
 \alias{setDF}
 \alias{sortData}
-\alias{tagInside}
+\alias{tag_inside}
 \alias{uvw0}
 \alias{updatePath}
 \alias{writeCatalog}
@@ -97,7 +97,7 @@ List of undocumented bLSmodelR functions:
 \item{\code{round125}: }{round digits to nearest predefined numbers}
 \item{\code{siteMap}: }{plot site map}
 \item{\code{sortData}: }{sort data, partially adopted from \code{\link{setorderv}}}
-\item{\code{tagInside}: }{tag TDs inside source area}
+\item{\code{tag_inside}: }{tag TDs inside source area}
 \item{\code{updatePath}: }{update path to TD catalogs}
 \item{\code{uvw0}: }{get initial (t=0) velocities from TD catalog}
 \item{\code{writeCatalog}: }{write TD catalog (default: saved as compact TD catalog)}

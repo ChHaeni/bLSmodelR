@@ -1,9 +1,6 @@
 # TODO:
-#   - change to consistent tagging (character instead of character/logical)
-#       -> careful rattail!
 #   - rename function 
 #       -> rename all existing tagInside() calls
-#   - better arguments/argument names
 #   - use better names for Sensors class (switchNames)
 #       -> this must be switched right at beginning (in run_bls)
 #       -> same for Sources -> name, x, y, id
@@ -23,7 +20,7 @@
 #' @return The provided TDcat object with two columns named "tag_inside", indicating if
 #'  touchdowns are inside the sources or not (TRUE/FALSE), and "source_names", indicating
 #'  the name of the corresponding source where the touchdown hits inside.
-tagInside <- function(catalog, sources, origin = c(0, 0),
+tag_inside <- function(catalog, sources, origin = c(0, 0),
     tag_id = FALSE) {
 
     if (!inherits(catalog, 'TDcat')) {

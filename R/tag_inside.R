@@ -20,7 +20,7 @@
 #'  touchdowns are inside the sources or not (TRUE/FALSE), and "source_names", indicating
 #'  the name of the corresponding source where the touchdown hits inside.
 tag_inside <- function(catalog, sources, origin = c(0, 0),
-    tag_id = FALSE) {
+    tag_id = FALSE, colname_inside = 'td_inside', colname_sources = 'source_names') {
 
     if (!inherits(catalog, 'TDcat')) {
         stop('Argument "catalog" must be of class "TDcat"')
@@ -38,6 +38,13 @@ tag_inside <- function(catalog, sources, origin = c(0, 0),
         stop('Argument "origin" must be either a numeric vector of length 2 OR a ',
             ' matrix-like object containing a SINGLE ROW as well as COLUMN NAMES ',
             '"x-Coord (m)" and "y-Coord (m)"')
+    }
+
+    if (!length(colname_inside) == 1 || !is.character(colname_inside)) {
+        stop('Argument "colname_inside" must be a character vector of length == 1')
+    }
+    if (!length(colname_sources) == 1 || !is.character(colname_sources)) {
+        stop('Argument "colname_sources" must be a character vector of length == 1')
     }
 
 	catalog[, ':='(
@@ -83,6 +90,8 @@ tag_inside <- function(catalog, sources, origin = c(0, 0),
         }
 	}
 	catalog[, ":="(bbox_inside = NULL, rn = NULL)]
+
+    setnames(catalog, c('td_inside', 'source_names'), c(colname_inside, colname_sources))
 
 	invisible(catalog)
 }

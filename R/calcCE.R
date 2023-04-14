@@ -93,11 +93,11 @@
 		
 		cat("\nGet TD inside source areas:\n")
 		tag_bbox(Catalog,Srange)
-		Catalog[,inside0:=inside]
+		Catalog[, inside_Srange := bbox_inside]
 		Catalog[,rn:=.I]
 
 		cat("\n~~ Sensor Height (z-d) >",SubRun[Row,SensorHeight],"m < ~~\n")
-		if(Catalog[,any(inside)]){
+		if (Catalog[, any(bbox_inside)]) {
 			combs <- expand.grid(SourceNames,SensorNames,KEEP.OUT.ATTRS=FALSE,stringsAsFactors=FALSE)
 			SensorNumbers <- chmatch(combs[,2],AllSensorNames)
 			nc <- NROW(combs)
@@ -109,33 +109,43 @@
 				
 				Source <- combs[cmb,1]
 				Sensor <- combs[cmb,2]
-				SourceAreaRelative <- copy(Scalc[Source])[,":="(x=x-SensorPositions[Sensor,1],y=y-SensorPositions[Sensor,2])]
-				Catalog[,inside:=inside0]
-				tag_bbox(Catalog,SourceAreaRelative)
+				SourceAreaRelative <- copy(Scalc[Source])[, ":="(
+                    x = x - SensorPositions[Sensor, 1], 
+                    y = y - SensorPositions[Sensor, 2]
+                    )]
+				Catalog[, bbox_inside := inside_Srange]
+				tag_bbox(Catalog, SourceAreaRelative)
 				
-				if(Catalog[,any(inside)]){
+				if (Catalog[, any(bbox_inside)]) {
 					# tag Inside Source
-					Catalog[,inside1:=inside]
-					TDinside <- SourceAreaRelative[,
-					{
-						tag_bbox(Catalog[,inside:=inside1],.(x=x,y=y))
-						cbind(ID=Catalog[(inside),rn],pnt.in.poly(Catalog[(inside),cbind(x,y)],cbind(x,y)))
-					},by=pid][,sum(pip),by=ID]
+					TDinside <- SourceAreaRelative[, {
+						tag_bbox(Catalog, .(x = x, y = y))
+						cbind(
+                            ID = Catalog[(bbox_inside), rn], 
+                            pnt.in.poly(Catalog[(bbox_inside), cbind(x, y)], cbind(x, y))
+                        )
+					}, by = pid][, sum(pip), by = ID]
 
-					if(any(TDinside[,as.logical(V1)])){
-						setkey(Catalog,rn)
-						Catalog[TDinside,inside:=as.logical(V1)]
+					if (TDinside[, any(V1 > 0)]) {
+						setkey(Catalog, rn)
+						Catalog[TDinside, tag_inside := V1 > 0]
 
 						# calc CE
-						Ci[[Source]][[Sensor]] <- Catalog[(inside),.(CE = sum(2/wTD)),by=Traj_ID]
+						Ci[[Source]][[Sensor]] <- Catalog[(tag_inside),
+                            .(CE = sum(2 / wTD))
+                            , by = Traj_ID]
 						# Max_Dist etc.
-						setkey(Catalog,Traj_ID)
-						Cat <- Catalog[Catalog[(inside),.(minTime=min(Time)),by=Traj_ID]][Time>=minTime,]
+						setkey(Catalog, Traj_ID)
+                        browser()
+                        # TODO: was macht minTime???
+						Cat <- Catalog[Catalog[(tag_inside), 
+                                .(minTime = min(Time))
+                                , by = Traj_ID]][Time >= minTime, ]
 						Out[Source,":="(
 							Max_Dist = max(Max_Dist,rotateCatalog(Cat,SubRun[Row,WD],back=TRUE)[,-min(x)],na.rm=TRUE),
-							N_TD = N_TD + Catalog[,sum(inside)],
-							TD_Time_avg = sum(TD_Time_avg,Catalog[(inside),-mean(Time)],na.rm=TRUE),
-							TD_Time_max = max(TD_Time_max,Catalog[(inside),-min(Time)],na.rm=TRUE),
+							N_TD = N_TD + Catalog[,sum(tag_inside)],
+							TD_Time_avg = sum(TD_Time_avg,Catalog[(tag_inside),-mean(Time)],na.rm=TRUE),
+							TD_Time_max = max(TD_Time_max,Catalog[(tag_inside),-min(Time)],na.rm=TRUE),
 							N_Sensor = N_Sensor + 1
 							)]
 					}

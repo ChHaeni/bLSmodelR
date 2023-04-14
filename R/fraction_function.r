@@ -174,7 +174,7 @@ calc_fct <- function(res, ncores = NULL, SourceSplit = NULL,
         Sens_xy <- as.numeric(c_sens[c_sens[, "Point Sensor Name"] %in% ps, 
           c("x-Coord (m)", "y-Coord (m)")])
         # copy catalog
-        Cat <- Cat0[, .(x, y, inside = TRUE, inside0 = FALSE)]
+        Cat <- Cat0[, .(x, y, bbox_inside = TRUE, inside0 = FALSE)]
         # add Sensor x & y
         Cat[, ":="(
           x = x + Sens_xy[1],
@@ -182,7 +182,7 @@ calc_fct <- function(res, ncores = NULL, SourceSplit = NULL,
           )]
         # get IDs inside, initial inside has to be TRUE
         tag_bbox(Cat, apply(SouLi[[Source[1]]][,2:3], 2, range))
-        Cat[, inside0 := inside]
+        Cat[, inside0 := bbox_inside]
         # initialize all_check
         all_check <- 0
         # loop over sources
@@ -190,10 +190,10 @@ calc_fct <- function(res, ncores = NULL, SourceSplit = NULL,
           # jSrc <- 1
           iSource[[jSrc]]$polygons[(!isInside), isInside := {
             # copy from original inside
-            Cat[, inside := inside0]
+            Cat[, bbox_inside := inside0]
             # tag near
-            tag_bbox(Cat[(inside)], .(x, y))
-            C_sub <- Cat[(inside), .(x, y)]
+            tag_bbox(Cat[(bbox_inside)], .(x, y))
+            C_sub <- Cat[(bbox_inside), .(x, y)]
             any(as.logical(.Call("pip", C_sub[, x], C_sub[, y], C_sub[, .N], x, y, length(x), PACKAGE = "bLSmodelR")))
           }, by = .(tile, polygon)]
           all_check <- all_check + iSource[[jSrc]]$polygons[, as.integer(all(isInside))]

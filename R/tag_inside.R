@@ -1,6 +1,5 @@
 # TODO:
-#   - rename function 
-#       -> rename all existing tagInside() calls
+#   - add argument to name output columns
 #   - use better names for Sensors class (switchNames)
 #       -> this must be switched right at beginning (in run_bls)
 #       -> same for Sources -> name, x, y, id
@@ -54,13 +53,13 @@ tag_inside <- function(catalog, sources, origin = c(0, 0),
 	catalog[, rn := .I]
 	setkey(catalog, rn)
 
-	if (catalog[, any(inside)]) {
+	if (catalog[, any(bbox_inside)]) {
 		# tag Inside Source
         if (tag_id) {
             td_inside <- sources_relative[, {
                 cbind(
-                    ID = catalog[(inside), rn], 
-                    pnt.in.poly(catalog[(inside), cbind(x, y)], cbind(x, y))
+                    ID = catalog[(bbox_inside), rn], 
+                    pnt.in.poly(catalog[(bbox_inside), cbind(x, y)], cbind(x, y))
                 )
             }, by = .(area, pid)][pip == 1L, 
             paste0(paste(area, pid, sep = "/"), collapse = ",")
@@ -68,8 +67,8 @@ tag_inside <- function(catalog, sources, origin = c(0, 0),
         } else {
             td_inside <- sources_relative[, {
                 cbind(
-                    ID = catalog[(inside), rn], 
-                    pnt.in.poly(catalog[(inside), cbind(x, y)], cbind(x, y))
+                    ID = catalog[(bbox_inside), rn], 
+                    pnt.in.poly(catalog[(bbox_inside), cbind(x, y)], cbind(x, y))
                 )
             }, by = .(area, pid)][pip == 1L, 
             paste0(area, collapse = ",")
@@ -80,7 +79,7 @@ tag_inside <- function(catalog, sources, origin = c(0, 0),
             source_names = V1
             )]
 	}
-	catalog[, ":="(inside = NULL, rn = NULL)]
+	catalog[, ":="(bbox_inside = NULL, rn = NULL)]
 
 	invisible(catalog)
 }

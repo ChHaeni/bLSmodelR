@@ -30,13 +30,14 @@ tag_inside <- function(catalog, sources, origin = c(0, 0),
         stop('Argument "sources" must be of class "Sources"')
     }
     
-    if (inherits(origin, 'Sensors')) {
-        origin <- origin[, c('x-Coord (m)', 'y-Coord (m)'), drop = TRUE]
+    if (!is.numeric(origin)) {
+        origin <- unlist(origin[, c('x-Coord (m)', 'y-Coord (m)'), drop = TRUE])
     }
 
     if (!is.numeric(origin) || length(origin) != 2) {
-        stop('Argument "origin" must be either a numeric vector of length 2 or a single',
-            ' point sensor (class "Sensors")')
+        stop('Argument "origin" must be either a numeric vector of length 2 OR a ',
+            ' matrix-like object containing a SINGLE ROW as well as COLUMN NAMES ',
+            '"x-Coord (m)" and "y-Coord (m)"')
     }
 
 	catalog[, ':='(
@@ -46,8 +47,8 @@ tag_inside <- function(catalog, sources, origin = c(0, 0),
 	sources_relative <- data.table(sources)
 	setnames(sources_relative, c("area", "x", "y", "pid"))
 	sources_relative[, ":="(
-        x = x - origin[1],
-        y = y - origin[2]
+        x = x - origin[[1]],
+        y = y - origin[[2]]
         )]
 	tag_bbox(catalog, sources_relative)
 	catalog[, rn := .I]

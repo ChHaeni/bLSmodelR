@@ -328,7 +328,7 @@
 				UVW[[cName]] <- uvw
 			}
 
-			tag_inside(Ctlg,Src,CSnsrs[chmatch(Row[i,PointSensor],CSnsrs[, "Point Sensor Name"]),])
+			tag_inside(Ctlg, Src, CSnsrs[chmatch(Row[i, PointSensor], CSnsrs[, "Point Sensor Name"]), ])
 			setkey(Ctlg,Traj_ID)
 			
 			if(Ctlg[,any(td_inside)]){	

@@ -19,8 +19,8 @@
 #' @return The provided TDcat object with two columns named "td_inside", indicating if
 #'  touchdowns are inside the sources or not (TRUE/FALSE), and "source_names", indicating
 #'  the name of the corresponding source where the touchdown hits inside.
-tag_inside <- function(catalog, sources, origin = c(0, 0),
-    tag_id = FALSE, colname_inside = 'td_inside', colname_sources = 'source_names') {
+tag_inside <- function(catalog, sources, origin = c(0, 0), tag_id = FALSE, 
+    colname_inside = 'td_inside', colname_sources = 'source_names', name_outside = '') {
 
     if (!inherits(catalog, 'TDcat')) {
         stop('Argument "catalog" must be of class "TDcat"')
@@ -54,7 +54,7 @@ tag_inside <- function(catalog, sources, origin = c(0, 0),
 
 	catalog[, ':='(
         td_inside = FALSE,
-        source_names = ''
+        source_names = name_outside
         )]
 	sources_relative <- data.table(sources)
 	setnames(sources_relative, c("area", "x", "y", "pid"))

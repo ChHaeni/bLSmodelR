@@ -131,3 +131,25 @@ genSensors <- function(...){
 
 	structure(as.data.frame(Out), class = c("Sensors", "data.frame"), Version = "4.2+")
 }
+
+# subset Sensors by name
+'[.Sensors' <- function(x, i, j, ...) {
+    if (!missing(i) && is.character(i)) {
+        i <- which(x[[1]] %in% i)
+    }
+    out <- `[.data.frame`(x, i, j, ...)
+    if (ncol(out) != 8 && inherits(out, 'data.frame')) {
+        class(out) <- 'data.frame'
+    }
+    out
+}
+'[<-.Sensors' <- function(x, i, j, value) {
+    if (!missing(i) && is.character(i)) {
+        i <- which(x[[1]] %in% i)
+    }
+    out <- `[<-.data.frame`(x, i, j, value)
+    if (ncol(out) != 8 && inherits(out, 'data.frame')) {
+        class(out) <- 'data.frame'
+    }
+    out
+}

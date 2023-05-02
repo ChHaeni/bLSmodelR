@@ -160,6 +160,11 @@ S3method(rename_sensor, Sensors)
 S3method(rename_sensor, InputList)
 S3method(rename_sensor, bLSresult)
 
+S3method("[", Sensors)
+S3method("[", Sources)
+S3method("[<-", Sensors)
+S3method("[<-", Sources)
+
 
 importFrom("grDevices", "cm", "colorRampPalette", "contourLines","graphics.off", "grey")
 importFrom("graphics", "abline", "axis", "box", "contour", "grid","legend", "lines", "locator", "par", "points", "polygon","rect", "rug", "strheight", "strwidth", "text")

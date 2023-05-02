@@ -51,3 +51,25 @@ genSources <- function(...){
 
 	return(structure(Out,class=c("Sources","data.frame")))
 }
+
+# subset Sources by name
+'[.Sources' <- function(x, i, j, ...) {
+    if (!missing(i) && is.character(i)) {
+        i <- which(x[[1]] %in% i)
+    }
+    out <- `[.data.frame`(x, i, j, ...)
+    if (ncol(out) != 4 && inherits(out, 'data.frame')) {
+        class(out) <- 'data.frame'
+    }
+    out
+}
+'[<-.Sources' <- function(x, i, j, value) {
+    if (!missing(i) && is.character(i)) {
+        i <- which(x[[1]] %in% i)
+    }
+    out <- `[<-.data.frame`(x, i, j, value)
+    if (ncol(out) != 4 && inherits(out, 'data.frame')) {
+        class(out) <- 'data.frame'
+    }
+    out
+}

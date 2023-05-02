@@ -143,7 +143,10 @@
 					tag_inside(Ctlg,Src_Spatial[[j]],CSnsrs[chmatch(Row[i,PointSensor],CSnsrs[, "Point Sensor Name"]),])
 					Ctlg[(td_inside),vDep := vd_Spatial[[j]]]
 				}
-
+                # TODO: allow for deposition inside source
+                #   -> set vdep to 0 inside and remove subsetting below
+                #   -> set vdep to 0 before spatial vdep such that it can be set to non
+                #           zero through spatial...
 				Ctlg[,":="(
 					wTD2 = 2/wTD
 					)][,dep:=1][(!tagInsideQ), dep := exp(-vDep*wTD2)

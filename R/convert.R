@@ -64,7 +64,6 @@ convert <- function(x){
       x$Sensors <- convert(x$Sensors)  
       return(x)
     }
-  } else {
-    invisible(x)
   } 
+  invisible(x)
 }

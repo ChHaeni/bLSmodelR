@@ -133,9 +133,13 @@ genSensors <- function(...){
 }
 
 # subset Sensors by name
-'[.Sensors' <- function(x, i, j, ...) {
+'[.Sensors' <- function(x, i, j, perl = FALSE, ...) {
     if (!missing(i) && is.character(i)) {
-        i <- which(x[[1]] %in% i)
+        newi <- which(x[[1]] %in% i)
+        if (length(newi) == 0 && length(i) == 1) {
+            newi <- grep(i, x[[1]], perl = perl)
+        }
+        i <- newi
     }
     out <- `[.data.frame`(x, i, j, ...)
     if (ncol(out) != 8 && inherits(out, 'data.frame')) {
@@ -143,9 +147,13 @@ genSensors <- function(...){
     }
     out
 }
-'[<-.Sensors' <- function(x, i, j, value) {
+'[<-.Sensors' <- function(x, i, j, perl = FALSE, value) {
     if (!missing(i) && is.character(i)) {
-        i <- which(x[[1]] %in% i)
+        newi <- which(x[[1]] %in% i)
+        if (length(newi) == 0 && length(i) == 1) {
+            newi <- grep(i, x[[1]], perl = perl)
+        }
+        i <- newi
     }
     out <- `[<-.data.frame`(x, i, j, value)
     if (ncol(out) != 8 && inherits(out, 'data.frame')) {

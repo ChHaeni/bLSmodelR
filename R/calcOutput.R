@@ -15,9 +15,8 @@
 		ind <- which(unlist(lapply(find_points, any)))
 		if(length(ind) > 0){
 			SonicList[[i]] <- SncRun[ind,]
-            SonicList[[i]][, Calc.Sensor := paste(unique(unlist(lapply(ind, function(x) {
-                splitSensor[[x]][find_points[[x]]]
-            }))), collapse = ',')]
+            SonicList[[i]][, Calc.Sensor := unlist(lapply(ind, function(x) paste(
+                splitSensor[[x]][find_points[[x]]], collapse = ',')))]
 			SonicList[[i]][, Sensor := SensorNames[i]]
 		}
 	}

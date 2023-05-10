@@ -44,7 +44,8 @@
 			uCE=0,uCE_se=NA_real_,uCE_lo=NA_real_,uCE_hi=NA_real_,
 			vCE=0,vCE_se=NA_real_,vCE_lo=NA_real_,vCE_hi=NA_real_,
 			wCE=0,wCE_se=NA_real_,wCE_lo=NA_real_,wCE_hi=NA_real_,
-			N_TD=0,TD_Time_avg=NA_real_,TD_Time_max=NA_real_,Max_Dist=NA_real_,UCE=0,N_Sensor=0,Calc.Sensor=NULL,seed=NULL)]
+			N_TD=0,TD_Time_avg=NA_real_,TD_Time_max=NA_real_,Max_Dist=NA_real_,UCE=0,
+            n_time_avg=0,Calc.Sensor=NULL,seed=NULL)]
 	setkey(Out,Source)
 	# Max_Dist = max fetch inside Source area
 
@@ -142,6 +143,7 @@
                                 .(minTime = min(Time))
                                 , by = Traj_ID]][Time >= minTime, ]
                         # sum is used because of na.rm option
+                        avg_time <- Catalog[(td_inside), -mean(Time)]
 						Out[Source, ":="(
 							Max_Dist = max(
                                 Max_Dist, 
@@ -151,13 +153,13 @@
 							N_TD = N_TD + Catalog[, sum(td_inside)], 
 							TD_Time_avg = sum(
                                 TD_Time_avg, 
-                                Catalog[(td_inside), -mean(Time)], 
+                                avg_time,
                                 na.rm = TRUE), 
 							TD_Time_max = max(
                                 TD_Time_max, 
                                 Catalog[(td_inside), -min(Time)], 
                                 na.rm = TRUE), 
-							N_Sensor = N_Sensor + 1
+							n_time_avg = n_time_avg + as.integer(!is.na(avg_time))
 							)]
 					}
 				}
@@ -172,8 +174,10 @@
 	cat("\nCalculating Source contributions\n\n")
 
 	# TD_Time_avg
-	if(Out[,any(N_TD>0)])Out[N_TD>0,TD_Time_avg:=TD_Time_avg/N_Sensor]
-	Out[,N_Sensor:=NULL]
+	if (Out[, any(N_TD > 0)]) {
+        Out[N_TD > 0, TD_Time_avg := TD_Time_avg / n_time_avg]
+    }
+	Out[, n_time_avg := NULL]
 
 	# weights:
 	wts <- rep(2,lasn)

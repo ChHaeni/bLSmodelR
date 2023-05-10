@@ -7,6 +7,10 @@
 
 # current version:
 
+## fixed:
+- Fix average time for line sensors at plume edges
+        i.e., with sub-sensors containing no touchdowns in source area
+
 ---
 
 # v4.8-0

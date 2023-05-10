@@ -5,6 +5,11 @@
 
 using namespace Rcpp;
 
+#ifdef RCPP_USE_GLOBAL_ROSTREAM
+Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
+Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
+#endif
+
 // csFs
 Rcpp::List csFs(Rcpp::NumericVector uIn, Rcpp::NumericVector vIn, Rcpp::NumericVector wIn, const double& ZIn, const double& ustarIn, const double& LinvIn, const double& ZoIn, const double& bwIn, const double& sUustarIn, const double& sVustarIn, const double& kvIn, const double& C0In, const double& alphaIn, const double& MaxFetchIn);
 RcppExport SEXP _bLSmodelR_csFs(SEXP uInSEXP, SEXP vInSEXP, SEXP wInSEXP, SEXP ZInSEXP, SEXP ustarInSEXP, SEXP LinvInSEXP, SEXP ZoInSEXP, SEXP bwInSEXP, SEXP sUustarInSEXP, SEXP sVustarInSEXP, SEXP kvInSEXP, SEXP C0InSEXP, SEXP alphaInSEXP, SEXP MaxFetchInSEXP) {

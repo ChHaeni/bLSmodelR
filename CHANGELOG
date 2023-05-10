@@ -19,6 +19,7 @@
 
 ## changed
 - deposition parallelism uses load balanced variant
+- deposition parallelism no longer writes temporary files
 
 ## other
 - add calculation time for deposition run

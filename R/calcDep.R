@@ -1,36 +1,30 @@
-.calcDep_Wrapper <- function(input_file, spatial = FALSE) {
-    # TODO: wrap try around?
-    input_list <- qs::qread(input_file, strict = TRUE)
-    # TODO: wrap try around?
-    file.remove(input_file)
-	setDT(input_list[['RunList']])
-	setkey(input_list[['RunList']], rn, Sensor)
-	out <- vector("list", input_list[['RunList']][,.N])
+.calcDep_Wrapper <- function(RunElement, Catalogs, Cat.Path, Sources, Sensors, vDep, 
+    vDepSpatial, spatial = FALSE) {
+	setDT(RunElement)
+	setkey(RunElement, rn, Sensor)
+	out <- vector("list", RunElement[,.N])
 	if (spatial) {
 		for (rl in seq_along(out)) {
 			out[[rl]] <- .calcDep_Spatial(
-                input_list[['RunList']][rl, ], input_list[['Catalogs']], input_list[['Cat.Path']], 
-                input_list[['Sources']], input_list[['Sensors']], input_list[['vDep']], 
-                input_list[['vDepSpatial']]
+                RunElement[rl, ], Catalogs, Cat.Path, 
+                Sources, Sensors, vDep, 
+                vDepSpatial
             )
 		}
 	} else {
 		for (rl in seq_along(out)) {
 			out[[rl]] <- .calcDep(
-                input_list[['RunList']][rl, ], input_list[['Catalogs']], input_list[['Cat.Path']], 
-                input_list[['Sources']], input_list[['Sensors']], input_list[['vDep']], 
-                input_list[['vDepSpatial']]
+                RunElement[rl, ], Catalogs, Cat.Path, 
+                Sources, Sensors, vDep, 
+                vDepSpatial
             )
 		}
 	}
     # gather mem usage
     cpu_mem <- .gather_mem(out)
-	out <- data.table::rbindlist(out)[, vd_index := input_list[['RunList']][, vd_index]]
+	out <- data.table::rbindlist(out)[, vd_index := RunElement[, vd_index]]
     setattr(out, 'cpu_mem', cpu_mem)
-    # TODO: wrap try around?
-    qs::qsave(out, res_file <- sub('parbls_input_', 'parbls_result_', input_file), preset = 'uncompressed')
-    # return result file path (and try error states?)
-    return(res_file)
+    out
 }
 
 .calcDep_Spatial <- function(Run, Catalogs, C.Path, Sources, CSnsrs, vd, vdSpatial) {

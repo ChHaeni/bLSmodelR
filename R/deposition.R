@@ -241,57 +241,40 @@ deposition <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL,
             }
             parallel::clusterEvalQ(cl, data.table::setDTthreads(1L))
 
-            # sort by N_TD
-            ntd_order <- Run[index_g0, order(N_TD)]
-            ### try to qsave/qread, instead of direct traffic?
-            # get temporary file name
-            # NOTE: what if tempdir is not accessable (e.g. PRIME?)
-            t_file <- tempfile(pattern = 'parbls_input_')
+            # sort decreasing by N_TD
+            ntd_order <- Run[index_g0, order(N_TD, decreasing = TRUE)]
 
-            # distribute to clusters
-            InputFiles <- lapply(seq_along(cl), function(x, run) {
-                    # file name
-                    f_name <- paste0(t_file, '_', x)
-                    # qsave to tempfile
-                    qs::qsave(list(
-                            RunList = run[seq.int(from = x, to = nrow(run), by = length(cl)), ],
-                            Catalogs = Catalogs, 
-                            Cat.Path = Cat.Path, 
-                            Sources = ModelInput[['Sources']], 
-                            Sensors = pSens$'Calc.Sensors', 
-                            vDep = vDep, 
-                            vDepSpatial = vDepSpatial), 
-                        file = f_name,
-                        preset = 'uncompressed'
-                    )
-                    # return file name
-                    f_name
-                }, run = as.data.frame(Run[index_g0[ntd_order], ]))
+            # prepare row list
+            InputList <- lapply(index_g0[ntd_order], function(x) {
+                as.data.frame(Run[x, ])
+                })
 
             # run parallel
             cat("\n***********\n")
             cat("Parallel computing deposition corrected C/E ratios...\nThis will take a moment...\n\n")
             if(vdSpat){
-                ResFiles <- try(
-                    .clusterApplyLB(cl, InputFiles, .calcDep_Wrapper, spatial = TRUE,
+                OutList <- try(
+                    .clusterApplyLB(cl, InputList, .calcDep_Wrapper, spatial = TRUE,
+                        Catalogs = Catalogs, Cat.Path = Cat.Path, 
+                        Sources = ModelInput[['Sources']], Sensors = pSens[['Calc.Sensors']],
+                        vDep = vDep, vDepSpatial = vDepSpatial,
                         progress = show_progress)
                     , silent = TRUE)
             } else {
-                ResFiles <- try(
-                    .clusterApplyLB(cl, InputFiles, .calcDep_Wrapper, 
+                OutList <- try(
+                    .clusterApplyLB(cl, InputList, .calcDep_Wrapper, 
+                        Catalogs = Catalogs, Cat.Path = Cat.Path, 
+                        Sources = ModelInput[['Sources']], Sensors = pSens[['Calc.Sensors']],
+                        vDep = vDep, vDepSpatial = vDepSpatial,
                         progress = show_progress)
                     , silent = TRUE)
             }
             # check try-error
-            if (inherits(ResFiles, 'try-error')) {
+            if (inherits(OutList, 'try-error')) {
                 parallel::stopCluster(cl)
                 stop('parallel computing returned the following error message:\n',
-                    attr(ResFiles, 'condition')[['message']])
+                    attr(OutList, 'condition')[['message']])
             }
-            # read files
-            OutList <- lapply(ResFiles, qs::qread)
-            # clean up
-            file.remove(unlist(ResFiles))
             # get gc/memory attribute
             cpu_mem <- .gather_mem(OutList)
             # bind together (we do not need to order because of merge)

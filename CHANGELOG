@@ -1,0 +1,28 @@
+# planned
+
+- Add function to rename sources in existing model results
+- footprint plot: allow deposition inside source area
+
+---
+
+# current version:
+
+## added:
+- Subsetting Sensors and Sources by name (regular expressions possible)
+        It is now possible to select e.g. all sensors starting with "M" by `my_sensors['^M']`.
+- Add function to rename sensors in existing model results
+- Extend footprint plot to optionally include deposition
+- CHANGELOG file: Keep track of model changes
+
+---
+
+# v4.7-5:
+
+## fixed:
+- Fix bug affecting "tilted" line sensors where more than one catalog was calculated 
+    due to the height difference.
+        Before version 4.7-5 the CE values were calculated based on a single catalog only, i.e., 
+        line sensors were treated as if they were "untilted", measuring on a single height.
+
+
+[comment]: # (categories: added, changed, fixed, deprecated, removed, performance, other)

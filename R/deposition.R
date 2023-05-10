@@ -1,12 +1,19 @@
 deposition <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL, 
     vDepSpatial = NULL, ncores = 1, memory_limit = NULL) {
 
+	cat("\n**********************************************\n")
+    cat("             DEPOSITION CALCULATION\n")
+	cat("\nLocal Date/Time: ",format(Start <- Sys.time(),format="%d-%m-%Y %H:%M:%S"),"\n")
+	cat("\n**********************************************\n")
+
 	# argument names better!
 	RNG <- RNGkind(kind="L'Ecuyer-CMRG")
 
 	on.exit(
 		{
 			RNGkind(kind=RNG[1])
+			cat("\nLocal Date/Time: ",format(Sys.time(),format="%d-%m-%Y %H:%M:%S"),"\n")
+			cat("\n***bLSmodelR deposition calculation aborted!***\n")
 		}
 	)
 
@@ -53,6 +60,7 @@ deposition <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL,
 
 	# vDepSpatial
 	if(vdSpat <- !is.null(vDepSpatial)){
+        cat('Spatial definition of vdep provided\n')
         # check 'Sources' obj
 		if(!inherits(vDepSpatial[[2]],"Sources")){
 			stop("Second list element of argument 'vDepSpatial' must be of class 'Sources'!")
@@ -179,7 +187,9 @@ deposition <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL,
             stop("First list element of argument 'vDepSpatial' must be either a character vector,",
                 " a list or an object that inherits from 'data.frame'!")
         }
-	}
+	} else {
+        cat('Uniform vdep (outside source area) across model domain\n')
+    }
 
 	### procSensors:
 	pSens <- procSensors(ModelInput[["Sensors"]])
@@ -225,6 +235,7 @@ deposition <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL,
                 cl <- .makePSOCKcluster(ncores, memory_limit = memory_limit)
                 data.table::setDTthreads(ncores)
             }
+            cat('\n*** Parallel computation on', length(cl), 'cores ***\n')
             if (.is_recording()) {
                 parallel::clusterEvalQ(cl, bLSmodelR:::.start_recording())
             }
@@ -258,7 +269,8 @@ deposition <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL,
                 }, run = as.data.frame(Run[index_g0[ntd_order], ]))
 
             # run parallel
-            cat("Parallel computing deposition corrected C/E...\nThis will take a moment...\n")
+            cat("\n***********\n")
+            cat("Parallel computing deposition corrected C/E ratios...\nThis will take a moment...\n")
             if(vdSpat){
                 ResFiles <- try(parallel::clusterApply(cl, InputFiles, .calcDep_Wrapper, spatial = TRUE), silent = TRUE)
             } else {
@@ -324,6 +336,21 @@ deposition <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL,
 	setattr(Out,"vDep",list(vDep=vDep,vDepSpatial=vDepSpatial))
 	setattr(Out,"class",c("deposition",class(Out)))
     setattr(Out, 'cpu_mem', cpu_mem)
+
+    cat("\nFinished Deposition Calculation!\nLocal Date/Time: ",
+        format(End <- Sys.time(), format = "%d-%m-%Y %H:%M:%S"), 
+        "\nDuration of deposition run:", 
+        sprintf("%1.1f", dur <- End - Start), 
+        attr(dur, "units"), 
+        "\n****************************************************\n****************************************************\n"
+    )
+    setattr(Out, "DepositionRunTime", dur)
+
+	on.exit(
+		{
+			RNGkind(kind=RNG[1])
+		}
+	)
 
 	return(Out)
 }

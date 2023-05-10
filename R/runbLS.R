@@ -2,7 +2,10 @@ runbLS <- function(ModelInput, Cat.Path = NULL, ncores = NULL, TDonly = NULL,
     asDT = TRUE, simpleNames = asDT, memory_limit = NULL) {
 
 	cat("\n**********************************************\n")
-	cat("\nLocal Date/Time: ",format(Start <- Sys.time(),format="%d-%m-%Y %H:%M:%S"),"\n")
+    cat("                MAIN MODEL RUN\n")
+	cat("\nLocal Date/Time: ",
+        format(Start <- Sys.time(), format = "%d-%m-%Y %H:%M:%S"), 
+        "\n")
 	cat("\n**********************************************\n")
 
 	RNG <- RNGkind(kind="L'Ecuyer-CMRG")
@@ -104,6 +107,7 @@ runbLS <- function(ModelInput, Cat.Path = NULL, ncores = NULL, TDonly = NULL,
 	}
 
     if (!is.null(cl)) {
+        cat('\n*** Parallel computation on', length(cl), 'cores ***\n\n')
         # setup RNG stream
         parallel::clusterSetRNGStream(cl, sample.int(1e9, 6, TRUE))
         # set wd

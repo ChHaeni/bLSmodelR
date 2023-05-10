@@ -14,6 +14,11 @@
 ## performance
 - deposition: Move catalog variable calculations out of loop
 
+## other
+- add calculation time for deposition run
+- be more verbose when running deposition
+- state number of cores
+
 ---
 
 # v5.8-0

@@ -63,7 +63,7 @@
 		SncList <- lapply(ilist,function(x,y)y[x,], as.data.frame(SncRun))
 
 		cat("\n***********\n")
-		cat("Parallel computing CE ratios.\n")
+		cat("Parallel computing C/E ratios.\n")
 		cat("\n\t-> This might take some time depending on the calculation load!!! <-\n\n")
 		OutList <- .clusterApplyLB(cl,SncList,.calcCE,InputList,Srcs,C.Path)		
 	

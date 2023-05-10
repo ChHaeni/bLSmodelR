@@ -1,9 +1,9 @@
-# functions to fix bug in parallel::clusterApplyLB
-.clusterApplyLB <- function (cl = NULL, x, fun, ...) {
+# functions to fix bug in parallel::clusterApplyLB (and add progress bar)
+.clusterApplyLB <- function (cl = NULL, x, fun, ..., progress = TRUE) {
     argfun <- function(i) c(list(x[[i]]), list(...))
-    .dynamicClusterApply(cl, fun, length(x), argfun)
+    .dynamicClusterApply(cl, fun, length(x), argfun, progress = progress)
 }
-.dynamicClusterApply <- function (cl = NULL, fun, n, argfun) {
+.dynamicClusterApply <- function (cl = NULL, fun, n, argfun, progress = TRUE) {
     cl <- parallel:::defaultCluster(cl)
     p <- length(cl)
     if (n > 0L && p) {
@@ -11,12 +11,40 @@
             argfun(job), tag = job)
         for (i in 1:min(n, p)) submit(i, i)
         val <- vector("list", n)
+        if (progress) {
+            cat('<parallel work load progress>\n')
+            steps <- unique(round(seq(1, n, length.out = 20)))
+            # remove 100%
+            steps <- steps[-length(steps)]
+        }
         for (i in 1:n) {
             d <- .recvOneResult(cl)
             j <- i + min(n, p)
             if (j <= n) 
                 submit(d$node, j)
             val[d$tag] <- list(d$value)
+            # add progress bar
+            if (progress && i %in% steps) {
+                i_step <- round(i / n * 20)
+                # clean previous
+                cat('\r', paste(rep(' ', 40), collapse = ''), '\r')
+                cat(
+                    sprintf("\r[%s%s%s] %1.0f%%",
+                        paste(
+                            rep(">", i_step), 
+                            collapse=""),
+                        "|",
+                        paste(rep(".", 20 - i_step), 
+                            collapse=""),
+                        i / n * 100
+                    )
+                )
+            }
+        }
+		if (progress) {
+            cat('\r', paste(rep(' ', 40), collapse = ''), '\r')
+            cat(paste0("\r[", paste0(rep(">", 20), collapse = ""), "] 100%\n"))
+            cat('<done>\n\n')
         }
         parallel:::checkForRemoteErrors(val)
     }

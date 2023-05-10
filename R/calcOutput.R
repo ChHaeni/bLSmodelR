@@ -65,7 +65,7 @@
 		cat("\n***********\n")
 		cat("Parallel computing C/E ratios.\n")
 		cat("\n\t-> This might take some time depending on the calculation load!!! <-\n\n")
-		OutList <- .clusterApplyLB(cl,SncList,.calcCE,InputList,Srcs,C.Path)		
+		OutList <- .clusterApplyLB(cl, SncList, .calcCE, InputList, Srcs, C.Path)		
 	
 	} else {
 		

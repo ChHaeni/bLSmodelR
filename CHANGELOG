@@ -7,6 +7,10 @@
 
 # current version:
 
+---
+
+# v4.8-0
+
 ## added:
 - Subsetting Sensors and Sources by name (regular expressions possible)
         It is now possible to select e.g. all sensors starting with "M" by `my_sensors['^M']`.

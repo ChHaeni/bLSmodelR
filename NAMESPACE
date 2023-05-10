@@ -69,7 +69,6 @@ export(collect_results)
 export(depoSlurm)
 
 importFrom(Rcpp, evalCpp)
-importFrom(tcltk,tclvalue,tkgetSaveFile,tk_choose.files,tk_choose.dir)
 
 importFrom(sp,Polygon,Polygons,SpatialPolygons)
 importFrom(rgeos,gIntersection)

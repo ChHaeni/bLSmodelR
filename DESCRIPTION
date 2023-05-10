@@ -8,5 +8,5 @@ Maintainer: Christoph Haeni <christoph.haeni@bfh.ch>
 Description: This is the backward Lagrangian stochastic (bLS) model as described by Flesch et al. (2004).
 License: GPL-2
 Depends: R (>= 3.6.0), rlecuyer, data.table (>= 1.13.0), qs, parallel
-Imports: Rcpp (>= 0.12.17), tcltk, sp, rgeos, geosphere, RgoogleMaps, maptools 
+Imports: Rcpp (>= 0.12.17), sp, rgeos, geosphere, RgoogleMaps, maptools 
 LinkingTo: Rcpp

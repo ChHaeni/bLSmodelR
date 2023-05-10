@@ -35,18 +35,11 @@ runbLS <- function(ModelInput, Cat.Path = NULL, ncores = NULL, TDonly = NULL,
 	Model <- ModelInput[["Model"]]
 
 	if (Model[["TDwrite"]] || Model[["TDread"]]) {
-		Cat.Path <- switch(class(Cat.Path),
-			"character" = {
-				if(!dir.exists(Cat.Path)){
-					stop("Cat.Path folder does not exist:\n\t-> input: \"",Cat.Path,"\"")
-				}else{
-					Cat.Path
-				}
-			},
-			{cat("Select TD catalog directory...\n")
-			tk_choose.dir(default = getwd(), caption = "Select TD catalog directory")}
-		)
-		if(is.na(Cat.Path)){cat("\n- tcltk interface canceled -\n");return(invisible(NULL))}
+        if (!is.character(Cat.Path)) {
+            stop("Cat.Path argument is not of type character")
+        } else if (!dir.exists(Cat.Path)) {
+            stop("Cat.Path folder does not exist:\n\t-> input: \"", Cat.Path, "\"")
+        }
 	} 
 	
 	if(!is.null(ModelInput[["Sources"]])){

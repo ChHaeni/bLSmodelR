@@ -11,9 +11,12 @@
 - Fix average time for line sensors at plume edges
         i.e., with sub-sensors containing no touchdowns in source area
 
+## performance
+- deposition: Move catalog variable calculations out of loop
+
 ---
 
-# v4.8-0
+# v5.8-0
 
 ## added:
 - Subsetting Sensors and Sources by name (regular expressions possible)

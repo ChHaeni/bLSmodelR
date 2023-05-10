@@ -121,11 +121,17 @@
 					indexNew <- 1:N0
 					names(indexNew) <- takeSub
 					Ctlg <- Ctlg[Traj_ID %in% takeSub,]
-					Ctlg[,":="(Traj_ID=indexNew[as.character(Traj_ID)])]
+					Ctlg[, ":="(
+                        Traj_ID = indexNew[as.character(Traj_ID)]
+                        )]
 					for(ac in (names(attCat) %w/o% c("names","row.names",".internal.selfref","uvw0")))setattr(Ctlg,ac,attCat[[ac]])
 					uvw <- uvw[takeSub,]
 				}
 				UVW[[cName]] <- uvw
+                # prepare wTD2 once per Ctlg
+                Ctlg[, ":="(
+                    wTD2 = 2 / wTD
+                    )]
 			}
 
 			tag_inside(Ctlg,Src,CSnsrs[chmatch(Row[i,PointSensor], CSnsrs[, "Point Sensor Name"]),])
@@ -138,21 +144,22 @@
 				# N_TD_sum <- N_TD_sum + Ctlg[,sum(tagInsideQ)]
 
 				### spatially inhomogeneous vdep:
-				Ctlg[,vDep := vdep]
-				for(j in nms_Spatial){
-					tag_inside(Ctlg,Src_Spatial[[j]],CSnsrs[chmatch(Row[i,PointSensor],CSnsrs[, "Point Sensor Name"]),])
+				Ctlg[, vDep := vdep]
+				for (j in nms_Spatial) {
+					tag_inside(Ctlg, Src_Spatial[[j]], 
+                        CSnsrs[chmatch(Row[i, PointSensor], CSnsrs[, "Point Sensor Name"]), ]
+                    )
 					Ctlg[(td_inside),vDep := vd_Spatial[[j]]]
 				}
                 # TODO: allow for deposition inside source
                 #   -> set vdep to 0 inside and remove subsetting below
                 #   -> set vdep to 0 before spatial vdep such that it can be set to non
                 #           zero through spatial...
-				Ctlg[,":="(
-					wTD2 = 2/wTD
-					)][,dep:=1][(!tagInsideQ), dep := exp(-vDep*wTD2)
-				]
+				Ctlg[, dep := 1][(!tagInsideQ), dep := exp(-vDep * wTD2)]
 
-				Ci[[i]] <- Ctlg[Traj_ID %in% Traj_ID[(tagInsideQ)],.(CE = sum(as.numeric(tagInsideQ)*cumprod(dep)*wTD2)),by=Traj_ID]
+				Ci[[i]] <- Ctlg[Traj_ID %in% Traj_ID[(tagInsideQ)],
+                    .(CE = sum(as.numeric(tagInsideQ) * cumprod(dep) * wTD2))
+                    , by = Traj_ID]
 			}
 		}
 		cat(paste0("\r[",paste0(rep(">",20),collapse=""),"] 100%\n"))
@@ -324,10 +331,17 @@
 					indexNew <- 1:N0
 					names(indexNew) <- takeSub
 					Ctlg <- Ctlg[Traj_ID %in% takeSub,]
-					Ctlg[,":="(Traj_ID=indexNew[as.character(Traj_ID)])]
+					Ctlg[, ":="(
+                        Traj_ID = indexNew[as.character(Traj_ID)]
+                        )]
 					for(ac in (names(attCat) %w/o% c("names","row.names",".internal.selfref","uvw0")))setattr(Ctlg,ac,attCat[[ac]])
 					uvw <- uvw[takeSub,]
 				}
+                # prepare wTD2 & dep_outside once per Ctlg
+                Ctlg[, ":="(
+                    wTD2 = 2 / wTD,
+                    dep_outside = exp(-vdep * 2 / wTD)
+                    )]
 				UVW[[cName]] <- uvw
 			}
 
@@ -338,12 +352,11 @@
 
 				# N_TD_sum <- N_TD_sum + Ctlg[,sum(td_inside)]		
 				
-				Ctlg[,":="(
-					wTD2 = 2/wTD
-					)][,dep:=1][(!td_inside), dep := exp(-vdep*wTD2)
-				]
+				Ctlg[, dep := 1][(!td_inside), dep := dep_outside]
 
-				Ci[[i]] <- Ctlg[Traj_ID %in% Traj_ID[(td_inside)],.(CE = sum(as.numeric(td_inside)*cumprod(dep)*wTD2)),by=Traj_ID]
+				Ci[[i]] <- Ctlg[Traj_ID %in% Traj_ID[(td_inside)],
+                    .(CE = sum(as.numeric(td_inside) * cumprod(dep) * wTD2))
+                    , by = Traj_ID]
 
 			}
 		}

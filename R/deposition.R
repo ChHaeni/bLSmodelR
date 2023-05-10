@@ -1,5 +1,5 @@
 deposition <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL, 
-    vDepSpatial = NULL, ncores = 1, memory_limit = NULL) {
+    vDepSpatial = NULL, ncores = 1, memory_limit = NULL, show_progress = TRUE) {
 
 	cat("\n**********************************************\n")
     cat("             DEPOSITION CALCULATION\n")
@@ -272,9 +272,15 @@ deposition <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL,
             cat("\n***********\n")
             cat("Parallel computing deposition corrected C/E ratios...\nThis will take a moment...\n")
             if(vdSpat){
-                ResFiles <- try(parallel::clusterApply(cl, InputFiles, .calcDep_Wrapper, spatial = TRUE), silent = TRUE)
+                ResFiles <- try(
+                    .clusterApplyLB(cl, InputFiles, .calcDep_Wrapper, spatial = TRUE,
+                        progress = show_progress)
+                    , silent = TRUE)
             } else {
-                ResFiles <- try(parallel::clusterApply(cl, InputFiles, .calcDep_Wrapper), silent = TRUE)
+                ResFiles <- try(
+                    .clusterApplyLB(cl, InputFiles, .calcDep_Wrapper, 
+                        progress = show_progress)
+                    , silent = TRUE)
             }
             # check try-error
             if (inherits(ResFiles, 'try-error')) {

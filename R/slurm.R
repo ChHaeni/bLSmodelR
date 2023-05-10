@@ -282,9 +282,9 @@ write_runbLS_script <- function(tmpdir, cpath, ncores, mem_lim = NULL) {
             'inlist$Interval <- int',
             # run model
             if (is.null(mem_lim)) {
-                paste0('res <- runbLS(inlist, "', cpath, '", ncores = ', ncores, ')')
+                paste0('res <- runbLS(inlist, "', cpath, '", ncores = ', ncores, ', show_progress = FALSE)')
             } else {
-                paste0('res <- runbLS(inlist, "', cpath, '", ncores = ', ncores, ', memory_limit = "', mem_lim, '")')
+                paste0('res <- runbLS(inlist, "', cpath, '", ncores = ', ncores, ', memory_limit = "', mem_lim, '", show_progress = FALSE)')
             },
             # save result; get index from int%i.rds
             'saveRDS(res, sub("/int([0-9]{1,2}[.]rds)", "/res\\\\1", ifile))'

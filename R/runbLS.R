@@ -1,5 +1,5 @@
 runbLS <- function(ModelInput, Cat.Path = NULL, ncores = NULL, TDonly = NULL, 
-    asDT = TRUE, simpleNames = asDT, memory_limit = NULL) {
+    asDT = TRUE, simpleNames = asDT, memory_limit = NULL, show_progress = TRUE) {
 
 	cat("\n**********************************************\n")
     cat("                MAIN MODEL RUN\n")
@@ -129,7 +129,8 @@ runbLS <- function(ModelInput, Cat.Path = NULL, ncores = NULL, TDonly = NULL,
 
 	if(!ModelInput[["Model"]][["TDonly"]]){
 		
-		Out <- .calcOutput(Intervals, ModelInput, Cat.Path, cl)
+		Out <- .calcOutput(Intervals, ModelInput, Cat.Path, cl, 
+            show_progress = show_progress)
         cpu_mem <- attr(Out, 'cpu_mem')
 		Intervals <- attr(Out,"CalcSteps")
 		Out[,":="(

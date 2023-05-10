@@ -7,12 +7,18 @@
 
 # current version:
 
+## added
+- add option to show progress bar (default: show) for load balanced parallel computing (C/E values)
+
 ## fixed:
 - Fix average time for line sensors at plume edges
         i.e., with sub-sensors containing no touchdowns in source area
 
 ## performance
 - deposition: Move catalog variable calculations out of loop
+
+## changed
+- deposition parallelism uses load balanced variant
 
 ## other
 - add calculation time for deposition run

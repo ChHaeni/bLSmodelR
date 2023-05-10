@@ -270,7 +270,7 @@ deposition <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL,
 
             # run parallel
             cat("\n***********\n")
-            cat("Parallel computing deposition corrected C/E ratios...\nThis will take a moment...\n")
+            cat("Parallel computing deposition corrected C/E ratios...\nThis will take a moment...\n\n")
             if(vdSpat){
                 ResFiles <- try(
                     .clusterApplyLB(cl, InputFiles, .calcDep_Wrapper, spatial = TRUE,

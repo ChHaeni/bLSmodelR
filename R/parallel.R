@@ -7,16 +7,25 @@
     cl <- parallel:::defaultCluster(cl)
     p <- length(cl)
     if (n > 0L && p) {
+        if (progress) {
+            cat('<parallel work load progress>\n')
+            steps <- unique(round(seq(1, n, length.out = 20)))
+            # remove 100% and first entry
+            steps <- steps[-c(1, length(steps))]
+            # print 0% progress
+            cat(
+                sprintf("\r[%s%s] %1.0f%%",
+                    "|",
+                    paste(rep(".", 20), 
+                        collapse=""),
+                    0
+                )
+            )
+        }
         submit <- function(node, job) parallel:::sendCall(cl[[node]], fun, 
             argfun(job), tag = job)
         for (i in 1:min(n, p)) submit(i, i)
         val <- vector("list", n)
-        if (progress) {
-            cat('<parallel work load progress>\n')
-            steps <- unique(round(seq(1, n, length.out = 20)))
-            # remove 100%
-            steps <- steps[-length(steps)]
-        }
         for (i in 1:n) {
             d <- .recvOneResult(cl)
             j <- i + min(n, p)

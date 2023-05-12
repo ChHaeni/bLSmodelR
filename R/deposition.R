@@ -274,7 +274,7 @@ deposition <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL,
             }
             # check try-error
             if (inherits(OutList, 'try-error')) {
-                parallel::stopCluster(cl)
+                try(parallel::stopCluster(cl))
                 stop('parallel computing returned the following error message:\n',
                     attr(OutList, 'condition')[['message']])
             }

@@ -2,23 +2,18 @@
 	setDT(RunElement)
 	setkey(RunElement, rn, Sensor)
 	out <- vector("list", RunElement[,.N])
-	if (spatial) {
-		for (rl in seq_along(out)) {
-			out[[rl]] <- .calcDep_Spatial(
-                RunElement[rl, ], Catalogs, Cat.Path, 
-                Sources, Sensors, vDep, 
-                vDepSpatial
-            )
-		}
-	} else {
-		for (rl in seq_along(out)) {
-			out[[rl]] <- .calcDep(
-                RunElement[rl, ], Catalogs, Cat.Path, 
-                Sources, Sensors, vDep, 
-                vDepSpatial
-            )
-		}
-	}
+    dep_fun <- if (spatial) .calcDep_Spatial else .calcDep
+    for (rl in seq_along(out)) {
+        out[[rl]] <- dep_fun(
+            RunElement[rl, ], 
+            get('Catalogs', envir = .GlobalEnv), 
+            get('Cat.Path', envir = .GlobalEnv), 
+            get('Sources', envir = .GlobalEnv), 
+            get('Sensors', envir = .GlobalEnv), 
+            get('vDep', envir = .GlobalEnv), 
+            get('vDepSpatial', envir = .GlobalEnv)
+        )
+    }
     # gather mem usage
     cpu_mem <- .gather_mem(out)
 	out <- data.table::rbindlist(out)[, vd_index := RunElement[, vd_index]]

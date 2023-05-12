@@ -251,21 +251,24 @@ deposition <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL,
 
             # run parallel
             cat("\n***********\n")
+            cat("Export R objects...\n")
+            current_env <- environment()
+            Sources <- ModelInput[['Sources']]
+            Sensors <- pSens[['Calc.Sensors']]
+            parallel::clusterExport(cl,
+                c('Catalogs', 'Cat.Path', 'Sources', 'Sensors', 'vDep', 'vDepSpatial'),
+                envir = current_env
+                )
+            rm(Sources, Sensors)
             cat("Parallel computing deposition corrected C/E ratios...\nThis will take a moment...\n\n")
             if(vdSpat){
                 OutList <- try(
                     .clusterApplyLB(cl, InputList, .calcDep_Wrapper, spatial = TRUE,
-                        Catalogs = Catalogs, Cat.Path = Cat.Path, 
-                        Sources = ModelInput[['Sources']], Sensors = pSens[['Calc.Sensors']],
-                        vDep = vDep, vDepSpatial = vDepSpatial,
                         progress = show_progress)
                     , silent = TRUE)
             } else {
                 OutList <- try(
                     .clusterApplyLB(cl, InputList, .calcDep_Wrapper, 
-                        Catalogs = Catalogs, Cat.Path = Cat.Path, 
-                        Sources = ModelInput[['Sources']], Sensors = pSens[['Calc.Sensors']],
-                        vDep = vDep, vDepSpatial = vDepSpatial,
                         progress = show_progress)
                     , silent = TRUE)
             }

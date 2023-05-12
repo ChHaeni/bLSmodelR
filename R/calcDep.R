@@ -1,5 +1,4 @@
-.calcDep_Wrapper <- function(RunElement, Catalogs, Cat.Path, Sources, Sensors, vDep, 
-    vDepSpatial, spatial = FALSE) {
+.calcDep_Wrapper <- function(RunElement, spatial = FALSE) {
 	setDT(RunElement)
 	setkey(RunElement, rn, Sensor)
 	out <- vector("list", RunElement[,.N])

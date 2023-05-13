@@ -17,6 +17,32 @@
     out
 }
 
+.calcDep_Wrapper_noexport <- function(RunElement, 
+        Catalogs,
+        Cat.Path,
+        Sources,
+        Sensors,
+        vDep,
+        vDepSpatial,
+    spatial = FALSE) {
+	setDT(RunElement)
+	setkey(RunElement, rn, Sensor)
+    out <- .calcDep(
+        RunElement[rl, ], 
+        Catalogs,
+        Cat.Path,
+        Sources,
+        Sensors,
+        vDep,
+        vDepSpatial,
+        is_spatial = spatial,
+        ci_fun = if (spatial) fill_Ci_spatial else fill_Ci_homogeneous
+    )
+    # update vd index
+	out[, vd_index := RunElement[, vd_index]]
+    out
+}
+
 .calcDep <- function(Run, Catalogs, C.Path, Sources, CSnsrs, vd, vdSpatial,
     is_spatial, ci_fun) {
 

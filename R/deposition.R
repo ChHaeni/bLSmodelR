@@ -261,15 +261,17 @@ deposition <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL,
                 )
             rm(Sources, Sensors)
             cat("Parallel computing deposition corrected C/E ratios...\nThis will take a moment...\n\n")
-            if(vdSpat){
+            # TODO: compare only first 100 entries
+            browser()
+            if (TRUE) {
                 OutList <- try(
-                    .clusterApplyLB(cl, InputList, .calcDep_Wrapper, spatial = TRUE,
+                    .clusterApplyLB(cl, InputList, .calcDep_Wrapper, spatial = vdSpat,
                         progress = show_progress)
                     , silent = TRUE)
             } else {
                 OutList <- try(
-                    .clusterApplyLB(cl, InputList, .calcDep_Wrapper, 
-                        progress = show_progress)
+                    .clusterApplyLB(cl, InputList, .calcDep_Wrapper_noexport, 
+                        spatial = vdSpat, progress = show_progress)
                     , silent = TRUE)
             }
             # check try-error

@@ -12,7 +12,7 @@
         is_spatial = spatial
     )
     # update vd index
-	out[, vd_index := RunElement[, vd_index]]
+	out[, 'vd_index'] <-  RunElement[, vd_index]
     out
 }
 
@@ -37,7 +37,7 @@
         is_spatial = spatial
     )
     # update vd index
-	out[, vd_index := RunElement[, vd_index]]
+	out[, 'vd_index'] <-  RunElement[, vd_index]
     out
 }
 

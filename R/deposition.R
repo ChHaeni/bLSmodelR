@@ -262,18 +262,20 @@ deposition <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL,
             rm(Sources, Sensors)
             cat("Parallel computing deposition corrected C/E ratios...\nThis will take a moment...\n\n")
             # TODO: compare only first 100 entries
+            # -> mache tests auf cruncher2 oder mic!!!
             browser()
-            if (TRUE) {
-                OutList <- try(
-                    .clusterApplyLB(cl, InputList, .calcDep_Wrapper, spatial = vdSpat,
-                        progress = show_progress)
-                    , silent = TRUE)
-            } else {
-                OutList <- try(
-                    .clusterApplyLB(cl, InputList, .calcDep_Wrapper_noexport, 
-                        spatial = vdSpat, progress = show_progress)
-                    , silent = TRUE)
-            }
+            a1 <- Sys.time()
+            OutList <- try(
+                .clusterApplyLB(cl, InputList[1:100], .calcDep_Wrapper, spatial = vdSpat,
+                    progress = show_progress)
+                , silent = TRUE)
+            a2 <- Sys.time()
+            b1 <- Sys.time()
+            OutList <- try(
+                .clusterApplyLB(cl, InputList, .calcDep_Wrapper_noexport, 
+                    spatial = vdSpat, progress = show_progress)
+                , silent = TRUE)
+            b2 <- Sys.time()
             # check try-error
             if (inherits(OutList, 'try-error')) {
                 try(parallel::stopCluster(cl))

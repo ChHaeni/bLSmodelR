@@ -2,7 +2,7 @@
 	setDT(RunElement)
 	setkey(RunElement, rn, Sensor)
     out <- .calcDep(
-        RunElement[rl, ], 
+        RunElement,
         get('Catalogs', envir = .GlobalEnv), 
         get('Cat.Path', envir = .GlobalEnv), 
         get('Sources', envir = .GlobalEnv), 
@@ -28,7 +28,7 @@
 	setDT(RunElement)
 	setkey(RunElement, rn, Sensor)
     out <- .calcDep(
-        RunElement[rl, ], 
+        RunElement,
         Catalogs,
         Cat.Path,
         Sources,

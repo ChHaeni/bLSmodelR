@@ -158,7 +158,7 @@
 
 			if (Ctlg[, any(td_inside)]) {
                 # get values
-                Ci[[i]] <- ci_fun()
+                Ci[[i]] <- ci_fun(Ctlg, nms_Spatial, Src_Spatial, CSnsrs, vdep, Row)
 			}
 		}
 		cat(paste0("\r[",paste0(rep(">",20),collapse=""),"] 100%\n"))
@@ -260,32 +260,32 @@
 	return(Out)	
 }
 
-fill_Ci_homogeneous <- function() {
-    Ctlg[, dep := 1][(!td_inside), dep := dep_outside]
+fill_Ci_homogeneous <- function(Cat, ...) {
+    Cat[, dep := 1][(!td_inside), dep := dep_outside]
     # return Traj_ID & CE
-    Ctlg[Traj_ID %in% Traj_ID[(td_inside)],
+    Cat[Traj_ID %in% Traj_ID[(td_inside)],
         .(CE = sum(as.numeric(td_inside) * cumprod(dep) * wTD2))
         , by = Traj_ID]
 }
 
-fill_Ci_spatial <- function() {
+fill_Ci_spatial <- function(Cat, nms_spatial, src_spatial, csnsrs, vd, run_row) {
     # assign for looping over spatial
-    Ctlg[, tagInsideQ := td_inside]
+    Cat[, tagInsideQ := td_inside]
     ### spatially inhomogeneous vdep:
-    Ctlg[, vDep := vdep]
-    for (j in nms_Spatial) {
-        tag_inside(Ctlg, Src_Spatial[[j]], 
-            CSnsrs[chmatch(Row[i, PointSensor], CSnsrs[, "Point Sensor Name"]), ]
+    Cat[, vDep := vd]
+    for (j in nms_spatial) {
+        tag_inside(Cat, src_spatial[[j]], 
+            csnsrs[chmatch(run_row[i, PointSensor], csnsrs[, "Point Sensor Name"]), ]
         )
-        Ctlg[(td_inside), vDep := vd_Spatial[[j]]]
+        Cat[(td_inside), vDep := vd_Spatial[[j]]]
     }
     # TODO: allow for deposition inside source
     #   -> set vdep to 0 inside and remove subsetting below
     #   -> set vdep to 0 before spatial vdep such that it can be set to non
     #           zero through spatial...
-    Ctlg[, dep := 1][(!tagInsideQ), dep := exp(-vDep * wTD2)]
+    Cat[, dep := 1][(!tagInsideQ), dep := exp(-vDep * wTD2)]
     # return Traj_ID & CE
-    Ctlg[Traj_ID %in% Traj_ID[(tagInsideQ)],
+    Cat[Traj_ID %in% Traj_ID[(tagInsideQ)],
         .(CE = sum(as.numeric(tagInsideQ) * cumprod(dep) * wTD2))
         , by = Traj_ID]
 }

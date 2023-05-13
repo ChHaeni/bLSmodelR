@@ -273,9 +273,12 @@ deposition <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL,
             b1 <- Sys.time()
             OutList <- try(
                 .clusterApplyLB(cl, InputList, .calcDep_Wrapper_noexport, 
+                    Catalogs, Cat.Path, Sources, Sensors, vDep, vDepSpatial,
                     spatial = vdSpat, progress = show_progress)
                 , silent = TRUE)
             b2 <- Sys.time()
+            a2 - a1
+            b2 - b1
             # check try-error
             if (inherits(OutList, 'try-error')) {
                 try(parallel::stopCluster(cl))

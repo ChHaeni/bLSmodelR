@@ -263,6 +263,7 @@ deposition <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL,
             cat("Parallel computing deposition corrected C/E ratios...\nThis will take a moment...\n\n")
             # TODO: compare only first 100 entries
             # -> mache tests auf cruncher2 oder mic!!!
+            # -> check memory usage
             browser()
             a1 <- Sys.time()
             OutList <- try(
@@ -298,17 +299,13 @@ deposition <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL,
         } else {
 
             OutList <- vector(n_g0,mode="list")
-            if(vdSpat){
-                for(i in seq_len(n_g0)){
-                    cat(i,"/",n_g0,":\n")
-                    OutList[[i]] <- .calcDep_Spatial(Run[index_g0[i],],Catalogs,Cat.Path,ModelInput[["Sources"]],pSens$"Calc.Sensors",vDep,vDepSpatial)
-                }
-            } else {
-                for(i in seq_len(n_g0)){
-                    cat(i,"/",n_g0,":\n")
-                    OutList[[i]] <- .calcDep(Run[index_g0[i],],Catalogs,Cat.Path,ModelInput[["Sources"]],pSens$"Calc.Sensors",vDep,vDepSpatial)
-                }			
-            }
+            for(i in seq_len(n_g0)){
+                cat(i,"/",n_g0,":\n")
+                OutList[[i]] <- .calcDep(Run[index_g0[i], ], Catalogs, Cat.Path, 
+                    ModelInput[["Sources"]], pSens$"Calc.Sensors", vDep, vDepSpatial,
+                    vdSpat
+                )
+            }			
             Out <- rbindlist(OutList)[, vd_index := index_g0]
             # get gc/memory attribute
             cpu_mem <- .gather_mem(OutList)

@@ -9,8 +9,7 @@
         get('Sensors', envir = .GlobalEnv), 
         get('vDep', envir = .GlobalEnv), 
         get('vDepSpatial', envir = .GlobalEnv),
-        is_spatial = spatial,
-        ci_fun = if (spatial) fill_Ci_spatial else fill_Ci_homogeneous
+        is_spatial = spatial
     )
     # update vd index
 	out[, vd_index := RunElement[, vd_index]]
@@ -35,8 +34,7 @@
         Sensors,
         vDep,
         vDepSpatial,
-        is_spatial = spatial,
-        ci_fun = if (spatial) fill_Ci_spatial else fill_Ci_homogeneous
+        is_spatial = spatial
     )
     # update vd index
 	out[, vd_index := RunElement[, vd_index]]
@@ -44,7 +42,13 @@
 }
 
 .calcDep <- function(Run, Catalogs, C.Path, Sources, CSnsrs, vd, vdSpatial,
-    is_spatial, ci_fun) {
+    is_spatial) {
+
+    ci_fun <- if (is_spatial) {
+        bLSmodelR:::fill_Ci_spatial 
+    } else {
+        bLSmodelR:::fill_Ci_homogeneous
+    }
 
     # record gc/mem
     .record_now(start = TRUE)
@@ -158,7 +162,8 @@
 
 			if (Ctlg[, any(td_inside)]) {
                 # get values
-                Ci[[i]] <- ci_fun(Ctlg, nms_Spatial, Src_Spatial, CSnsrs, vdep, Row)
+                Ci[[i]] <- ci_fun(Ctlg, nms_Spatial, Src_Spatial, CSnsrs, vdep, 
+                    vd_Spatial, Row[i, PointSensor])
 			}
 		}
 		cat(paste0("\r[",paste0(rep(">",20),collapse=""),"] 100%\n"))
@@ -268,16 +273,17 @@ fill_Ci_homogeneous <- function(Cat, ...) {
         , by = Traj_ID]
 }
 
-fill_Ci_spatial <- function(Cat, nms_spatial, src_spatial, csnsrs, vd, run_row) {
+fill_Ci_spatial <- function(Cat, nms_spatial, src_spatial, csnsrs, vd, vd_spatial, 
+    point_sensor) {
     # assign for looping over spatial
     Cat[, tagInsideQ := td_inside]
     ### spatially inhomogeneous vdep:
     Cat[, vDep := vd]
     for (j in nms_spatial) {
         tag_inside(Cat, src_spatial[[j]], 
-            csnsrs[chmatch(run_row[i, PointSensor], csnsrs[, "Point Sensor Name"]), ]
+            csnsrs[chmatch(point_sensor, csnsrs[, "Point Sensor Name"]), ]
         )
-        Cat[(td_inside), vDep := vd_Spatial[[j]]]
+        Cat[(td_inside), vDep := vd_spatial[[j]]]
     }
     # TODO: allow for deposition inside source
     #   -> set vdep to 0 inside and remove subsetting below

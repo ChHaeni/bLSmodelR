@@ -25,17 +25,6 @@ runbLS <- function(ModelInput, Cat.Path = NULL, ncores = NULL, TDonly = NULL,
             ' "CE", "uCE", "vCE" and "wCE"')
     }
 
-    # be verbose
-    if (length(variables) > 1) {
-        cat('calculating output variables:',
-            paste('\t"', 
-                paste(variables, collapse = '", "'),
-                '"', sep = ''),
-            '\n')
-    } else {
-        cat('calculating output variable: "', variables, '"\n', sep = '')
-    }
-
 	if(!inherits(ModelInput,"InputList")){
 		stop("Argument ModelInput must be of class \"InputList\"")
 	} else {

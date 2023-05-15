@@ -24,19 +24,6 @@ deposition <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL,
             ' "CE", "uCE", "vCE" and "wCE"')
     }
 
-    # be verbose
-    if (length(variables) > 1) {
-        cat('calculating output variables:',
-            paste('\t"', 
-                paste(
-                    paste0(variables, '_Dep')
-                    , collapse = '", "'),
-                '"', sep = ''),
-            '\n')
-    } else {
-        cat('calculating output variable: "', variables, '"\n', sep = '')
-    }
-
   # convert old versions 
   sx <- as.character(substitute(x))
 	x <- copy(x)

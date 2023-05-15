@@ -1,5 +1,10 @@
-.calcCE <- function(SubRun,InputList,Srcs,C.Path){
+.calcCE <- function(SubRun, InputList, Srcs, C.Path, variables = 'CE') {
 
+    if (!all(variables %in% c('CE', 'wCE', 'uCE', 'vCE'))) {
+        stop('argument "variables" should be any combination of',
+            ' "CE", "uCE", "vCE" and "wCE"')
+    }
+    which_vars <- c('uCE', 'vCE', 'wCE') %in% variables
 
     # record gc/mem
     .record_now(start = TRUE)
@@ -193,20 +198,28 @@
 		rwts[AllSensorOrder] <- rwts
 	}
 
-	# uvw key:
-	uvw_key <- SubRun[,.(SubSensor = unlist(strsplit(Calc.Sensor,",",fixed=TRUE))),by=.(row=1:nrow(SubRun))]
-	setkey(uvw_key,"SubSensor")
+    if (any(which_vars)) {
+        # uvw key:
+        uvw_key <- SubRun[,.(SubSensor = unlist(strsplit(Calc.Sensor,",",fixed=TRUE))),by=.(row=1:nrow(SubRun))]
+        setkey(uvw_key,"SubSensor")
+        UVW_mean <- lapply(UVW,function(x)colMeans(x))
+    }
 
-	# U Matrix:
-	UVW_mean <- lapply(UVW,function(x)colMeans(x))
-	U_matrix <- matrix(sapply(1:nrow(SubRun),function(x)UVW[[x]][,"u0"] - UVW_mean[[x]]["u0"]),nrow=N0)
-	V_matrix <- matrix(sapply(1:nrow(SubRun),function(x)UVW[[x]][,"v0"] - UVW_mean[[x]]["v0"]),nrow=N0)
-	W_matrix <- matrix(sapply(1:nrow(SubRun),function(x)UVW[[x]][,"w0"] - UVW_mean[[x]]["w0"]),nrow=N0)
+    if (which_vars[1]) {
+        # U Matrix:
+        U_matrix <- matrix(sapply(1:nrow(SubRun),function(x)UVW[[x]][,"u0"] - UVW_mean[[x]]["u0"]),nrow=N0)
+    }
+    if (which_vars[2]) {
+        V_matrix <- matrix(sapply(1:nrow(SubRun),function(x)UVW[[x]][,"v0"] - UVW_mean[[x]]["v0"]),nrow=N0)
+    }
+    if (which_vars[3]) {
+        W_matrix <- matrix(sapply(1:nrow(SubRun),function(x)UVW[[x]][,"w0"] - UVW_mean[[x]]["w0"]),nrow=N0)
+    }
 
 	for(i in Out[N_TD>0,Source]){
 
 		# check NULL
-		not_null <- !sapply(Ci[[i]],is.null)
+		not_null <- !sapply(Ci[[i]], is.null)
 		
 		# Mean I:
 		CE_mean <- sum(sapply(Ci[[i]][not_null],function(x)x[,sum(CE)])*rwts[not_null])/N0
@@ -230,31 +243,43 @@
 		CE_se_add <- sqrt(sum(cov(c_matrix)*orwts)/N0)
 		
 		# uCE + SE
-		uvwCE <- c_matrix*U_matrix[,uvw_key[AllSensorNames,row]]
-		uCE_add <- sum(colSums(uvwCE)*rwts)/N0
-		uCE_se_add <- sqrt(sum(cov(uvwCE)*orwts)/N0)
+        if (which_var[1]) {
+            uvwCE <- c_matrix*U_matrix[,uvw_key[AllSensorNames,row]]
+            uCE_add <- sum(colSums(uvwCE)*rwts)/N0
+            uCE_se_add <- sqrt(sum(cov(uvwCE)*orwts)/N0)
+        } else {
+            uCE_add <- uCE_se_add <- NA_real_
+        }
 
 		# vCE + SE
-		uvwCE <- c_matrix*V_matrix[,uvw_key[AllSensorNames,row]]
-		vCE_add <- sum(colSums(uvwCE)*rwts)/N0
-		vCE_se_add <- sqrt(sum(cov(uvwCE)*orwts)/N0)
+        if (which_var[2]) {
+            uvwCE <- c_matrix*V_matrix[,uvw_key[AllSensorNames,row]]
+            vCE_add <- sum(colSums(uvwCE)*rwts)/N0
+            vCE_se_add <- sqrt(sum(cov(uvwCE)*orwts)/N0)
+        } else {
+            vCE_add <- vCE_se_add <- NA_real_
+        }
 
 		# uCE + SE
-		uvwCE <- c_matrix*W_matrix[,uvw_key[AllSensorNames,row]]
-		wCE_add <- sum(colSums(uvwCE)*rwts)/N0
-		wCE_se_add <- sqrt(sum(cov(uvwCE)*orwts)/N0)
+        if (which_var[3]) {
+            uvwCE <- c_matrix*W_matrix[,uvw_key[AllSensorNames,row]]
+            wCE_add <- sum(colSums(uvwCE)*rwts)/N0
+            wCE_se_add <- sqrt(sum(cov(uvwCE)*orwts)/N0)
+        } else {
+            wCE_add <- wCE_se_add <- NA_real_
+        }
 
 		# write results
-		Out[i,CE := CE_mean]
-		Out[i,UCE := UCE_mean]
-		Out[i,uCE := uCE_add]
-		Out[i,vCE := vCE_add]
-		Out[i,wCE := wCE_add]
+		Out[i, CE := CE_mean]
+		Out[i, UCE := UCE_mean]
+		Out[i, uCE := uCE_add]
+		Out[i, vCE := vCE_add]
+		Out[i, wCE := wCE_add]
 		# SE:
-		Out[i,CE_se := CE_se_add]
-		Out[i,uCE_se := uCE_se_add]
-		Out[i,vCE_se := vCE_se_add]
-		Out[i,wCE_se := wCE_se_add]
+		Out[i, CE_se := CE_se_add]
+		Out[i, uCE_se := uCE_se_add]
+		Out[i, vCE_se := vCE_se_add]
+		Out[i, wCE_se := wCE_se_add]
 
 	}
 	# Upper/Lower

@@ -42,7 +42,13 @@
 }
 
 .calcDep <- function(Run, Catalogs, C.Path, Sources, CSnsrs, vd, vdSpatial,
-    is_spatial) {
+    is_spatial, variables = 'CE') {
+
+    if (!all(variables %in% c('CE', 'wCE', 'uCE', 'vCE'))) {
+        stop('argument "variables" should be any combination of',
+            ' "CE", "uCE", "vCE" and "wCE"')
+    }
+    which_vars <- c('uCE', 'vCE', 'wCE') %in% variables
 
     ci_fun <- if (is_spatial) {
         bLSmodelR:::fill_Ci_spatial 
@@ -208,32 +214,47 @@
                 c_matrix[Ci[[j]][, Traj_ID], j] <- Ci[[j]][, CE - CE_mean]
             }
 
-            # uCE + SE
-            Us <- matrix(
-                UVW[[uniqueCats[1]]][, 'u0'] - mean(UVW[[uniqueCats[1]]][, 'u0'])
-                , nrow = N0, ncol = nr)
-            for (ic in uniqueCats[-1]) {
-                Us[, indCats == ic] <- UVW[[ic]][, 'u0'] - mean(UVW[[ic]][, 'u0'])
+            if (which_vars[1]) {
+                # uCE + SE
+                Us <- matrix(
+                    UVW[[uniqueCats[1]]][, 'u0'] - mean(UVW[[uniqueCats[1]]][, 'u0'])
+                    , nrow = N0, ncol = nr)
+                for (ic in uniqueCats[-1]) {
+                    Us[, indCats == ic] <- UVW[[ic]][, 'u0'] - mean(UVW[[ic]][, 'u0'])
+                }
+                uvwCE <- c_matrix * Us
+                uCE_add <- sum(colSums(uvwCE) * rwts) / N0
+                uCE_se_add <- sqrt(sum(cov(uvwCE) * orwts) / N0)
+            } else {
+                uCE_add <- uCE_se_add <- NA_real_
+                if (any(which_vars[3:4])) {
+                    Us <- matrix(0.0, nrow = N0, ncol = nr)
+                }
             }
-            uvwCE <- c_matrix * Us
-            uCE_add <- sum(colSums(uvwCE) * rwts) / N0
-            uCE_se_add <- sqrt(sum(cov(uvwCE) * orwts) / N0)
 
-            # vCE + SE
-            for (ic in uniqueCats) {
-                Us[, indCats == ic] <- UVW[[ic]][, 'v0']
+            if (which_vars[2]) {
+                # vCE + SE
+                for (ic in uniqueCats) {
+                    Us[, indCats == ic] <- UVW[[ic]][, 'v0']
+                }
+                uvwCE <- c_matrix * Us
+                vCE_add <- sum(colSums(uvwCE) * rwts) / N0
+                vCE_se_add <- sqrt(sum(cov(uvwCE) * orwts) / N0)
+            } else {
+                vCE_add <- vCE_se_add <- NA_real_
             }
-            uvwCE <- c_matrix * Us
-            vCE_add <- sum(colSums(uvwCE) * rwts) / N0
-            vCE_se_add <- sqrt(sum(cov(uvwCE) * orwts) / N0)
 
-            # uCE + SE
-            for (ic in uniqueCats) {
-                Us[, indCats == ic] <- UVW[[ic]][, 'w0']
+            if (which_vars[3]) {
+                # uCE + SE
+                for (ic in uniqueCats) {
+                    Us[, indCats == ic] <- UVW[[ic]][, 'w0']
+                }
+                uvwCE <- c_matrix * Us
+                wCE_add <- sum(colSums(uvwCE) * rwts) / N0
+                wCE_se_add <- sqrt(sum(cov(uvwCE) * orwts) / N0)
+            } else {
+                wCE_add <- wCE_se_add <- NA_real_
             }
-            uvwCE <- c_matrix * Us
-            wCE_add <- sum(colSums(uvwCE) * rwts) / N0
-            wCE_se_add <- sqrt(sum(cov(uvwCE) * orwts) / N0)
 
 			Out <- data.frame(
                 # CE

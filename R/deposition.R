@@ -269,15 +269,6 @@ deposition <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL,
                 as.data.frame(Run[x, ])
                 })
 
-            ###################################
-
-            parallel::stopCluster(cl)
-            cl <- .makePSOCKcluster(ncores, outfile = '')
-            # cl <- .makePSOCKcluster(ncores, memory_limit = memory_limit)
-            parallel::clusterEvalQ(cl, data.table::setDTthreads(1L))
-            show_progress <- FALSE
-
-
             # run parallel
             cat("\n***********\n")
             cat("Export R objects...\n")
@@ -290,34 +281,12 @@ deposition <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL,
                 )
             rm(Sources, Sensors)
             cat("Parallel computing deposition corrected C/E ratios...\nThis will take a moment...\n\n")
-            # TODO: compare only first 100 entries
-            # -> mache tests auf cruncher2 oder mic!!!
-            # -> check memory usage
 
-            browser()
-
-            parallel::clusterEvalQ(cl, bLSmodelR:::.start_recording())
-            a1 <- Sys.time()
-            OutList1 <- try(
-                .clusterApplyLB(cl, InputList[1000 + 1:21], .calcDep_Wrapper, spatial = vdSpat,
+            # run in parallel
+            OutList <- try(
+                .clusterApplyLB(cl, InputList, .calcDep_Wrapper, spatial = vdSpat,
                     variables = variables, progress = show_progress)
                 , silent = TRUE)
-            a2 <- Sys.time()
-            clusterEvalQ(cl, rm(list = ls()))
-            clusterEvalQ(cl, for(i in 1:10)gc())
-            b1 <- Sys.time()
-            OutList2 <- try(
-                .clusterApplyLB(cl, InputList[1000 + 1:21], .calcDep_Wrapper_noexport, 
-                    Catalogs, Cat.Path, ModelInput[['Sources']], pSens[['Calc.Sensors']], 
-                    vDep, vDepSpatial, spatial = vdSpat, variables = variables, 
-                    progress = show_progress)
-                , silent = TRUE)
-            b2 <- Sys.time()
-            clusterEvalQ(cl, for(i in 1:10)gc())
-            a2 - a1
-            b2 - b1
-            .gather_mem(OutList1)[]
-            .gather_mem(OutList2)[]
 
             # check try-error
             if (inherits(OutList, 'try-error')) {
@@ -342,7 +311,7 @@ deposition <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL,
                 cat(i,"/",n_g0,":\n")
                 OutList[[i]] <- .calcDep(Run[index_g0[i], ], Catalogs, Cat.Path, 
                     ModelInput[["Sources"]], pSens$"Calc.Sensors", vDep, vDepSpatial,
-                    vdSpat
+                    vdSpat, variables = variables
                 )
             }			
             Out <- rbindlist(OutList)[, vd_index := index_g0]

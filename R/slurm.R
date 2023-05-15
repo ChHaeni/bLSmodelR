@@ -1,5 +1,5 @@
 # runbLSlurm main function
-runbLSlurm <- function(input_list, cat_path, ..., 
+runbLSlurm <- function(input_list, cat_path, ..., variables = 'CE',
     cpu_mem_min = 0, memory_limit = NULL, record_mem = FALSE, wait = TRUE) {
     
     # print usage without arguments
@@ -44,7 +44,8 @@ runbLSlurm <- function(input_list, cat_path, ...,
     saveRDS(input_list, file.path(slurm$tmp_dir, 'input_list.rds'))
 
     # create script with argument
-    rscript_file <- write_runbLS_script(slurm$tmp_dir, cat_path, slurm$part[, cpus_per_task], mem_lim = memory_limit)
+    rscript_file <- write_runbLS_script(slurm$tmp_dir, cat_path, 
+        slurm$part[, cpus_per_task], mem_lim = memory_limit, variables = variables)
 
     # create sbatch file, run slurm job & return result
     run_sbatch(slurm = slurm, rscript = rscript_file, wait = wait)
@@ -263,7 +264,8 @@ split_int <- function(int, p){
 
 # write R scripts
 # runbLS
-write_runbLS_script <- function(tmpdir, cpath, ncores, mem_lim = NULL) {
+write_runbLS_script <- function(tmpdir, cpath, ncores, mem_lim = NULL, 
+    variables = 'CE') {
     # get tmpfile name
     tmp <- tempfile(pattern = 'Rscript', tmpdir = tmpdir, fileext = '.R')
     # write R script to tmp file
@@ -282,9 +284,12 @@ write_runbLS_script <- function(tmpdir, cpath, ncores, mem_lim = NULL) {
             'inlist$Interval <- int',
             # run model
             if (is.null(mem_lim)) {
-                paste0('res <- runbLS(inlist, "', cpath, '", ncores = ', ncores, ', show_progress = FALSE)')
+                paste0('res <- runbLS(inlist, "', cpath, '", ncores = ', ncores, 
+                    ', show_progress = FALSE, variables = ', dput(variables), ')')
             } else {
-                paste0('res <- runbLS(inlist, "', cpath, '", ncores = ', ncores, ', memory_limit = "', mem_lim, '", show_progress = FALSE)')
+                paste0('res <- runbLS(inlist, "', cpath, '", ncores = ', ncores, 
+                    ', memory_limit = "', mem_lim, '", show_progress = FALSE, variables = ',
+                    dput(variables), ')')
             },
             # save result; get index from int%i.rds
             'saveRDS(res, sub("/int([0-9]{1,2}[.]rds)", "/res\\\\1", ifile))'
@@ -298,7 +303,7 @@ write_runbLS_script <- function(tmpdir, cpath, ncores, mem_lim = NULL) {
     tmp
 }
 # depostion
-write_deposition_script <- function(tmpdir, ncores, mem_lim = NULL) {
+write_deposition_script <- function(tmpdir, ncores, mem_lim = NULL, variables = 'CE') {
     # get tmpfile name
     tmp <- tempfile(pattern = 'Rscript', tmpdir = tmpdir, fileext = '.R')
     # write R script to tmp file
@@ -322,10 +327,12 @@ write_deposition_script <- function(tmpdir, ncores, mem_lim = NULL) {
             # run deposition
             if (is.null(mem_lim)) {
                 paste0('res <- do.call(deposition, c(list(x = bls_result, ncores = ', 
-                    ncores, '), dep_args[c("vDep", "vDepSpatial")]))')
+                    ncores, ', variables = ', dput(variables), 
+                    '), dep_args[c("vDep", "vDepSpatial")]))')
             } else {
                 paste0('res <- do.call(deposition, c(list(x = bls_result, ncores = ', 
-                    ncores, ', memory_limit = "', mem_lim, '"), dep_args[c("vDep", "vDepSpatial")]))')
+                    ncores, ', memory_limit = "', mem_lim, '", variables = ', 
+                    dput(variables), '), dep_args[c("vDep", "vDepSpatial")]))')
             },
             # save result; get index from int%i.rds
             'saveRDS(res, sub("/int([0-9]{1,2}[.]rds)", "/res\\\\1", ifile))'
@@ -340,7 +347,7 @@ write_deposition_script <- function(tmpdir, ncores, mem_lim = NULL) {
 }
 
 depoSlurm <- function(x, vDep, ..., rn = NULL, Sensor = NULL, Source = NULL, vDepSpatial = NULL,
-    cpu_mem_min = 0, memory_limit = NULL, record_mem = FALSE, wait = TRUE) {
+    cpu_mem_min = 0, memory_limit = NULL, record_mem = FALSE, wait = TRUE, variables = 'CE') {
 
     # memory recording?
     .set_recording(record_mem)
@@ -417,7 +424,8 @@ depoSlurm <- function(x, vDep, ..., rn = NULL, Sensor = NULL, Source = NULL, vDe
     )
     
     # create script with argument
-    rscript_file <- write_deposition_script(slurm$tmp_dir, slurm$part[, cpus_per_task], mem_lim = memory_limit)
+    rscript_file <- write_deposition_script(slurm$tmp_dir, slurm$part[, cpus_per_task], 
+        mem_lim = memory_limit, variables = variables)
 
     # create sbatch file, run slurm job & return result
     run_sbatch(slurm = slurm, rscript = rscript_file, wait = wait)

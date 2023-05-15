@@ -183,10 +183,6 @@
 			# check nulls
 			not_null <- !sapply(Ci, is.null)
 
-			# # erweitere UVW:
-			# is_nUVW <- sapply(UVW,is.null)
-			# UVW[is_nUVW] <- UVW[!is_nUVW][1]
-
 			# weights:
 			wts <- rep(2, nr)
 			wts[c(1, nr)] <- 1
@@ -212,33 +208,32 @@
                 c_matrix[Ci[[j]][, Traj_ID], j] <- Ci[[j]][, CE - CE_mean]
             }
 
-			# Us per Cat
-			Us <- do.call(cbind,lapply(UVW,function(x){
-				x[,"u0"] - mean(x[,"u0"])
-			}))
-			# Vs per Cat
-			Vs <- do.call(cbind,lapply(UVW,function(x){
-				x[,"v0"]
-			}))
-			# Ws per Cat
-			Ws <- do.call(cbind,lapply(UVW,function(x){
-				x[,"w0"]
-			}))
-
             # uCE + SE
-            uvwCE <- c_matrix * Us[, indCats]
+            Us <- matrix(
+                UVW[[uniqueCats[1]]][, 'u0'] - mean(UVW[[uniqueCats[1]]][, 'u0'])
+                , nrow = N0, ncol = nr)
+            for (ic in uniqueCats[-1]) {
+                Us[, indCats == ic] <- UVW[[ic]][, 'u0'] - mean(UVW[[ic]][, 'u0'])
+            }
+            uvwCE <- c_matrix * Us
             uCE_add <- sum(colSums(uvwCE) * rwts) / N0
             uCE_se_add <- sqrt(sum(cov(uvwCE) * orwts) / N0)
 
             # vCE + SE
-            uvwCE <- c_matrix * Vs[, indCats]
-            vCE_add <- sum(colSums(uvwCE)*rwts)/N0
-            vCE_se_add <- sqrt(sum(cov(uvwCE)*orwts)/N0)
+            for (ic in uniqueCats) {
+                Us[, indCats == ic] <- UVW[[ic]][, 'v0']
+            }
+            uvwCE <- c_matrix * Us
+            vCE_add <- sum(colSums(uvwCE) * rwts) / N0
+            vCE_se_add <- sqrt(sum(cov(uvwCE) * orwts) / N0)
 
             # uCE + SE
-            uvwCE <- c_matrix * Ws[, indCats]
-            wCE_add <- sum(colSums(uvwCE)*rwts)/N0
-            wCE_se_add <- sqrt(sum(cov(uvwCE)*orwts)/N0)
+            for (ic in uniqueCats) {
+                Us[, indCats == ic] <- UVW[[ic]][, 'w0']
+            }
+            uvwCE <- c_matrix * Us
+            wCE_add <- sum(colSums(uvwCE) * rwts) / N0
+            wCE_se_add <- sqrt(sum(cov(uvwCE) * orwts) / N0)
 
 			Out <- data.frame(
                 # CE

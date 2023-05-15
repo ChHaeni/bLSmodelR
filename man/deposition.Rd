@@ -8,7 +8,8 @@ Dry Deposition Post-Processing
 Run the \sQuote{bLSmodelR} dry deposition post-processing function.
 }
 \usage{
-deposition(x, vDep, rn = NULL, Sensor = NULL, Source = NULL, vDepSpatial = NULL, ncores = 1, memory_limit = NULL)
+deposition(x, vDep, rn = NULL, Sensor = NULL, Source = NULL, vDepSpatial = NULL, 
+    ncores = 1, memory_limit = NULL, show_progress = TRUE, variables = 'CE')
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -35,6 +36,12 @@ integer. Number of cores used for parallel processing.
 }
   \item{memory_limit}{
 character. Maximal vector heap size (memory limit) specified via 'R_MAX_VSIZE' (see also \code{?Memory}). This has only an effect if R is running in a bash environment.
+}
+  \item{show_progress}{
+logical. Show progress when computing output variables in prallel. Defaults to \code{TRUE}.
+}
+  \item{variables}{
+character vector specifying the output variables of line sensors to calculate (any combination of \code{"CE"}, \code{"wCE"}, \code{"uCE"}, \code{"vCE"}). Defaults to \code{"CE"} only which can reduce calculation time significantly.
 }
 }
 % \details{

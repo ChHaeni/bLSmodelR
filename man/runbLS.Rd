@@ -8,8 +8,8 @@ Run bLSmodelR
 Run \sQuote{bLSmodelR} using the specified model input.
 }
 \usage{
-runbLS(ModelInput, Cat.Path = NULL, ncores = NULL, TDonly = NULL, 
-  asDT = TRUE, simpleNames = asDT, memory_limit = NULL)
+runbLS(ModelInput, Cat.Path = NULL, ncores = NULL, TDonly = NULL, asDT = TRUE, 
+    simpleNames = asDT, memory_limit = NULL, show_progress = TRUE, variables = "CE")
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -33,6 +33,12 @@ logical. Use simple column names for Output, if \code{TRUE}. Default \code{FALSE
 }
   \item{memory_limit}{
 character. Maximal vector heap size (memory limit) specified via 'R_MAX_VSIZE' (see also \code{?Memory}). This has only an effect if R is running in a bash environment.
+}
+  \item{show_progress}{
+logical. Show progress when computing output variables in prallel. Defaults to \code{TRUE}.
+}
+  \item{variables}{
+character vector specifying the output variables of line sensors to calculate (any combination of \code{"CE"}, \code{"wCE"}, \code{"uCE"}, \code{"vCE"}). Defaults to \code{"CE"} only which can reduce calculation time significantly.
 }
 }
 \details{

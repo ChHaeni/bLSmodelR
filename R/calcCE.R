@@ -1,9 +1,6 @@
 .calcCE <- function(SubRun, InputList, Srcs, C.Path, variables = 'CE') {
 
-    if (!all(variables %in% c('CE', 'wCE', 'uCE', 'vCE'))) {
-        stop('argument "variables" should be any combination of',
-            ' "CE", "uCE", "vCE" and "wCE"')
-    }
+    # which additional variables?
     which_vars <- c('uCE', 'vCE', 'wCE') %in% variables
 
     # record gc/mem

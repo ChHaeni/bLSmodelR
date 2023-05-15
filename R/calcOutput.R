@@ -1,4 +1,5 @@
-.calcOutput <- function(SncRun, InputList, C.Path, cl = NULL, show_progress = TRUE) {
+.calcOutput <- function(SncRun, InputList, C.Path, cl = NULL, show_progress = TRUE,
+    variables = 'CE') {
 
 	### procSensors:
 	InputList$Sensors <- procSensors(InputList[["Sensors"]])
@@ -66,7 +67,7 @@
 		cat("Parallel computing C/E ratios.\n")
 		cat("\n\t-> This might take some time depending on the calculation load!!! <-\n\n")
 		OutList <- .clusterApplyLB(cl, SncList, .calcCE, InputList, Srcs, C.Path, 
-            progress = show_progress)		
+            progress = show_progress, variables = variables)
 	
 	} else {
 		
@@ -82,7 +83,8 @@
 			cat("Sensor:",Key[i,Sensor],"\n")
 			cat("Count:",i,"/",nk,"\n")
 
-			OutList[[i]] <- .calcCE(SncRun[ilist,],InputList,Srcs,C.Path)			
+			OutList[[i]] <- .calcCE(SncRun[ilist, ], InputList, Srcs, C.Path, 
+                variables = variables)
 
 		}
 	}

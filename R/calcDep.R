@@ -1,4 +1,4 @@
-.calcDep_Wrapper <- function(RunElement, spatial = FALSE) {
+.calcDep_Wrapper <- function(RunElement, variables = 'CE', spatial = FALSE) {
 	setDT(RunElement)
 	setkey(RunElement, rn, Sensor)
     out <- .calcDep(
@@ -9,7 +9,27 @@
         get('Sensors', envir = .GlobalEnv), 
         get('vDep', envir = .GlobalEnv), 
         get('vDepSpatial', envir = .GlobalEnv),
-        is_spatial = spatial
+        is_spatial = spatial,
+        variables = variables
+    )
+    # update vd index
+	out[, 'vd_index'] <-  RunElement[, vd_index]
+    out
+}
+
+.calcDep_Wrapper2 <- function(RunElement, variables = 'CE', spatial = FALSE) {
+	setDT(RunElement)
+	setkey(RunElement, rn, Sensor)
+    out <- .calcDep(
+        RunElement,
+        .GlobalEnv[['Catalogs']],
+        .GlobalEnv[['Cat.Path']],
+        .GlobalEnv[['Sources']],
+        .GlobalEnv[['Sensors']],
+        .GlobalEnv[['vDep']],
+        .GlobalEnv[['vDepSpatial']],
+        is_spatial = spatial,
+        variables = variables
     )
     # update vd index
 	out[, 'vd_index'] <-  RunElement[, vd_index]
@@ -17,12 +37,13 @@
 }
 
 .calcDep_Wrapper_noexport <- function(RunElement, 
-        Catalogs,
-        Cat.Path,
-        Sources,
-        Sensors,
-        vDep,
-        vDepSpatial,
+    Catalogs,
+    Cat.Path,
+    Sources,
+    Sensors,
+    vDep,
+    vDepSpatial,
+    variables = 'CE',
     spatial = FALSE) {
 	setDT(RunElement)
 	setkey(RunElement, rn, Sensor)
@@ -34,7 +55,8 @@
         Sensors,
         vDep,
         vDepSpatial,
-        is_spatial = spatial
+        is_spatial = spatial,
+        variables = variables
     )
     # update vd index
 	out[, 'vd_index'] <-  RunElement[, vd_index]
@@ -44,10 +66,7 @@
 .calcDep <- function(Run, Catalogs, C.Path, Sources, CSnsrs, vd, vdSpatial,
     is_spatial, variables = 'CE') {
 
-    if (!all(variables %in% c('CE', 'wCE', 'uCE', 'vCE'))) {
-        stop('argument "variables" should be any combination of',
-            ' "CE", "uCE", "vCE" and "wCE"')
-    }
+    # which additional variables?
     which_vars <- c('uCE', 'vCE', 'wCE') %in% variables
 
     ci_fun <- if (is_spatial) {

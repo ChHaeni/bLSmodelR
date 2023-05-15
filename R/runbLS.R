@@ -1,5 +1,6 @@
 runbLS <- function(ModelInput, Cat.Path = NULL, ncores = NULL, TDonly = NULL, 
-    asDT = TRUE, simpleNames = asDT, memory_limit = NULL, show_progress = TRUE) {
+    asDT = TRUE, simpleNames = asDT, memory_limit = NULL, show_progress = TRUE,
+    variables = 'CE') {
 
 	cat("\n**********************************************\n")
     cat("                MAIN MODEL RUN\n")
@@ -17,6 +18,23 @@ runbLS <- function(ModelInput, Cat.Path = NULL, ncores = NULL, TDonly = NULL,
 			cat("\n***bLSmodelR Run aborted!***\n")
 		}
 	)
+
+    # check variable argument
+    if (!all(variables %in% c('CE', 'wCE', 'uCE', 'vCE'))) {
+        stop('argument "variables" should be a vector with any combination of',
+            ' "CE", "uCE", "vCE" and "wCE"')
+    }
+
+    # be verbose
+    if (length(variables) > 1) {
+        cat('calculating output variables:',
+            paste('\t"', 
+                paste(variables, collapse = '", "'),
+                '"', sep = ''),
+            '\n')
+    } else {
+        cat('calculating output variable: "', variables, '"\n', sep = '')
+    }
 
 	if(!inherits(ModelInput,"InputList")){
 		stop("Argument ModelInput must be of class \"InputList\"")
@@ -123,7 +141,7 @@ runbLS <- function(ModelInput, Cat.Path = NULL, ncores = NULL, TDonly = NULL,
 	if(!ModelInput[["Model"]][["TDonly"]]){
 		
 		Out <- .calcOutput(Intervals, ModelInput, Cat.Path, cl, 
-            show_progress = show_progress)
+            show_progress = show_progress, variables = variables)
         cpu_mem <- attr(Out, 'cpu_mem')
 		Intervals <- attr(Out,"CalcSteps")
 		Out[,":="(

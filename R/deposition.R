@@ -1,5 +1,6 @@
 deposition <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL, 
-    vDepSpatial = NULL, ncores = 1, memory_limit = NULL, show_progress = TRUE) {
+    vDepSpatial = NULL, ncores = 1, memory_limit = NULL, show_progress = TRUE,
+    variables = 'CE') {
 
 	cat("\n**********************************************\n")
     cat("             DEPOSITION CALCULATION\n")
@@ -16,6 +17,25 @@ deposition <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL,
 			cat("\n***bLSmodelR deposition calculation aborted!***\n")
 		}
 	)
+
+    # check variable argument
+    if (!all(variables %in% c('CE', 'wCE', 'uCE', 'vCE'))) {
+        stop('argument "variables" should be a vector with any combination of',
+            ' "CE", "uCE", "vCE" and "wCE"')
+    }
+
+    # be verbose
+    if (length(variables) > 1) {
+        cat('calculating output variables:',
+            paste('\t"', 
+                paste(
+                    paste0(variables, '_Dep')
+                    , collapse = '", "'),
+                '"', sep = ''),
+            '\n')
+    } else {
+        cat('calculating output variable: "', variables, '"\n', sep = '')
+    }
 
   # convert old versions 
   sx <- as.character(substitute(x))
@@ -249,6 +269,15 @@ deposition <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL,
                 as.data.frame(Run[x, ])
                 })
 
+            ###################################
+
+            parallel::stopCluster(cl)
+            cl <- .makePSOCKcluster(ncores, outfile = '')
+            # cl <- .makePSOCKcluster(ncores, memory_limit = memory_limit)
+            parallel::clusterEvalQ(cl, data.table::setDTthreads(1L))
+            show_progress <- FALSE
+
+
             # run parallel
             cat("\n***********\n")
             cat("Export R objects...\n")
@@ -264,22 +293,32 @@ deposition <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL,
             # TODO: compare only first 100 entries
             # -> mache tests auf cruncher2 oder mic!!!
             # -> check memory usage
+
             browser()
+
+            parallel::clusterEvalQ(cl, bLSmodelR:::.start_recording())
             a1 <- Sys.time()
-            OutList <- try(
-                .clusterApplyLB(cl, InputList[1:100], .calcDep_Wrapper, spatial = vdSpat,
-                    progress = show_progress)
+            OutList1 <- try(
+                .clusterApplyLB(cl, InputList[1000 + 1:21], .calcDep_Wrapper, spatial = vdSpat,
+                    variables = variables, progress = show_progress)
                 , silent = TRUE)
             a2 <- Sys.time()
+            clusterEvalQ(cl, rm(list = ls()))
+            clusterEvalQ(cl, for(i in 1:10)gc())
             b1 <- Sys.time()
-            OutList <- try(
-                .clusterApplyLB(cl, InputList, .calcDep_Wrapper_noexport, 
+            OutList2 <- try(
+                .clusterApplyLB(cl, InputList[1000 + 1:21], .calcDep_Wrapper_noexport, 
                     Catalogs, Cat.Path, ModelInput[['Sources']], pSens[['Calc.Sensors']], 
-                    vDep, vDepSpatial, spatial = vdSpat, progress = show_progress)
+                    vDep, vDepSpatial, spatial = vdSpat, variables = variables, 
+                    progress = show_progress)
                 , silent = TRUE)
             b2 <- Sys.time()
+            clusterEvalQ(cl, for(i in 1:10)gc())
             a2 - a1
             b2 - b1
+            .gather_mem(OutList1)[]
+            .gather_mem(OutList2)[]
+
             # check try-error
             if (inherits(OutList, 'try-error')) {
                 try(parallel::stopCluster(cl))

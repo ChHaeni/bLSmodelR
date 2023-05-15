@@ -17,52 +17,6 @@
     out
 }
 
-.calcDep_Wrapper2 <- function(RunElement, variables = 'CE', spatial = FALSE) {
-	setDT(RunElement)
-	setkey(RunElement, rn, Sensor)
-    out <- .calcDep(
-        RunElement,
-        .GlobalEnv[['Catalogs']],
-        .GlobalEnv[['Cat.Path']],
-        .GlobalEnv[['Sources']],
-        .GlobalEnv[['Sensors']],
-        .GlobalEnv[['vDep']],
-        .GlobalEnv[['vDepSpatial']],
-        is_spatial = spatial,
-        variables = variables
-    )
-    # update vd index
-	out[, 'vd_index'] <-  RunElement[, vd_index]
-    out
-}
-
-.calcDep_Wrapper_noexport <- function(RunElement, 
-    Catalogs,
-    Cat.Path,
-    Sources,
-    Sensors,
-    vDep,
-    vDepSpatial,
-    variables = 'CE',
-    spatial = FALSE) {
-	setDT(RunElement)
-	setkey(RunElement, rn, Sensor)
-    out <- .calcDep(
-        RunElement,
-        Catalogs,
-        Cat.Path,
-        Sources,
-        Sensors,
-        vDep,
-        vDepSpatial,
-        is_spatial = spatial,
-        variables = variables
-    )
-    # update vd index
-	out[, 'vd_index'] <-  RunElement[, vd_index]
-    out
-}
-
 .calcDep <- function(Run, Catalogs, C.Path, Sources, CSnsrs, vd, vdSpatial,
     is_spatial, variables = 'CE') {
 

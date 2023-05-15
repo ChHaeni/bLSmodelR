@@ -56,7 +56,7 @@
 	# on.exit(browser())
 	vd_index <- Run[, vd_index]
 	# browser()	
-	if(Run[,N_TD > 0]){
+	if (Run[, N_TD > 0]) {
 		
 		# N_TD_tot <- Run[,N_TD]
 		# N_TD_sum <- 0
@@ -66,18 +66,18 @@
         # TODO: get vDep from Run?
 		vdep <- vd[vd_index]
 
-		n <- nrow(Row)
+		nr <- nrow(Row)
 		indCats <- Row[,Cat.Name]
 		uniqueCats <- unique(indCats)
 		nCats <- length(uniqueCats)
 		cat("Sensor", Row[1, Sensor], "/ Source", Row[1, Source],"\n")
-		Steps <- unique(round(seq(1,n,length.out=10))) %w/o% n
+		Steps <- unique(round(seq(1,nr,length.out=10))) %w/o% nr
 		N0 <- Row[1,N0]
 		cName <- ""
 		cSeed <- -1
 		Src <- Sources[Sources[,1] %chin% Row[1,Source],]
 
-		Ci <- vector(mode="list",length=n)
+		Ci <- vector(mode="list",length=nr)
 		UVW <- vector(mode="list",length=nCats)
 		names(UVW) <- uniqueCats
 
@@ -104,7 +104,7 @@
             nms_Spatial <- nms_Spatial[!is.na(unlist(vd_Spatial))]
         }
 
-		for(i in seq_len(n)){
+		for(i in seq_len(nr)){
 
 			# if(N_TD_sum == N_TD_tot){
 			# 	# browser()
@@ -112,7 +112,7 @@
 			# }
 
 			# progressbar
-			if(i %in% Steps)cat(sprintf("\r[%s%s%s] %1.0f%%",paste(rep(">",round(2*(i-1)/n*10)),collapse=""),"|",paste(rep(".",max(0,19-round(2*(i-1)/n*10))),collapse=""),(i-1)/n*100))
+			if(i %in% Steps)cat(sprintf("\r[%s%s%s] %1.0f%%",paste(rep(">",round(2*(i-1)/nr*10)),collapse=""),"|",paste(rep(".",max(0,19-round(2*(i-1)/nr*10))),collapse=""),(i-1)/nr*100))
 			# {xalt <- matrix(0,2,3)
 			# xneu <- gc()
 			# while(abs(xalt[2,3]-xneu[2,3])>0){xalt<-xneu;xneu <- gc()}
@@ -178,39 +178,43 @@
 
 		# browser()
 
-		if(n>1){
+		if (nr > 1) {
 
 			# check nulls
-			is_null <- sapply(Ci,is.null)
+			not_null <- !sapply(Ci, is.null)
+
 			# # erweitere UVW:
 			# is_nUVW <- sapply(UVW,is.null)
 			# UVW[is_nUVW] <- UVW[!is_nUVW][1]
 
 			# weights:
-			wts <- rep(2,n)
-			wts[c(1,n)] <- 1
-			rwts <- wts/sum(wts)
+			wts <- rep(2, nr)
+			wts[c(1, nr)] <- 1
+			rwts <- wts / sum(wts)
+			orwts <- outer(rwts, rwts) / sqrt(N0)
 
-			Cmean <- rep(0,n)
-			Cmean[!is_null] <- sapply(Ci[!is_null],function(x)x[,sum(CE)])/N0
-			# individual CEs
-			CEs <- mapply(function(i,x,y){
-				out <- rep(0,N0)
-				if(i){
-					out
-				} else {
-					out[x[,Traj_ID]] <- x[,CE]
-					out - y
-				}
-			},i=is_null,x=Ci,y=Cmean,SIMPLIFY=TRUE)
+            # average CE + UCE
+            CE_mean <- 0
+            UCE_mean <- 0
+            for (i_n in which(not_null)) {
+                CE_mean <- CE_mean + Ci[[i_n]][, sum(CE)] * rwts[i_n]
+                UCE_mean <- UCE_mean + Ci[[i_n]][, 
+                    sum(UVW[[indCats[i_n]]][Traj_ID, 'u0'] * CE)] * rwts[i_n]
+            }
+            CE_mean <- CE_mean / N0
+            UCE_mean <- UCE_mean / N0
+
+            # initialize C Matrix
+            c_matrix <- matrix(-CE_mean, nrow = N0, ncol = nr)
+
+            # fill C Matrix:
+            for (j in which(not_null)) {
+                c_matrix[Ci[[j]][, Traj_ID], j] <- Ci[[j]][, CE - CE_mean]
+            }
 
 			# Us per Cat
 			Us <- do.call(cbind,lapply(UVW,function(x){
 				x[,"u0"] - mean(x[,"u0"])
-			}))
-			# Um per Cat
-			Um <- do.call(cbind,lapply(UVW,function(x){
-				x[,"u0"]
 			}))
 			# Vs per Cat
 			Vs <- do.call(cbind,lapply(UVW,function(x){
@@ -220,46 +224,68 @@
 			Ws <- do.call(cbind,lapply(UVW,function(x){
 				x[,"w0"]
 			}))
-			rwm <- outer(rwts,rwts)/sqrt(N0)
+
+            # uCE + SE
+            uvwCE <- c_matrix * Us[, indCats]
+            uCE_add <- sum(colSums(uvwCE) * rwts) / N0
+            uCE_se_add <- sqrt(sum(cov(uvwCE) * orwts) / N0)
+
+            # vCE + SE
+            uvwCE <- c_matrix * Vs[, indCats]
+            vCE_add <- sum(colSums(uvwCE)*rwts)/N0
+            vCE_se_add <- sqrt(sum(cov(uvwCE)*orwts)/N0)
+
+            # uCE + SE
+            uvwCE <- c_matrix * Ws[, indCats]
+            wCE_add <- sum(colSums(uvwCE)*rwts)/N0
+            wCE_se_add <- sqrt(sum(cov(uvwCE)*orwts)/N0)
+
 			Out <- data.frame(
-				CE=sum(Cmean*rwts),
-				CE_se=sqrt(sum(cov(CEs)*rwm)),
-				uCE=sum(colMeans(Us[,indCats[!is_null],drop=FALSE]*CEs[,!is_null,drop=FALSE])*rwts[!is_null]),			
-				uCE_se=sqrt(sum(cov(Us[,indCats]*CEs)*rwm)),			
-				vCE=sum(colMeans(Vs[,indCats[!is_null],drop=FALSE]*CEs[,!is_null,drop=FALSE])*rwts[!is_null]),
-				vCE_se=sqrt(sum(cov(Vs[,indCats]*CEs)*rwm)),
-				wCE=sum(colMeans(Ws[,indCats[!is_null],drop=FALSE]*CEs[,!is_null,drop=FALSE])*rwts[!is_null]),
-				wCE_se=sqrt(sum(cov(Ws[,indCats]*CEs)*rwm)),
-				UCE=sum(colMeans(Um[,indCats[!is_null],drop=FALSE]*t(t(CEs[,!is_null,drop=FALSE]) + Cmean[!is_null]))*rwts[!is_null])
+                # CE
+				CE = CE_mean,
+				CE_se = sqrt(sum(cov(c_matrix) * orwts) / N0),
+                # uCE
+				uCE = uCE_add,
+				uCE_se = uCE_se_add,
+                # vCE
+				vCE = vCE_add,
+				vCE_se = vCE_se_add,
+                # wCE
+				wCE = wCE_add,
+				wCE_se = wCE_se_add,
+                # UCE
+				UCE = UCE_mean
 			)
 
 		} else {
-			# browser()
-			Ci_v <- rep(0,N0)
-			Ci_v[Ci[[1]][,Traj_ID]] <- Ci[[1]][,CE]
+			Ci_v <- rep(0, N0)
+			Ci_v[Ci[[1]][, Traj_ID]] <- Ci[[1]][, CE]
+            CE_mean <- mean(Ci_v)
+            dCi <- Ci_v - CE
+            dui <- UVW[[1]][, 'u0'] - mean(UVW[[1]][, 'u0'])
 			Out <- data.frame(
-				CE=(CE <- mean(Ci_v)),
-				CE_se=sd(Ci_v)/sqrt(N0),
-				uCE=mean((UVW[[1]][,"u0"]-mean(UVW[[1]][,"u0"]))*(Ci_v - CE)),
-				uCE_se=sd((UVW[[1]][,"u0"]-mean(UVW[[1]][,"u0"]))*(Ci_v - CE))/sqrt(N0),
-				vCE=mean(UVW[[1]][,"v0"]*(Ci_v - CE)),
-				vCE_se=sd(UVW[[1]][,"v0"]*(Ci_v - CE))/sqrt(N0),
-				wCE=mean(UVW[[1]][,"w0"]*(Ci_v - CE)),
-				wCE_se=sd(UVW[[1]][,"w0"]*(Ci_v - CE))/sqrt(N0),
-				UCE=mean(UVW[[1]][,"u0"]*Ci_v)
+				CE = CE_mean,
+				CE_se = sd(Ci_v) / sqrt(N0), 
+				uCE = mean(dui * dCi), 
+				uCE_se = sd(dui * dCi) / sqrt(N0), 
+				vCE = mean(UVW[[1]][, "v0"] * dCi), 
+				vCE_se = sd(UVW[[1]][, "v0"] * dCi) / sqrt(N0), 
+				wCE = mean(UVW[[1]][, "w0"] * dCi), 
+				wCE_se = sd(UVW[[1]][, "w0"] * dCi) / sqrt(N0), 
+				UCE = mean(UVW[[1]][, "u0"] * Ci_v)
 			)		
 		}
 	} else {
 		Out <- data.frame(
-			CE=0,
-			CE_se=NA_real_,
-			uCE=0,
-			uCE_se=NA_real_,
-			vCE=0,
-			vCE_se=NA_real_,
-			wCE=0,
-			wCE_se=NA_real_,
-			UCE=0
+			CE = 0, 
+			CE_se = NA_real_, 
+			uCE = 0, 
+			uCE_se = NA_real_, 
+			vCE = 0, 
+			vCE_se = NA_real_, 
+			wCE = 0, 
+			wCE_se = NA_real_, 
+			UCE = 0
 		)		
 	}
 

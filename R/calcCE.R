@@ -185,7 +185,6 @@
 	rwts <- wts/sum(wts)
 	if(lasn > 1){
 		# rwts korrekt sortieren -> welche Sensoren sind max/min node? -> welche pos haben diese?
-		Sname <- SubRun[1,Sensor]
 		AllSensorOrder <- InputList$Sensors$"Calc.Sensors"[
 			match(
 				AllSensorNames, 

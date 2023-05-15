@@ -12,6 +12,7 @@
         is_spatial = spatial,
         variables = variables
     )
+    for (i in 1:10) gc()
     # update vd index
 	out[, 'vd_index'] <-  RunElement[, vd_index]
     out

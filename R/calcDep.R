@@ -200,7 +200,7 @@
                 uCE_se_add <- sqrt(sum(cov(uvwCE) * orwts) / N0)
             } else {
                 uCE_add <- uCE_se_add <- NA_real_
-                if (any(which_vars[3:4])) {
+                if (any(which_vars[2:3])) {
                     Us <- matrix(0.0, nrow = N0, ncol = nr)
                 }
             }

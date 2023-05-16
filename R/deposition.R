@@ -279,6 +279,7 @@ deposition <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL,
             # check try-error
             if (inherits(OutList, 'try-error')) {
                 try(parallel::stopCluster(cl))
+                on.exit()
                 stop('parallel computing returned the following error message:\n',
                     attr(OutList, 'condition')[['message']])
             }
@@ -290,6 +291,15 @@ deposition <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL,
                 rbindlist(OutList),
                 # N_TD == 0
                 Run[N_TD == 0, .(CE, CE_se, uCE, uCE_se, vCE, vCE_se, wCE, wCE_se, UCE, vd_index)]
+            )
+
+            parallel::stopCluster(cl)
+            on.exit(
+                {
+                    RNGkind(kind=RNG[1])
+                    cat("\nLocal Date/Time: ",format(Sys.time(),format="%d-%m-%Y %H:%M:%S"),"\n")
+                    cat("\n***bLSmodelR deposition calculation aborted!***\n")
+                }
             )
 
         } else {

@@ -207,7 +207,7 @@
 		
         .record_now()
 
-		# browser()
+		browser()
 
 		if (nr > 1) {
 

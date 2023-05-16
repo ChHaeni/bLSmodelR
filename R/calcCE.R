@@ -219,8 +219,10 @@
 		# rwts korrekt sortieren -> welche Sensoren sind max/min node? -> welche pos haben diese?
 		AllSensorOrder <- InputList$Sensors$"Calc.Sensors"[
 			match(
-				AllSensorNames, 
-				InputList$Sensors$"Calc.Sensors"[, "Point Sensor Name"]), 
+				InputList$Sensors$"Calc.Sensors"[, "Point Sensor Name"],
+				AllSensorNames,
+                nomatch = 0
+                ), 
 			"Node"]
 		rwts[AllSensorOrder] <- rwts
 	}

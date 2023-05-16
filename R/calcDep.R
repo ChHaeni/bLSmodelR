@@ -192,9 +192,9 @@
                         # assign outside source
                         Ctlg[, dep := 1][(!td_inside), dep := dep_outside]
                         # return Traj_ID & CE
-                        Ci[[sens_row[sns]]] <- Ctlg[Traj_ID %in% Traj_ID[(td_inside)],
+                        Ci[[sens_row[sns]]] <- Ctlg[Traj_ID %in% Traj_ID[(td_inside)], {
                             .(CE = sum(as.numeric(td_inside) * cumprod(dep) * wTD2))
-                            , by = Traj_ID]
+                        } , by = Traj_ID]
                     }
 
                 }
@@ -204,7 +204,7 @@
 		cat(paste0("\r[",paste0(rep(">",20),collapse=""),"] 100%\n"))
 
 		# rm(Catalogs,CSnsrs,Ctlg,Src,uvw,Run,Row)
-		
+
         .record_now()
 
 		if (nr > 1) {

@@ -67,7 +67,6 @@
 
 		SensorNames <- unlist(strsplit(SubRun[Row, Calc.Sensor], ",", fixed = TRUE))
 		
-        # TODO: Srange by row -> same for deposition (by Catalog)
         # prepare range of Source - Sensor distance
         sind <- chmatch(SensorNames, InputList$Sensors$"Calc.Sensors"[, "Point Sensor Name"])
         SensorPositions <- as.matrix(InputList$Sensors$"Calc.Sensors"[sind, c("x-Coord (m)", "y-Coord (m)")])
@@ -147,8 +146,12 @@
 				tag_bbox(Catalog, SourceAreaRelative)
 				
 				if (Catalog[, any(bbox_inside)]) {
+                    # assign bbox_inside
+                    Catalog[, bbox_source := bbox_inside]
 					# tag Inside Source
 					TDinside <- SourceAreaRelative[, {
+                        # reassign bbox
+                        Catalog[, bbox_inside := bbox_source]
 						tag_bbox(Catalog, .(x = x, y = y))
 						cbind(
                             ID = Catalog[(bbox_inside), rn], 

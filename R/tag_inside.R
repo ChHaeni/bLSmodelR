@@ -67,9 +67,14 @@ tag_inside <- function(catalog, sources, origin = c(0, 0), tag_id = FALSE,
 	setkey(catalog, rn)
 
 	if (catalog[, any(bbox_inside)]) {
+        # assign outer bbox
+        catalog[, bbox_outer := bbox_inside]
 		# tag Inside Source
         if (tag_id) {
             tds_inside <- sources_relative[, {
+                #reassing outer bbox and tag sub source
+                catalog[, bbox_inside := bbox_outer]
+                tag_bbox(catalog, .(x = x, y = y))
                 cbind(
                     ID = catalog[(bbox_inside), rn], 
                     pnt.in.poly(catalog[(bbox_inside), cbind(x, y)], cbind(x, y))
@@ -79,6 +84,9 @@ tag_inside <- function(catalog, sources, origin = c(0, 0), tag_id = FALSE,
             , by = ID]	
         } else {
             tds_inside <- sources_relative[, {
+                #reassing outer bbox and tag sub source
+                catalog[, bbox_inside := bbox_outer]
+                tag_bbox(catalog, .(x = x, y = y))
                 cbind(
                     ID = catalog[(bbox_inside), rn], 
                     pnt.in.poly(catalog[(bbox_inside), cbind(x, y)], cbind(x, y))
@@ -87,6 +95,7 @@ tag_inside <- function(catalog, sources, origin = c(0, 0), tag_id = FALSE,
             paste0(area, collapse = ",")
             , by = ID]					
         }
+        catalog[, bbox_outer := NULL]
         if (nrow(tds_inside) > 0) {
             catalog[tds_inside, ':='(
                 td_inside = TRUE,

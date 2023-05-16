@@ -187,8 +187,8 @@
                     # tag inside
                     tag_inside(Ctlg, Src, SensorPositions[sns, ])
                     if (Ctlg[, any(td_inside)]) {
-                        # # set key for sorting?
-                        # setkey(Ctlg, Traj_ID)
+                        # set key for sorting
+                        setkey(Ctlg, Traj_ID)
                         # assign outside source
                         Ctlg[, dep := 1][(!td_inside), dep := dep_outside]
                         # return Traj_ID & CE
@@ -206,8 +206,6 @@
 		# rm(Catalogs,CSnsrs,Ctlg,Src,uvw,Run,Row)
 		
         .record_now()
-
-		browser()
 
 		if (nr > 1) {
 

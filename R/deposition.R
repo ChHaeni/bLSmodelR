@@ -240,7 +240,7 @@ deposition <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL,
                 ncores <- min(ncores, n_g0)
                 on.exit(parallel::stopCluster(cl), add = TRUE)
                 cl <- .makePSOCKcluster(ncores, memory_limit = memory_limit)
-                data.table::setDTthreads(ncores)
+                # data.table::setDTthreads(ncores)
             }
             cat('\n*** Parallel computation on', length(cl), 'cores ***\n')
             if (.is_recording()) {

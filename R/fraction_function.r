@@ -6,7 +6,7 @@ calc_fct <- function(res, ncores = NULL, SourceSplit = NULL,
   memory_limit = NULL
   ){
   
-  if(!is.null(ncores)) setDTthreads(ncores)
+  # if(!is.null(ncores)) setDTthreads(ncores)
 
   # convert old versions 
   sres <- as.character(substitute(res))

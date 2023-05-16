@@ -95,7 +95,7 @@ runbLS <- function(ModelInput, Cat.Path = NULL, ncores = NULL, TDonly = NULL,
         # set up PSOCK clusters
         cl <- .makePSOCKcluster(ncores, memory_limit = memory_limit)
         # set data.table threads to ncores on master
-        data.table::setDTthreads(ncores)
+        # data.table::setDTthreads(ncores)
 	} else if (ncores != 1) {
 		stop("Number of cores must be greater or equal to 1!")
 	} else {

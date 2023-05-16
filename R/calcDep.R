@@ -35,27 +35,29 @@
 	browser()	
 	if (Run[, N_TD > 0]) {
 		
-		# N_TD_tot <- Run[,N_TD]
-		# N_TD_sum <- 0
-
         # merge Catalogs with row
-		Row <- Catalogs[Run][order(as.numeric(gsub(".*[.]([0-9]*)$","\\1",PointSensor)))]
+		Row <- Catalogs[Run][order(as.numeric(
+                gsub(".*[.]([0-9]*)$", "\\1", PointSensor)
+                ))]
         # TODO: get vDep from Run?
 		vdep <- vd[vd_index]
 
+        # total sensors/rows
 		nr <- nrow(Row)
-		indCats <- Row[,Cat.Name]
+		indCats <- Row[, Cat.Name]
+        # unique catalogs
 		uniqueCats <- unique(indCats)
 		nCats <- length(uniqueCats)
-		cat("Sensor", Row[1, Sensor], "/ Source", Row[1, Source],"\n")
-		Steps <- unique(round(seq(1,nr,length.out=10))) %w/o% nr
-		N0 <- Row[1,N0]
-		cName <- ""
-		cSeed <- -1
-		Src <- Sources[Sources[,1] %chin% Row[1,Source],]
+        # catalog/row mapping
+        cat_row <- Row[, I(lapply(uniqueCats, '==', Cat.Name))]
 
-		Ci <- vector(mode="list",length=nr)
-		UVW <- vector(mode="list",length=nCats)
+		N0 <- Row[1, N0]
+		Src <- Sources[Sources[, 1] %chin% Row[1, Source], ]
+        Scalc <- as.data.table(Src)
+        setnames(Scalc, c('name', 'x', 'y', 'id'))
+
+		Ci <- vector(mode = "list", length = nr)
+		UVW <- vector(mode = "list", length = nCats)
 		names(UVW) <- uniqueCats
 
         if (is_spatial) {
@@ -81,71 +83,109 @@
             nms_Spatial <- nms_Spatial[!is.na(unlist(vd_Spatial))]
         }
 
-		for(i in seq_len(nr)){
+		cat("Sensor", Row[1, Sensor], "/ Source", Row[1, Source],"\n")
+		Steps <- unique(round(seq(1, nCats, length.out = 10))) %w/o% nCats
 
-			# if(N_TD_sum == N_TD_tot){
-			# 	# browser()
-			# 	break
-			# }
+		for (i in seq_len(nCats)) {
 
 			# progressbar
-			if(i %in% Steps)cat(sprintf("\r[%s%s%s] %1.0f%%",paste(rep(">",round(2*(i-1)/nr*10)),collapse=""),"|",paste(rep(".",max(0,19-round(2*(i-1)/nr*10))),collapse=""),(i-1)/nr*100))
+			if (i %in% Steps) {
+                cat(sprintf("\r[%s%s%s] %1.0f%%",
+                    paste(rep(">", round(2 * (i - 1) / nCats * 10)), collapse = ""), "|",
+                    paste(rep(".", max(0, 19 - round(2 * (i - 1) / nCats * 10))), collapse = ""), 
+                    (i - 1) / nCats * 100
+                ))
+            }
+            # get sub Row
+            subRow <- Row[cat_row[[i]], ]
 			# {xalt <- matrix(0,2,3)
 			# xneu <- gc()
 			# while(abs(xalt[2,3]-xneu[2,3])>0){xalt<-xneu;xneu <- gc()}
 			# }
-			# if(cName!=Row[i,Cat.Name] | cSeed!=Row[i,Subset_seed]){
-			if(cName!=Row[i,Cat.Name]){
-				cName <- Row[i,Cat.Name]
-				cSeed <- Row[i,seed]
-				Ctlg <- readCatalog(paste0(C.Path,"/",cName))			
-				initializeCatalog(Row[i, ], Catalog = Ctlg)
-				uvw <- uvw0(Ctlg)
-				Cat.N0 <- attr(Ctlg,"N0")
-				rotateCatalog(Ctlg,Row[i,WD])
-				if(Cat.N0>N0){
-					env <- globalenv()
-				    oseed <- env$.Random.seed
-				    set.seed(cSeed,kind="L'Ecuyer-CMRG")			
-					takeSub <- sample.int(Cat.N0,N0)
-			        if (is.null(oseed)) {
-			            rm(list = ".Random.seed", envir = env)
-			        } else {
-			            assign(".Random.seed", value = oseed, envir = env)
-			        }
-					attCat <- attributes(Ctlg)
-					indexNew <- 1:N0
-					names(indexNew) <- takeSub
-					Ctlg <- Ctlg[Traj_ID %in% takeSub,]
-					Ctlg[, ":="(
-                        Traj_ID = indexNew[as.character(Traj_ID)]
-                        )]
-					for(ac in (names(attCat) %w/o% c("names","row.names",".internal.selfref","uvw0")))setattr(Ctlg,ac,attCat[[ac]])
-					uvw <- uvw[takeSub,]
-				}
-				UVW[[cName]] <- uvw
-                # prepare wTD2 once per Ctlg
-                if (is_spatial) {
-                    Ctlg[, ":="(
-                        wTD2 = 2 / wTD
-                        )]
+            # read catalog
+            cName <- uniqueCats[i]
+            cSeed <- subRow[, seed[1]]
+            Ctlg <- readCatalog(paste0(C.Path, "/", cName))			
+            initializeCatalog(subRow[1, ], Catalog = Ctlg)
+            uvw <- uvw0(Ctlg)
+            Cat.N0 <- attr(Ctlg,"N0")
+            rotateCatalog(Ctlg, subRow[, WD[1]])
+            if (Cat.N0 > N0) {
+                env <- globalenv()
+                oseed <- env$.Random.seed
+                set.seed(cSeed,kind="L'Ecuyer-CMRG")			
+                takeSub <- sample.int(Cat.N0,N0)
+                if (is.null(oseed)) {
+                    rm(list = ".Random.seed", envir = env)
                 } else {
-                    Ctlg[, ":="(
-                        wTD2 = 2 / wTD,
-                        dep_outside = exp(-vDep * 2 / wTD)
-                        )]
+                    assign(".Random.seed", value = oseed, envir = env)
                 }
-			}
+                attCat <- attributes(Ctlg)
+                indexNew <- 1:N0
+                names(indexNew) <- takeSub
+                Ctlg <- Ctlg[Traj_ID %in% takeSub,]
+                Ctlg[, ":="(
+                    Traj_ID = indexNew[as.character(Traj_ID)]
+                    )]
+                for(ac in (names(attCat) %w/o% c("names","row.names",".internal.selfref","uvw0")))setattr(Ctlg,ac,attCat[[ac]])
+                uvw <- uvw[takeSub,]
+            }
+            UVW[[cName]] <- uvw
+            # prepare wTD2 once per Ctlg
+            if (is_spatial) {
+                Ctlg[, ":="(
+                    wTD2 = 2 / wTD
+                    )]
+            } else {
+                Ctlg[, ":="(
+                    wTD2 = 2 / wTD,
+                    dep_outside = exp(-vDep * 2 / wTD)
+                    )]
+            }
 
-			tag_inside(Ctlg,Src,CSnsrs[chmatch(Row[i,PointSensor], CSnsrs[, "Point Sensor Name"]),])
-			setkey(Ctlg,Traj_ID)
-			# browser()
+            ## get relative source range
+            # get sensors
+            SensorNames <- subRow[, PointSensor]
+            
+            # prepare range of Source - Sensor distance
+            sind <- chmatch(SensorNames, CSnsrs[, "Point Sensor Name"])
+            SensorPositions <- as.matrix(CSnsrs[sind, c("x-Coord (m)", "y-Coord (m)")])
+            rownames(SensorPositions) <- CSnsrs[sind, "Point Sensor Name"]
+            Srange <- Scalc[, rbind(
+                cbind(
+                    x = max(x) - min(SensorPositions[, "x-Coord (m)"]),
+                    y = max(y) - min(SensorPositions[, "y-Coord (m)"])
+                ),
+                cbind(
+                    x = min(x) - max(SensorPositions[, "x-Coord (m)"]),
+                    y = min(y) - max(SensorPositions[, "y-Coord (m)"])
+                )
+            )]
 
-			if (Ctlg[, any(td_inside)]) {
-                # get values
-                Ci[[i]] <- ci_fun(Ctlg, nms_Spatial, Src_Spatial, CSnsrs, vdep, 
-                    vd_Spatial, Row[i, PointSensor])
-			}
+            # tag bbox
+            cat("\nGet TD inside source areas:\n")
+            tag_bbox(Ctlg, Srange)
+            Ctlg[, inside_Srange := bbox_inside]
+
+            if (Ctlg[, any(bbox_inside)]) {
+
+                # loop over sensors
+                for (sns in SensorNames) {
+                    # assign outer bbox again
+                    Ctlg[, bbox_inside := inside_Srange]
+                    # tag inside
+                    tag_inside(Ctlg, Src, SensorPositions[sns, ])
+                    if (Ctlg[, any(td_inside)]) {
+                        # # set key?
+                        # setkey(Ctlg, Traj_ID)
+                        # get values
+                        Ci[[i]] <- ci_fun(Ctlg, nms_Spatial, Src_Spatial, CSnsrs, vdep, 
+                            vd_Spatial, sns)
+                    }
+
+                }
+
+            }
 		}
 		cat(paste0("\r[",paste0(rep(">",20),collapse=""),"] 100%\n"))
 

@@ -32,7 +32,7 @@
 
 	# on.exit(browser())
 	vd_index <- Run[, vd_index]
-	# browser()	
+	browser()	
 	if (Run[, N_TD > 0]) {
 		
 		# N_TD_tot <- Run[,N_TD]

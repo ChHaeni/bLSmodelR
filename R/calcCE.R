@@ -264,7 +264,7 @@
 		CE_se_add <- sqrt(sum(cov(c_matrix)*orwts)/N0)
 		
 		# uCE + SE
-        if (which_var[1]) {
+        if (which_vars[1]) {
             uvwCE <- c_matrix*U_matrix[,uvw_key[AllSensorNames,row]]
             uCE_add <- sum(colSums(uvwCE)*rwts)/N0
             uCE_se_add <- sqrt(sum(cov(uvwCE)*orwts)/N0)
@@ -273,7 +273,7 @@
         }
 
 		# vCE + SE
-        if (which_var[2]) {
+        if (which_vars[2]) {
             uvwCE <- c_matrix*V_matrix[,uvw_key[AllSensorNames,row]]
             vCE_add <- sum(colSums(uvwCE)*rwts)/N0
             vCE_se_add <- sqrt(sum(cov(uvwCE)*orwts)/N0)
@@ -282,7 +282,7 @@
         }
 
 		# uCE + SE
-        if (which_var[3]) {
+        if (which_vars[3]) {
             uvwCE <- c_matrix*W_matrix[,uvw_key[AllSensorNames,row]]
             wCE_add <- sum(colSums(uvwCE)*rwts)/N0
             wCE_se_add <- sqrt(sum(cov(uvwCE)*orwts)/N0)

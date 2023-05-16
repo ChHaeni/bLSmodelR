@@ -19,7 +19,7 @@
 ## performance
 - deposition: Move catalog variable calculations out of loop
 - deposition: Loop over catalogs & apply spatial vdep only on relevant touchdowns
-- add option to switch on/off calculation of uCE, vCE, wCE output values for line sensors in both main and deposition function
+- add option to switch on/off calculation of uCE, vCE, wCE output values in both main and deposition function
         default is 'CE' values only for better performance
 - add gc call in .calcDep_Wrapper function to free memory
 

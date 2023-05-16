@@ -258,21 +258,22 @@ deposition <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL,
 
             # run parallel
             cat("\n***********\n")
-            cat("Export R objects...\n")
-            current_env <- environment()
-            Sources <- ModelInput[['Sources']]
-            Sensors <- pSens[['Calc.Sensors']]
-            parallel::clusterExport(cl,
-                c('Catalogs', 'Cat.Path', 'Sources', 'Sensors', 'vDep', 'vDepSpatial'),
-                envir = current_env
-                )
-            rm(Sources, Sensors)
+            # cat("Export R objects...\n")
+            # current_env <- environment()
+            # Sources <- ModelInput[['Sources']]
+            # Sensors <- pSens[['Calc.Sensors']]
+            # parallel::clusterExport(cl,
+            #     c('Catalogs', 'Cat.Path', 'Sources', 'Sensors', 'vDep', 'vDepSpatial'),
+            #     envir = current_env
+            #     )
+            # rm(Sources, Sensors)
             cat("Parallel computing deposition corrected C/E ratios...\nThis will take a moment...\n\n")
 
             # run in parallel
             OutList <- try(
-                .clusterApplyLB(cl, InputList, .calcDep_Wrapper, spatial = vdSpat,
-                    variables = variables, progress = show_progress)
+                .clusterApplyLB(cl, InputList, .calcDep_Wrapper, Catalogs, Cat.Path, 
+                    ModelInput[['Sources']], pSens[['Calc.Sensors']], vDep, vDepSpatial, 
+                    spatial = vdSpat, variables = variables, progress = show_progress)
                 , silent = TRUE)
 
             # check try-error

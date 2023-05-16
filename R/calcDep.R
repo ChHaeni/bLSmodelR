@@ -1,14 +1,11 @@
-.calcDep_Wrapper <- function(RunElement, variables = 'CE', spatial = FALSE) {
+.calcDep_Wrapper <- function(RunElement, 
+    Catalogs, Cat.Path, Sources, Sensors, vDep, vDepSpatial,
+    variables = 'CE', spatial = FALSE) {
 	setDT(RunElement)
 	setkey(RunElement, rn, Sensor)
     out <- .calcDep(
         RunElement,
-        get('Catalogs', envir = .GlobalEnv), 
-        get('Cat.Path', envir = .GlobalEnv), 
-        get('Sources', envir = .GlobalEnv), 
-        get('Sensors', envir = .GlobalEnv), 
-        get('vDep', envir = .GlobalEnv), 
-        get('vDepSpatial', envir = .GlobalEnv),
+        Catalogs, Cat.Path, Sources, Sensors, vDep, vDepSpatial,
         is_spatial = spatial,
         variables = variables
     )

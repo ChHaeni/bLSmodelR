@@ -13,9 +13,12 @@
 ## fixed:
 - Fix average time for line sensors at plume edges
         i.e., with sub-sensors containing no touchdowns in source area
+- Fix tagging touchdowns inside "sub-sources"
+        tagging could fail for sources consisting of sub polygons
 
 ## performance
 - deposition: Move catalog variable calculations out of loop
+- deposition: Loop over catalogs & move spatial vdep tagging out of loop
 
 ## changed
 - deposition parallelism uses load balanced variant

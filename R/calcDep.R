@@ -148,21 +148,32 @@
             # tag bbox
             cat("\nGet TD inside source areas:\n")
             tag_bbox(Ctlg, Srange)
-            Ctlg[, inside_Srange := bbox_inside]
 
             if (Ctlg[, any(bbox_inside)]) {
 
                 ### spatially homogeneous vdep:
                 Ctlg[, vDep := vdep]
+
                 ### spatially inhomogeneous vdep:
                 if (is_spatial) {
                     # remove bbox tags for tag_inside below
-                    Ctlg[, bbox_inside := NULL]
+                    Ctlg[, ':='(
+                        inside_Srange = bbox_inside,
+                        bbox_inside = NULL
+                    )]
+                    # tag inside and assign vdep
                     for (j in nms_Spatial) {
                         tag_inside(Ctlg, Src_Spatial[[j]], SensorPositions[sns, ])
                         Ctlg[(td_inside), vDep := vd_Spatial[[j]]]
                     }
+                    # assign outer bbox again
+                    Ctlg[, bbox_inside := inside_Srange]
+                    Ctlg[, ':='(
+                        bbox_inside = inside_Srange,
+                        inside_Srange = NULL
+                    )]
                 }
+
                 # prepare wTD2 once per Ctlg
                 Ctlg[, ":="(
                     wTD2 = 2 / wTD
@@ -174,8 +185,6 @@
 
                 # loop over sensors
                 for (sns in SensorNames) {
-                    # assign outer bbox again
-                    Ctlg[, bbox_inside := inside_Srange]
                     # tag inside
                     tag_inside(Ctlg, Src, SensorPositions[sns, ])
                     if (Ctlg[, any(td_inside)]) {

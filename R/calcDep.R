@@ -148,7 +148,6 @@
             )]
 
             # tag bbox
-            cat("\nGet TD inside source areas:\n")
             tag_bbox(Ctlg, Srange)
 
             if (Ctlg[, any(bbox_inside)]) {

@@ -44,6 +44,8 @@
 		nCats <- length(uniqueCats)
         # catalog/row mapping
         cat_row <- Row[, I(lapply(uniqueCats, '==', Cat.Name))]
+        # sensor mapping
+        sens_row <- Row[, setNames(seq_along(PointSensor), PointSensor)]
 
 		N0 <- Row[1, N0]
 		Src <- Sources[Sources[, 1] %chin% Row[1, Source], ]
@@ -181,8 +183,6 @@
                 # get outside deposition
                 Ctlg[, dep_outside := exp(-vDep * 2 / wTD)]
 
-                browser()
-
                 # loop over sensors
                 for (sns in SensorNames) {
                     # tag inside
@@ -193,7 +193,7 @@
                         # assign outside source
                         Ctlg[, dep := 1][(!td_inside), dep := dep_outside]
                         # return Traj_ID & CE
-                        Ci[[i]] <- Ctlg[Traj_ID %in% Traj_ID[(td_inside)],
+                        Ci[[sens_row[sns]]] <- Ctlg[Traj_ID %in% Traj_ID[(td_inside)],
                             .(CE = sum(as.numeric(td_inside) * cumprod(dep) * wTD2))
                             , by = Traj_ID]
                     }

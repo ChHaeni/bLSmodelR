@@ -8,7 +8,7 @@
     p <- length(cl)
     if (n > 0L && p) {
         if (progress) {
-            cat('<parallel work load progress>\n')
+            cat('<parallel jobs processed>\n')
             steps <- unique(round(seq(1, n, length.out = 20)))
             # remove 100% and first entry
             steps <- steps[-c(1, length(steps))]

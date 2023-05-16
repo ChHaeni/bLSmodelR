@@ -155,26 +155,6 @@
                 ### spatially homogeneous vdep:
                 Ctlg[, vDep := vdep]
 
-                ### spatially inhomogeneous vdep:
-                if (is_spatial) {
-                    # remove bbox tags for tag_inside below
-                    Ctlg[, ':='(
-                        inside_Srange = bbox_inside,
-                        bbox_inside = NULL
-                    )]
-                    # tag inside and assign vdep
-                    for (j in nms_Spatial) {
-                        tag_inside(Ctlg, Src_Spatial[[j]], SensorPositions[sns, ])
-                        Ctlg[(td_inside), vDep := vd_Spatial[[j]]]
-                    }
-                    # assign outer bbox again
-                    Ctlg[, bbox_inside := inside_Srange]
-                    Ctlg[, ':='(
-                        bbox_inside = inside_Srange,
-                        inside_Srange = NULL
-                    )]
-                }
-
                 # prepare wTD2 once per Ctlg
                 Ctlg[, ":="(
                     wTD2 = 2 / wTD
@@ -186,13 +166,45 @@
                 for (sns in SensorNames) {
                     # tag inside
                     tag_inside(Ctlg, Src, SensorPositions[sns, ])
+
                     if (Ctlg[, any(td_inside)]) {
+
+                        ### get catalog subset
+                        sub_cat <- Ctlg[Traj_ID %in% Traj_ID[td_inside]]
+
+                        ### spatially inhomogeneous vdep:
+                        if (is_spatial) {
+                            ### spatially homogeneous vdep:
+                            sub_cat[, vDep := vdep]
+                            # copy td_inside & remove bbox tags for tag_inside below
+                            sub_cat[, ':='(
+                                inside_copy = td_inside,
+                                inside_Srange = bbox_inside,
+                                bbox_inside = NULL
+                            )]
+                            # tag inside and assign vdep
+                            for (j in nms_Spatial) {
+                                # only check relevant Trajectories
+                                tag_inside(sub_cat, Src_Spatial[[j]], SensorPositions[sns, ])
+                                sub_cat[(td_inside), vDep := vd_Spatial[[j]]]
+                            }
+                            # assign outer bbox and td_inside again
+                            sub_cat[, bbox_inside := inside_Srange]
+                            sub_cat[, ':='(
+                                td_inside = inside_copy,
+                                bbox_inside = inside_Srange,
+                                inside_Srange = NULL
+                            )]
+                            # recalc outside deposition
+                            sub_cat[, dep_outside := exp(-vDep * 2 / wTD)]
+                        }
+
                         # set key for sorting
-                        setkey(Ctlg, Traj_ID)
+                        setkey(sub_cat, Traj_ID)
                         # assign outside source
-                        Ctlg[, dep := 1][(!td_inside), dep := dep_outside]
+                        sub_cat[, dep := 1][(!td_inside), dep := dep_outside]
                         # return Traj_ID & CE
-                        Ci[[sens_row[sns]]] <- Ctlg[Traj_ID %in% Traj_ID[(td_inside)], {
+                        Ci[[sens_row[sns]]] <- sub_cat[, {
                             .(CE = sum(as.numeric(td_inside) * cumprod(dep) * wTD2))
                         } , by = Traj_ID]
                     }

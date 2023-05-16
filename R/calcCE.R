@@ -10,57 +10,78 @@
 	# zu beginn on.exit(fehlerangabe!?)
 	setDT(SubRun)
 
-	N0 <- SubRun[1,N0]
+    # get number of trajectories
+	N0 <- SubRun[1, N0]
 
-	AllSensorNames <- unlist(strsplit(SubRun[,Calc.Sensor],",",fixed=TRUE))
+    # get all Sensors
+	AllSensorNames <- unlist(strsplit(SubRun[, Calc.Sensor], ",", fixed = TRUE))
 	lasn <- length(AllSensorNames)
-		
-    browser()
 
-    # TODO: Srange by row -> same for deposition (by Catalog)
-    #       and, therefore, also get all sensors by row?
-	sind <- chmatch(AllSensorNames, InputList$Sensors$"Calc.Sensors"[, "Point Sensor Name"])
-	SensorPositions <- as.matrix(InputList$Sensors$"Calc.Sensors"[sind, c("x-Coord (m)", "y-Coord (m)")])
-	rownames(SensorPositions) <- InputList$Sensors$"Calc.Sensors"[sind, "Point Sensor Name"]
-	Sheight <- range(InputList$Sensors$"Calc.Sensors"[sind, "Sensor Height (m)"])
-	if(length(sind) > 1){
+    # get all Sources
+	SourceNames <- unlist(strsplit(SubRun[1, Source], ",", fixed = TRUE))	
+	Scalc <- copy(Srcs[SourceNames])
+	setkey(Scalc, Plot, pid)
+
+	# initialize CE list
+	Ci_sub <- vector(mode = "list", length = lasn)
+	names(Ci_sub) <- AllSensorNames
+
+    # final CE list per Source
+	Ci <- lapply(seq_along(SourceNames), function(x) Ci_sub)
+	names(Ci) <- SourceNames
+
+	# initialize uvw list
+	UVW <- vector(mode = "list", length = nrow(SubRun))
+
+	# initialize Output
+	Out <- SubRun[rep(1, length(SourceNames)), ][, 
+        SensorHeight := as.character(SensorHeight)]
+    # get Sensor heights
+	Sheight <- range(InputList$Sensors$"Calc.Sensors"[
+        InputList[['Sensors']][['Calc.Sensors']][, 'Sensor Name'] == Out[, Sensor]
+        , "Sensor Height (m)"])
+	if (length(Sheight) > 1) {
 		Sheight <- paste(sprintf("%1.2f", Sheight), collapse = " to ")
 	} else {
 		Sheight <- sprintf("%1.3f", Sheight[1])
 	}
-	SourceNames <- unlist(strsplit(SubRun[1,Source],",",fixed=TRUE))	
-	Scalc <- copy(Srcs[SourceNames])
-	setkey(Scalc,Plot,pid)
-	Srange <- Scalc[,rbind(
-		cbind(x=max(x)-min(SensorPositions[,"x-Coord (m)"]),y=max(y)-min(SensorPositions[,"y-Coord (m)"]))
-		,cbind(x=min(x)-max(SensorPositions[,"x-Coord (m)"]),y=min(y)-max(SensorPositions[,"y-Coord (m)"]))
-		)]
-	# initialize C list
-	Ci_sub <- vector(mode="list",length=lasn)
-	names(Ci_sub) <- AllSensorNames
-	Ci <- lapply(seq_along(SourceNames),function(x)Ci_sub)
-	names(Ci) <- SourceNames
-	# initialize uvw list
-	UVW <- vector(mode="list",length=nrow(SubRun))
-	# initialize Output
-	Out <- SubRun[rep(1,length(SourceNames)), ][, SensorHeight := as.character(SensorHeight)]
+    # fill & prepare Out
 	Out[, ":="(
-			Source=SourceNames,SourceArea=attr(InputList[["Sources"]],"SAreas")[SourceNames],
-			SensorHeight = Sheight,
-			CE=0,CE_se=NA_real_,CE_lo=NA_real_,CE_hi=NA_real_,
-			uCE=0,uCE_se=NA_real_,uCE_lo=NA_real_,uCE_hi=NA_real_,
-			vCE=0,vCE_se=NA_real_,vCE_lo=NA_real_,vCE_hi=NA_real_,
-			wCE=0,wCE_se=NA_real_,wCE_lo=NA_real_,wCE_hi=NA_real_,
-			N_TD=0,TD_Time_avg=NA_real_,TD_Time_max=NA_real_,Max_Dist=NA_real_,UCE=0,
-            n_time_avg=0,Calc.Sensor=NULL,seed=NULL)]
-	setkey(Out,Source)
-	# Max_Dist = max fetch inside Source area
+			Source = SourceNames, 
+            SourceArea = attr(InputList[["Sources"]], "SAreas")[SourceNames], 
+			SensorHeight = Sheight, 
+			CE = 0, CE_se = NA_real_, CE_lo = NA_real_, CE_hi = NA_real_, 
+			uCE = 0, uCE_se = NA_real_, uCE_lo = NA_real_, uCE_hi = NA_real_, 
+			vCE = 0, vCE_se = NA_real_, vCE_lo = NA_real_, vCE_hi = NA_real_, 
+			wCE = 0, wCE_se = NA_real_, wCE_lo = NA_real_, wCE_hi = NA_real_, 
+			N_TD = 0, TD_Time_avg = NA_real_, TD_Time_max = NA_real_, 
+            Max_Dist = NA_real_, UCE = 0, n_time_avg = 0, Calc.Sensor = NULL, 
+            seed = NULL)]
+    # remove Calc.* output
+    rm_ind <- Reduce(':', match(c('Calc.mtime', 'Calc.N0'), names(Out)))
+    Out[, names(Out)[rm_ind] := NULL]
+	setkey(Out, Source)
 
 	for(Row in seq(nsr <- nrow(SubRun))){
 
-
-		SensorNames <- unlist(strsplit(SubRun[Row,Calc.Sensor],",",fixed=TRUE))
+		SensorNames <- unlist(strsplit(SubRun[Row, Calc.Sensor], ",", fixed = TRUE))
 		
+        # TODO: Srange by row -> same for deposition (by Catalog)
+        # prepare range of Source - Sensor distance
+        sind <- chmatch(SensorNames, InputList$Sensors$"Calc.Sensors"[, "Point Sensor Name"])
+        SensorPositions <- as.matrix(InputList$Sensors$"Calc.Sensors"[sind, c("x-Coord (m)", "y-Coord (m)")])
+        rownames(SensorPositions) <- InputList$Sensors$"Calc.Sensors"[sind, "Point Sensor Name"]
+        Srange <- Scalc[, rbind(
+            cbind(
+                x = max(x) - min(SensorPositions[, "x-Coord (m)"]),
+                y = max(y) - min(SensorPositions[, "y-Coord (m)"])
+            ),
+            cbind(
+                x = min(x) - max(SensorPositions[, "x-Coord (m)"]),
+                y = min(y) - max(SensorPositions[, "y-Coord (m)"])
+            )
+        )]
+
 		if(nsr>1)cat(paste0("\n> Sub-Count: ",Row," / ",nsr," (",length(SensorNames),"/",lasn," sub-sensors)\n"))
 
 		# read Catalog:
@@ -143,7 +164,7 @@
 						Ci[[Source]][[Sensor]] <- Catalog[(td_inside),
                             .(CE = sum(2 / wTD))
                             , by = Traj_ID]
-						# Max_Dist etc.
+						# Max_Dist etc. (Max_Dist = max fetch inside Source area)
 						setkey(Catalog, Traj_ID)
                         # Time >= minTime excludes TD before first TD inside source
 						Cat <- Catalog[Catalog[(td_inside), 

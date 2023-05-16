@@ -60,6 +60,7 @@
     # remove Calc.* output
     rm_ind <- Reduce(':', match(c('Calc.mtime', 'Calc.N0'), names(Out)))
     Out[, names(Out)[rm_ind] := NULL]
+    Out[, Sensor_Swustar := NULL]
 	setkey(Out, Source)
 
 	for(Row in seq(nsr <- nrow(SubRun))){

@@ -138,15 +138,14 @@ runbLS <- function(ModelInput, Cat.Path = NULL, ncores = NULL, TDonly = NULL,
 			Cat.exists = NULL,
 			Cat.calc = NULL
 			)]
-		SAn <- match("SourceArea",names(Out))
-		SHn <- match("SensorHeight",names(Out))
-		sn <- match("UCE",names(Out))
-		setcolorder(Out,c(1,13,14,SHn,SAn:sn,2:12,15:(SHn-1),(SHn+1):(SAn-1)))
-
-		Out[, c("Sensor_Swustar", "Calc.ZSens", "Calc.Ustar", "Calc.L", "Calc.Zo",
-			"Calc.Su_Ustar", "Calc.Sv_Ustar", "Calc.bw", "Calc.C0", "Calc.kv", 
-			"Calc.A", "Calc.alpha", "Calc.MaxFetch", "Calc.Sensor_Swustar", 
-			"Calc.N0") := NULL]
+		SAn <- match("SourceArea", names(Out))
+		SHn <- match("SensorHeight", names(Out))
+		sn <- match("UCE", names(Out))
+        kn1 <- match(c('kv', 'A', 'alpha'), names(Out))
+        kn2 <- match(c('bw', 'C0'), names(Out))
+        firstn <- c(1, 13, 14, SHn, SAn:sn, 2:12, kn1, kn2) 
+        residn <- seq_along(names(Out)) %w/o% firstn
+		setcolorder(Out, c(firstn, residn))
 
 		setorder(Out,rn,Sensor,Source)
 		setkey(Intervals,rn,Sensor)
@@ -224,11 +223,6 @@ runbLS <- function(ModelInput, Cat.Path = NULL, ncores = NULL, TDonly = NULL,
 			)]
 		setcolorder(Out,c(1,13,14,2:12,15:ncol(Out)))
 		setorder(Out,rn,Sensor,Source)
-
-		Out[, c("Sensor_Swustar", "Calc.ZSens", "Calc.Ustar", "Calc.L", "Calc.Zo",
-			"Calc.Su_Ustar", "Calc.Sv_Ustar", "Calc.bw", "Calc.C0", "Calc.kv", 
-			"Calc.A", "Calc.alpha", "Calc.MaxFetch", "Calc.Sensor_Swustar", 
-			"Calc.N0") := NULL]
 
 		setattr(Out,"CatPath",Cat.Path)
 		setattr(Out,"Catalogs",Catalogs)

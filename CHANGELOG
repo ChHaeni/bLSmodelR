@@ -30,6 +30,7 @@
 - remove tcltk option & dependence in main function
         this caused R sessions with "bLSmodelR" attached inside a tmux session 
         when ssh X forwarding enabled to crash on detaching the session
+- remove columns with intermediate input 'Calc.*'
 
 ---
 

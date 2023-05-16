@@ -26,7 +26,7 @@
 
 	# on.exit(browser())
 	vd_index <- Run[, vd_index]
-	browser()	
+
 	if (Run[, N_TD > 0]) {
 		
         # merge Catalogs with row
@@ -149,16 +149,15 @@
             cat("\nGet TD inside source areas:\n")
             tag_bbox(Ctlg, Srange)
             Ctlg[, inside_Srange := bbox_inside]
-            
-            browser()
 
             if (Ctlg[, any(bbox_inside)]) {
 
+                ### spatially homogeneous vdep:
+                Ctlg[, vDep := vdep]
                 ### spatially inhomogeneous vdep:
                 if (is_spatial) {
                     # remove bbox tags for tag_inside below
                     Ctlg[, bbox_inside := NULL]
-                    Ctlg[, vDep := vd]
                     for (j in nms_Spatial) {
                         tag_inside(Ctlg, Src_Spatial[[j]], SensorPositions[sns, ])
                         Ctlg[(td_inside), vDep := vd_Spatial[[j]]]
@@ -170,6 +169,8 @@
                     )]
                 # get outside deposition
                 Ctlg[, dep_outside := exp(-vDep * 2 / wTD)]
+
+                browser()
 
                 # loop over sensors
                 for (sns in SensorNames) {

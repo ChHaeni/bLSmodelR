@@ -62,7 +62,7 @@ tag_inside <- function(catalog, sources, origin = c(0, 0), tag_id = FALSE,
         x = x - origin[[1]],
         y = y - origin[[2]]
         )]
-    if ('bbox_inside' %in% names(catalogs)) {
+    if (bbox_existed <- 'bbox_inside' %in% names(catalog)) {
         catalog[, bbox_before := bbox_inside]
     }
 	tag_bbox(catalog, sources_relative)

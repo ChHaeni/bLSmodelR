@@ -221,12 +221,10 @@
 		rwts[AllSensorOrder] <- rwts
 	}
 
-    if (any(which_vars)) {
-        # uvw key:
-        uvw_key <- SubRun[,.(SubSensor = unlist(strsplit(Calc.Sensor,",",fixed=TRUE))),by=.(row=1:nrow(SubRun))]
-        setkey(uvw_key,"SubSensor")
-        UVW_mean <- lapply(UVW,function(x)colMeans(x))
-    }
+    # uvw key:
+    uvw_key <- SubRun[,.(SubSensor = unlist(strsplit(Calc.Sensor,",",fixed=TRUE))),by=.(row=1:nrow(SubRun))]
+    setkey(uvw_key,"SubSensor")
+    UVW_mean <- lapply(UVW,function(x)colMeans(x))
 
     if (which_vars[1]) {
         # U Matrix:

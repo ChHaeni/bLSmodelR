@@ -11,9 +11,14 @@
 	setDT(SubRun)
 
 	N0 <- SubRun[1,N0]
-		
+
 	AllSensorNames <- unlist(strsplit(SubRun[,Calc.Sensor],",",fixed=TRUE))
 	lasn <- length(AllSensorNames)
+		
+    browser()
+
+    # TODO: Srange by row -> same for deposition (by Catalog)
+    #       and, therefore, also get all sensors by row?
 	sind <- chmatch(AllSensorNames, InputList$Sensors$"Calc.Sensors"[, "Point Sensor Name"])
 	SensorPositions <- as.matrix(InputList$Sensors$"Calc.Sensors"[sind, c("x-Coord (m)", "y-Coord (m)")])
 	rownames(SensorPositions) <- InputList$Sensors$"Calc.Sensors"[sind, "Point Sensor Name"]

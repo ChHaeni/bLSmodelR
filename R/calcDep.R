@@ -21,12 +21,6 @@
     # which additional variables?
     which_vars <- c('uCE', 'vCE', 'wCE') %in% variables
 
-    ci_fun <- if (is_spatial) {
-        bLSmodelR:::fill_Ci_spatial 
-    } else {
-        bLSmodelR:::fill_Ci_homogeneous
-    }
-
     # record gc/mem
     .record_now(start = TRUE)
 
@@ -131,17 +125,6 @@
                 uvw <- uvw[takeSub,]
             }
             UVW[[cName]] <- uvw
-            # prepare wTD2 once per Ctlg
-            if (is_spatial) {
-                Ctlg[, ":="(
-                    wTD2 = 2 / wTD
-                    )]
-            } else {
-                Ctlg[, ":="(
-                    wTD2 = 2 / wTD,
-                    dep_outside = exp(-vDep * 2 / wTD)
-                    )]
-            }
 
             ## get relative source range
             # get sensors
@@ -166,8 +149,27 @@
             cat("\nGet TD inside source areas:\n")
             tag_bbox(Ctlg, Srange)
             Ctlg[, inside_Srange := bbox_inside]
+            
+            browser()
 
             if (Ctlg[, any(bbox_inside)]) {
+
+                ### spatially inhomogeneous vdep:
+                if (is_spatial) {
+                    # remove bbox tags for tag_inside below
+                    Ctlg[, bbox_inside := NULL]
+                    Ctlg[, vDep := vd]
+                    for (j in nms_Spatial) {
+                        tag_inside(Ctlg, Src_Spatial[[j]], SensorPositions[sns, ])
+                        Ctlg[(td_inside), vDep := vd_Spatial[[j]]]
+                    }
+                }
+                # prepare wTD2 once per Ctlg
+                Ctlg[, ":="(
+                    wTD2 = 2 / wTD
+                    )]
+                # get outside deposition
+                Ctlg[, dep_outside := exp(-vDep * 2 / wTD)]
 
                 # loop over sensors
                 for (sns in SensorNames) {
@@ -176,11 +178,14 @@
                     # tag inside
                     tag_inside(Ctlg, Src, SensorPositions[sns, ])
                     if (Ctlg[, any(td_inside)]) {
-                        # # set key?
+                        # # set key for sorting?
                         # setkey(Ctlg, Traj_ID)
-                        # get values
-                        Ci[[i]] <- ci_fun(Ctlg, nms_Spatial, Src_Spatial, CSnsrs, vdep, 
-                            vd_Spatial, sns)
+                        # assign outside source
+                        Ctlg[, dep := 1][(!td_inside), dep := dep_outside]
+                        # return Traj_ID & CE
+                        Ci[[i]] <- Ctlg[Traj_ID %in% Traj_ID[(td_inside)],
+                            .(CE = sum(as.numeric(td_inside) * cumprod(dep) * wTD2))
+                            , by = Traj_ID]
                     }
 
                 }
@@ -320,35 +325,4 @@
     setattr(Out, 'cpu_mem', .record_now(reset = TRUE))
 
 	return(Out)	
-}
-
-fill_Ci_homogeneous <- function(Cat, ...) {
-    Cat[, dep := 1][(!td_inside), dep := dep_outside]
-    # return Traj_ID & CE
-    Cat[Traj_ID %in% Traj_ID[(td_inside)],
-        .(CE = sum(as.numeric(td_inside) * cumprod(dep) * wTD2))
-        , by = Traj_ID]
-}
-
-fill_Ci_spatial <- function(Cat, nms_spatial, src_spatial, csnsrs, vd, vd_spatial, 
-    point_sensor) {
-    # assign for looping over spatial
-    Cat[, tagInsideQ := td_inside]
-    ### spatially inhomogeneous vdep:
-    Cat[, vDep := vd]
-    for (j in nms_spatial) {
-        tag_inside(Cat, src_spatial[[j]], 
-            csnsrs[chmatch(point_sensor, csnsrs[, "Point Sensor Name"]), ]
-        )
-        Cat[(td_inside), vDep := vd_spatial[[j]]]
-    }
-    # TODO: allow for deposition inside source
-    #   -> set vdep to 0 inside and remove subsetting below
-    #   -> set vdep to 0 before spatial vdep such that it can be set to non
-    #           zero through spatial...
-    Cat[, dep := 1][(!tagInsideQ), dep := exp(-vDep * wTD2)]
-    # return Traj_ID & CE
-    Cat[Traj_ID %in% Traj_ID[(tagInsideQ)],
-        .(CE = sum(as.numeric(tagInsideQ) * cumprod(dep) * wTD2))
-        , by = Traj_ID]
 }

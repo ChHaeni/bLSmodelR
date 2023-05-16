@@ -62,6 +62,9 @@ tag_inside <- function(catalog, sources, origin = c(0, 0), tag_id = FALSE,
         x = x - origin[[1]],
         y = y - origin[[2]]
         )]
+    if ('bbox_inside' %in% names(catalogs)) {
+        catalog[, bbox_before := bbox_inside]
+    }
 	tag_bbox(catalog, sources_relative)
 	catalog[, rn := .I]
 	setkey(catalog, rn)
@@ -103,7 +106,11 @@ tag_inside <- function(catalog, sources, origin = c(0, 0), tag_id = FALSE,
                 )]
         }
 	}
-	catalog[, ":="(bbox_inside = NULL, rn = NULL)]
+    if (bbox_existed) {
+        catalog[, ":="(bbox_inside = bbox_before, rn = NULL, bbox_before = NULL)]
+    } else {
+        catalog[, ":="(bbox_inside = NULL, rn = NULL)]
+    }
 
     setnames(catalog, c('td_inside', 'source_names'), c(colname_inside, colname_sources))
 

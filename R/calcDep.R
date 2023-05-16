@@ -312,7 +312,7 @@
 			Ci_v <- rep(0, N0)
 			Ci_v[Ci[[1]][, Traj_ID]] <- Ci[[1]][, CE]
             CE_mean <- mean(Ci_v)
-            dCi <- Ci_v - CE
+            dCi <- Ci_v - CE_mean
             dui <- UVW[[1]][, 'u0'] - mean(UVW[[1]][, 'u0'])
 			Out <- data.frame(
 				CE = CE_mean,

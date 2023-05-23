@@ -40,7 +40,7 @@
 
 	SncRun[, seed := sample.int(1E9, .N)]
 		
-	if (!is.null(cl) & (nk > 1)) {
+	if (!is.null(cl) && (nk > 1)) {
 
 		# sort by LineSensor/PointSensor:
 		sort_nindex <- character(nk)

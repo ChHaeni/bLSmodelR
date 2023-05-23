@@ -37,13 +37,13 @@
 	Out <- SubRun[rep(1, length(SourceNames)), ][, 
         SensorHeight := as.character(SensorHeight)]
     # get Sensor heights
-	Sheight <- range(InputList$Sensors$"Calc.Sensors"[
+	Sheight <- unique(range(InputList$Sensors$"Calc.Sensors"[
         InputList[['Sensors']][['Calc.Sensors']][, 'Sensor Name'] == Out[, Sensor]
-        , "Sensor Height (m)"])
+        , "Sensor Height (m)"]))
 	if (length(Sheight) > 1) {
 		Sheight <- paste(sprintf("%1.2f", Sheight), collapse = " to ")
 	} else {
-		Sheight <- sprintf("%1.3f", Sheight[1])
+		Sheight <- sprintf("%1.3f", Sheight)
 	}
     # fill & prepare Out
 	Out[, ":="(

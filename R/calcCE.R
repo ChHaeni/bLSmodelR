@@ -57,9 +57,9 @@
 			N_TD = 0, TD_Time_avg = NA_real_, TD_Time_max = NA_real_, 
             Max_Dist = NA_real_, UCE = 0, n_time_avg = 0, Calc.Sensor = NULL, 
             seed = NULL)]
-    # remove Calc.* output
-    rm_ind <- Reduce(':', match(c('Calc.mtime', 'Calc.N0'), names(Out)))
-    Out[, names(Out)[rm_ind] := NULL]
+    # remove Calc.* output 
+    #   (this needs improvement, since user columns could be removed accidentally)
+    Out[, grep('^Calc[.]', names(Out), value = TRUE) := NULL]
     Out[, Sensor_Swustar := NULL]
 	setkey(Out, Source)
 

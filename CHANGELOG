@@ -5,7 +5,7 @@
 
 ---
 
-# current version:
+# v4.9-0
 
 ## added
 - add option to show progress bar (default: show) for load balanced parallel computing (C/E values)

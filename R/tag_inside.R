@@ -26,8 +26,12 @@ tag_inside <- function(catalog, sources, origin = c(0, 0), tag_id = FALSE,
         stop('Argument "catalog" must be of class "TDcat"')
     }
 
-    if (!inherits(sources, 'Sources')) {
-        stop('Argument "sources" must be of class "Sources"')
+    sources_relative <- as.data.table(sources)
+    if (ncol(sources_relative) == 2) {
+        setnames(sources_relative, c('x', 'y'))
+        sources_relative[, c('area', 'pid') := list('src', 1)]
+    } else {
+        setnames(sources_relative, c("area", "x", "y", "pid"))
     }
     
     if (!is.numeric(origin)) {
@@ -53,11 +57,9 @@ tag_inside <- function(catalog, sources, origin = c(0, 0), tag_id = FALSE,
     }
 
 	catalog[, ':='(
-        td_inside = FALSE,
-        source_names = name_outside
+        '_td_inside' = FALSE,
+        '_source_names' = name_outside
         )]
-	sources_relative <- data.table(sources)
-	setnames(sources_relative, c("area", "x", "y", "pid"))
 	sources_relative[, ":="(
         x = x - origin[[1]],
         y = y - origin[[2]]
@@ -66,8 +68,8 @@ tag_inside <- function(catalog, sources, origin = c(0, 0), tag_id = FALSE,
         catalog[, bbox_before := bbox_inside]
     }
 	tag_bbox(catalog, sources_relative)
-	catalog[, rn := .I]
-	setkey(catalog, rn)
+	catalog[, ._rn := .I]
+	setkey(catalog, ._rn)
 
 	if (catalog[, any(bbox_inside)]) {
         # assign outer bbox
@@ -79,7 +81,7 @@ tag_inside <- function(catalog, sources, origin = c(0, 0), tag_id = FALSE,
                 catalog[, bbox_inside := bbox_outer]
                 tag_bbox(catalog, .(x = x, y = y))
                 cbind(
-                    ID = catalog[(bbox_inside), rn], 
+                    ID = catalog[(bbox_inside), ._rn], 
                     pnt.in.poly(catalog[(bbox_inside), cbind(x, y)], cbind(x, y))
                 )
             }, by = .(area, pid)][pip == 1L, 
@@ -91,7 +93,7 @@ tag_inside <- function(catalog, sources, origin = c(0, 0), tag_id = FALSE,
                 catalog[, bbox_inside := bbox_outer]
                 tag_bbox(catalog, .(x = x, y = y))
                 cbind(
-                    ID = catalog[(bbox_inside), rn], 
+                    ID = catalog[(bbox_inside), ._rn], 
                     pnt.in.poly(catalog[(bbox_inside), cbind(x, y)], cbind(x, y))
                 )
             }, by = .(area, pid)][pip == 1L, 
@@ -101,18 +103,20 @@ tag_inside <- function(catalog, sources, origin = c(0, 0), tag_id = FALSE,
         catalog[, bbox_outer := NULL]
         if (nrow(tds_inside) > 0) {
             catalog[tds_inside, ':='(
-                td_inside = TRUE,
-                source_names = V1
+                '_td_inside' = TRUE,
+                '_source_names' = V1
                 )]
         }
 	}
     if (bbox_existed) {
-        catalog[, ":="(bbox_inside = bbox_before, rn = NULL, bbox_before = NULL)]
+        catalog[, ":="(bbox_inside = bbox_before, ._rn = NULL, bbox_before = NULL)]
     } else {
-        catalog[, ":="(bbox_inside = NULL, rn = NULL)]
+        catalog[, ":="(bbox_inside = NULL, ._rn = NULL)]
     }
 
-    setnames(catalog, c('td_inside', 'source_names'), c(colname_inside, colname_sources))
+    if (colname_inside %in% names(catalog)) catalog[, (colname_inside) := NULL]
+    if (colname_sources %in% names(catalog)) catalog[, (colname_sources) := NULL]
+    setnames(catalog, c('_td_inside', '_source_names'), c(colname_inside, colname_sources))
 
 	invisible(catalog)
 }

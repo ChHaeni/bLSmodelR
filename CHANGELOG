@@ -5,6 +5,13 @@
 
 ---
 
+# v4.9-2
+
+## fixed
+- tag_inside does less likely overwrite and not duplicate existing columns
+
+---
+
 # v4.9-1
 
 ## fixed:

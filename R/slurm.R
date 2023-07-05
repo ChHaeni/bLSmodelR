@@ -285,11 +285,11 @@ write_runbLS_script <- function(tmpdir, cpath, ncores, mem_lim = NULL,
             # run model
             if (is.null(mem_lim)) {
                 paste0('res <- runbLS(inlist, "', cpath, '", ncores = ', ncores, 
-                    ', show_progress = FALSE, variables = ', dput(variables), ')')
+                    ', show_progress = FALSE, variables = c("', paste(variables, collapse = '","'), '"))')
             } else {
                 paste0('res <- runbLS(inlist, "', cpath, '", ncores = ', ncores, 
-                    ', memory_limit = "', mem_lim, '", show_progress = FALSE, variables = ',
-                    dput(variables), ')')
+                    ', memory_limit = "', mem_lim, '", show_progress = FALSE, variables = c("',
+                    paste(variables, collapse = '","'), '"))')
             },
             # save result; get index from int%i.rds
             'saveRDS(res, sub("/int([0-9]{1,2}[.]rds)", "/res\\\\1", ifile))'
@@ -327,12 +327,12 @@ write_deposition_script <- function(tmpdir, ncores, mem_lim = NULL, variables = 
             # run deposition
             if (is.null(mem_lim)) {
                 paste0('res <- do.call(deposition, c(list(x = bls_result, ncores = ', 
-                    ncores, ', variables = ', dput(variables), 
-                    '), dep_args[c("vDep", "vDepSpatial")]))')
+                    ncores, ', variables = c("', paste(variables, collapse = '","'), 
+                    '")), dep_args[c("vDep", "vDepSpatial")]))')
             } else {
                 paste0('res <- do.call(deposition, c(list(x = bls_result, ncores = ', 
-                    ncores, ', memory_limit = "', mem_lim, '", variables = ', 
-                    dput(variables), '), dep_args[c("vDep", "vDepSpatial")]))')
+                    ncores, ', memory_limit = "', mem_lim, '", variables = c("', 
+                    paste(variables, collapse = '","'), '")), dep_args[c("vDep", "vDepSpatial")]))')
             },
             # save result; get index from int%i.rds
             'saveRDS(res, sub("/int([0-9]{1,2}[.]rds)", "/res\\\\1", ifile))'

@@ -1,8 +1,8 @@
 Package: bLSmodelR
 Type: Package
 Title: bLSmodelR - An atmospheric dispersion model in R 
-Version: 4.9-0
-Date: 2023-06-15
+Version: 4.9-1
+Date: 2023-07-05
 Author: Christoph Haeni
 Maintainer: Christoph Haeni <christoph.haeni@bfh.ch>
 Description: This is the backward Lagrangian stochastic (bLS) model as described by Flesch et al. (2004).

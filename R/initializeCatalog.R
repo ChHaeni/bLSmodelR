@@ -77,7 +77,6 @@ initializeCatalog <- function(N0,Ustar,Suu,Svu,bw,SensorHeight,L,Zo,A,alpha,MaxF
 		Nresid <- N0 - Cat_N0
 		if(Nresid>0){
 			if(Nresid>99){
-				# getUVW:
 				# initializeUVW:
 			    on.exit({if (is.null(oseed)) {
 						rm(list = ".Random.seed", envir = env)
@@ -90,16 +89,11 @@ initializeCatalog <- function(N0,Ustar,Suu,Svu,bw,SensorHeight,L,Zo,A,alpha,MaxF
 				Sv <- Svu*attr(Catalog,"Ustar")
 				Sw <- calcsigmaW(attr(Catalog,"Ustar"),SensorHeight/L,bw)
 				theta  <- acos(-attr(Catalog,"Ustar")/(Suu*Sw))
-				N2 <- max(floor(Cat_N0/100),1)
-				n <- rep(100,N2)
-				n[1] <- n[1] + Cat_N0%%100
-				out <- matrix(NA,nrow=Cat_N0,ncol=3)
-				dummy <- 0
-				for(i in 1:N2){
-					dummy <- max(dummy) + 1:n[i]
-					out[dummy,] <- .inifu(n[i],theta)
-				}
-				out <- t(t(out)/apply(out,2,sd))	
+                # fix seed state
+                # 3 x rnorm in .inifu (be careful with too large numbers!)
+                rnorm(Cat_N0)
+                rnorm(Cat_N0)
+                rnorm(Cat_N0)
 				# add uvw:
 				N2 <- max(floor(Nresid/100),1)
 				n <- rep(100,N2)
@@ -110,11 +104,16 @@ initializeCatalog <- function(N0,Ustar,Suu,Svu,bw,SensorHeight,L,Zo,A,alpha,MaxF
 					dummy <- max(dummy) + 1:n[i]
 					outadd[dummy,] <- .inifu(n[i],theta)
 				}
-				outadd <- t(t(outadd)/apply(outadd,2,sd))			
-				pars <- numeric(3)
-				for(i in 1:3)pars[i] <- optimize(function(x)abs(1-sd(c(out[,i],outadd[,i]/x))),interval=c(0.5,1.5),tol=1E-10)$minimum
-				out <- rbind(out,t(t(outadd)/pars))
-				setattr(Catalog,"uvw0",cbind(u0=out[,1]*Su + attr(Catalog,"U0"),v0=out[,2]*Svu*attr(Catalog,"Ustar"),w0=out[,3]*Sw))
+                # get existing uvw
+                outold <- attr(Catalog, 'uvw0')
+                # remove U0 offset
+                U0 <- attr(Catalog, 'U0')
+                outold[, 'u0'] <- outold[, 'u0'] - U0
+                # normalize and bind together
+                outold <- t(t(outold) / apply(outold, 2, sd))
+                outadd <- t(t(outadd) / apply(outadd, 2, sd))
+				out <- rbind(outold, outadd)
+				setattr(Catalog,"uvw0",cbind(u0=out[,1]*Su + U0,v0=out[,2]*Sv,w0=out[,3]*Sw))
 				setattr(Catalog,"N0",N0)
 				txt <- sprintf("N0 = %i\nZSens = %1.3f\nUstar = %1.7f\nL = %1.1f\nZo = %1.3e\nSu_Ustar = %1.3f\nSv_Ustar = %1.3f\nbw = %1.3f\nC0 = %1.3f\nkv = %1.2f\nA = %1.2f\nalpha = %1.3f\nMaxFetch = %1.0f\n",N0,SensorHeight,attr(Catalog,"Ustar"),L,Zo,Suu,Svu,bw,calcC0(bw,kv,A),kv,A,alpha,MaxFetch)
 				TDhead <- sprintf(paste0("TD Catalog generated on %s\n",txt),format(Sys.time()))

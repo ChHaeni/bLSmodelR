@@ -5,6 +5,19 @@
 
 ---
 
+# v.10-0
+
+## performance
+- changed format of TD catalogs. 
+        With the new format the TD header info can be read without the need to 
+        read the entire catalog into the current R session. 
+        Check argument `header_only = TRUE` in `readCatalog()`.
+
+## fixed
+- memory limit for sub processes was not correctly implemented
+
+---
+
 # v4.9-2
 
 ## fixed

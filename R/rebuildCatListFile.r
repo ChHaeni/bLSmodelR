@@ -1,4 +1,6 @@
 rebuildCatListFile <- function(C.Path, fromScratch = FALSE) {
+    # catalog flag -> same as readCatalog/writeCatalog
+    catalog_flag <- 'A'
     # check if cats exist & list them
 	Existing <- dir(C.Path, pattern = "Cat_Zm.*_[0-9]{14}$")
     # define path to CatList file
@@ -20,10 +22,17 @@ rebuildCatListFile <- function(C.Path, fromScratch = FALSE) {
             if (inherits(CatList, 'try-error')) {
                 stop('rebuildCatListFile: reading file ', Catfile, ' fails!')
             }
-			# check erroneous
-			CatList <- CatList[grepl("Cat_Zm.*_[0-9]{14}$", Name)]
-			# remove duplicates
-			CatList <- unique(CatList, by = 'Name')
+            # check catalog flag
+            cat_flag <- attr(CatList, 'cat_flag')
+            if (is.null(cat_flag) || cat_flag != catalog_flag) {
+                CatList <- as.data.table(c(list(a = character(0), b = as.POSIXct(character(0), tz = 'GMT')), rep(list(a = numeric(0)), 13)), stringsAsFactors = FALSE)
+                setnames(CatList, c("Name", "mtime", "N0", "ZSens", "Ustar", "L", "Zo", "Su_Ustar", "Sv_Ustar", "bw", "C0", "kv", "A", "alpha", "MaxFetch"))
+            } else {
+                # check erroneous
+                CatList <- CatList[grepl("Cat_Zm.*_[0-9]{14}$", Name)]
+                # remove duplicates
+                CatList <- unique(CatList, by = 'Name')
+            }
 		} else {
 			CatList <- as.data.table(c(list(a = character(0), b = as.POSIXct(character(0), tz = 'GMT')), rep(list(a = numeric(0)), 13)), stringsAsFactors = FALSE)
 			setnames(CatList, c("Name", "mtime", "N0", "ZSens", "Ustar", "L", "Zo", "Su_Ustar", "Sv_Ustar", "bw", "C0", "kv", "A", "alpha", "MaxFetch"))
@@ -49,30 +58,40 @@ rebuildCatListFile <- function(C.Path, fromScratch = FALSE) {
                 # get i
                 i <- check_index[j]
                 # read catalog
-				Cat <- try(qs::qread(ExistingFull[i], strict = TRUE), silent = TRUE)
+				CatHeader <- readCatalog(ExistingFull[i], header_only = TRUE)
                 # convert from old serialization?
-                if (inherits(Cat, 'try-error')) {
-                    Cat <- try(readRDS(ExistingFull[i]))
+                if (is.null(CatHeader)) {
+                    # old qs format
+                    Cat <- try(qs::qread(ExistingFull[i], strict = TRUE), silent = TRUE)
+                    if (inherits(Cat, 'try-error')) {
+                        # old rds format
+                        Cat <- try(readRDS(ExistingFull[i]))
+                    }
                     if (inherits(Cat, 'try-error')) {
                         # file corrupt
                         file.remove(ExistingFull[i])
                     } else {
-                        # save with new qs format
-                        qs::qsave(Cat, ExistingFull[i], 'balanced')
+                        # save with new binary format
+                        writeCatalog(Cat, ExistingFull[i])
+                        CatHeader <- attr(Cat, 'header')
                     }
                 }
-                Head <- unlist(strsplit(attr(Cat, "header"), "\n"))[-1]
-                Whead <- matrix(as.numeric(gsub(".*[=] ", "", Head)), nrow=1)
-                CatAdd[j, -(1:2)] <- Whead
-                # get file modified
-                CatAdd[j, 2] <- file.mtime(ExistingFull[i])
-                # get file name
-                CatAdd[j, 1] <- Existing[i]
+                if (!is.null(CatHeader)) {
+                    Head <- unlist(strsplit(CatHeader, "\n"))[-1]
+                    Whead <- matrix(as.numeric(gsub(".*[=] ", "", Head)), nrow=1)
+                    CatAdd[j, -(1:2)] <- Whead
+                    # get file modified
+                    CatAdd[j, 2] <- file.mtime(ExistingFull[i])
+                    # get file name
+                    CatAdd[j, 1] <- Existing[i]
+                }
 			}
             # bind together
 			CatList <- na.omit(rbind(CatList, CatAdd))
             cat('\r                                               \r   done\n')
 		}
+        # add catalog flag as attribute
+        setattr(CatList, 'cat_flag', catalog_flag)
         # try to write - if error retry for 20 seconds
         try_write <- try(qsave(CatList, Catfile, preset = 'uncompressed'), silent = TRUE)
         # loop on error

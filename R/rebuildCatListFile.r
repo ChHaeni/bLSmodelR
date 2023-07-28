@@ -36,7 +36,7 @@ rebuildCatListFile <- function(C.Path, fromScratch = FALSE) {
         CatList <- CatList[mtime == file.mtime(file.path(C.Path, Name))]
         # check catalogs not in CatList
 		if (any(checkCat <- CatList[, !(Existing %chin% Name)])){
-            cat('-> updating catalog db... ')
+            cat('-> updating catalog db...\n')
             # create CatAdd to append at bottom
             nr <- sum(checkCat)
 			CatAdd <- setNames(
@@ -45,6 +45,7 @@ rebuildCatListFile <- function(C.Path, fromScratch = FALSE) {
             # get check index
             check_index <- which(checkCat)
 			for(j in seq_along(check_index)){
+                cat('\r', j, '/', length(check_index))
                 # get i
                 i <- check_index[j]
                 # read catalog
@@ -70,7 +71,7 @@ rebuildCatListFile <- function(C.Path, fromScratch = FALSE) {
 			}
             # bind together
 			CatList <- na.omit(rbind(CatList, CatAdd))
-            cat('done\n')
+            cat('\r                                               \r   done\n')
 		}
         # try to write - if error retry for 20 seconds
         try_write <- try(qsave(CatList, Catfile, preset = 'uncompressed'), silent = TRUE)

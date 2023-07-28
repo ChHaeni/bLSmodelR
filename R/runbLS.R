@@ -89,7 +89,7 @@ runbLS <- function(ModelInput, Cat.Path = NULL, ncores = NULL, TDonly = NULL,
 	} else if (ncores > 1) {
 		on.exit(
 			{
-		    parallel::stopCluster(cl)
+		    if (exists('cl')) parallel::stopCluster(cl)
 			}, add = TRUE
 		)
         # set up PSOCK clusters

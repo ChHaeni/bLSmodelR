@@ -238,7 +238,11 @@ deposition <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL,
                 if (ncores < 1) ncores <- parallel::detectCores(TRUE, FALSE)
                 # restrict ncores to max. necessary
                 ncores <- min(ncores, n_g0)
-                on.exit(parallel::stopCluster(cl), add = TRUE)
+                on.exit(
+                    {
+                    if (exists('cl')) parallel::stopCluster(cl)
+                    }, add = TRUE
+                )
                 cl <- .makePSOCKcluster(ncores, memory_limit = memory_limit)
                 # data.table::setDTthreads(ncores)
             }

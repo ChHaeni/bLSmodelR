@@ -73,7 +73,7 @@ rebuildCatListFile <- function(C.Path, fromScratch = FALSE) {
             cat('done\n')
 		}
         # try to write - if error retry for 20 seconds
-        try_write <- qsave(CatList, Catfile, preset = 'uncompressed')
+        try_write <- try(qsave(CatList, Catfile, preset = 'uncompressed'), silent = TRUE)
         # loop on error
         time_now <- Sys.time()
         while(inherits(try_write, 'try-error')) {
@@ -85,7 +85,7 @@ rebuildCatListFile <- function(C.Path, fromScratch = FALSE) {
             # wait to continue...
             Sys.sleep(1)
             # try again
-            try_write <- qsave(CatList, Catfile, preset = 'uncompressed')
+            try_write <- try(qsave(CatList, Catfile, preset = 'uncompressed'), silent = TRUE)
         }
 	} else {
         ## no catalogs exist

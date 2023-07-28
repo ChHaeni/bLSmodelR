@@ -93,8 +93,10 @@
     parallel:::.check_ncores(length(names))
     cl <- vector("list", length(names))
     # check memory limit
-    if (!is.null(memory_limit)) {
-        stopifnot(length(memory_limit) == 1)
+    if (.Platform$OS.type != 'windows' && !is.null(memory_limit)) {
+        if (length(memory_limit) != 1) {
+            stop('Argument "memory_limit" must be of length 1!')
+        }
         if (is.numeric(memory_limit)) {
             # convert to Mb
             memory_limit <- as.integer(memory_limit * 1e-6)
@@ -122,23 +124,23 @@
             , 'x' =
             , 'xb' = {
                 num_pn_mb <- num_per_node * 1e-6
-                paste0(as.integer(num_per_node * 1e-6), 'Mb')
+                paste0(as.integer(num_per_node * 1e-6), 'MB')
             }
             , 'xkb' = {
                 num_pn_mb <- num_per_node * 1e-3
-                paste0(num_per_node, 'Kb')
+                paste0(num_per_node, 'KB')
             }
             , 'xmb' = {
                 num_pn_mb <- num_per_node
-                paste0(num_per_node, 'Mb')
+                paste0(num_per_node, 'MB')
             }
             , 'xgb' = {
                 num_pn_mb <- num_per_node * 1e3
-                paste0(num_per_node, 'Gb')
+                paste0(num_per_node, 'GB')
             }
             , 'xtb' = {
                 num_pn_mb <- num_per_node * 1e6
-                paste0(num_per_node, 'Tb')
+                paste0(num_per_node, 'TB')
             }
         )
         # be verbose
@@ -164,6 +166,9 @@
         socket <- serverSocket(port = port)
         on.exit(close(socket), add = TRUE)
         if (.Platform$OS.type == "windows") {
+            if (!is.null(memory_limit)) {
+                warning('Argmuent "memory_limit" can only be set on unix-alike systems and will be ignored!')
+            }
             for (i in seq_along(cl)) system(cmd, wait = FALSE, 
                 input = "")
         }

@@ -36,6 +36,7 @@ rebuildCatListFile <- function(C.Path, fromScratch = FALSE) {
         CatList <- CatList[mtime == file.mtime(file.path(C.Path, Name))]
         # check catalogs not in CatList
 		if (any(checkCat <- CatList[, !(Existing %chin% Name)])){
+            cat('-> updating catalog db... ')
             # create CatAdd to append at bottom
             nr <- sum(checkCat)
 			CatAdd <- setNames(
@@ -69,6 +70,7 @@ rebuildCatListFile <- function(C.Path, fromScratch = FALSE) {
 			}
             # bind together
 			CatList <- na.omit(rbind(CatList, CatAdd))
+            cat('done\n')
 		}
         # try to write - if error retry for 20 seconds
         try_write <- qsave(CatList, Catfile, preset = 'uncompressed')

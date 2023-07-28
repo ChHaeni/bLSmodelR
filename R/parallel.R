@@ -102,7 +102,7 @@
             if (memory_limit < 100) stop('Memory limit cannot be below 100Mb')
             # get number and unit for summary printing
             num <- memory_limit
-            unit <- 'Mb'
+            unit <- 'mb'
             # convert to string
             memory_limit <- paste0(memory_limit, unit)
         } else {
@@ -112,39 +112,42 @@
             num <- as.numeric(sub('^([0-9.]*)\\s*[a-zA-Z]*$', '\\1', memory_limit))
             unit <- tolower(sub('^[0-9.]*\\s*([a-zA-Z]*)$', '\\1', memory_limit))
             # check number & unit
-            if (is.na(num)) stop('memory limit must be specified in a format like e.g. "10Gb"')
+            if (is.na(num)) stop('memory limit must be specified in format "10Gb"')
             if (!(unit %in% c('', 'b', 'kb', 'mb', 'gb', 'tb'))) 
                 stop('memory limit units should be one of "Kb", "Mb", "Gb" or "Tb"')
-            memory_limit <- switch(paste0('x', unit)
-                , 'x' =
-                , 'xb' = {
-                    if (num < 100e6) stop('Memory limit cannot be below 100Mb')
-                    paste0(as.integer(num * 1e-6), 'Mb')
-                }
-                , 'xkb' = {
-                    if (num < 100e3) stop('Memory limit cannot be below 100Mb')
-                    paste0(num, 'Kb')
-                }
-                , 'xmb' = {
-                    if (num < 100) stop('Memory limit cannot be below 100Mb')
-                    paste0(num, 'Mb')
-                }
-                , 'xgb' = {
-                    if (num < 100e-3) stop('Memory limit cannot be below 100Mb')
-                    paste0(num, 'Gb')
-                }
-                , 'xtb' = {
-                    if (num < 100e-6) stop('Memory limit cannot be below 100Mb')
-                    paste0(num, 'Tb')
-                }
-                )
         }
+        # get memory per node & check
+        num_per_node <- floor(num / length(cl) * 100) / 100
+        mem_per_node <- switch(paste0('x', unit)
+            , 'x' =
+            , 'xb' = {
+                num_pn_mb <- num_per_node * 1e-6
+                paste0(as.integer(num_per_node * 1e-6), 'Mb')
+            }
+            , 'xkb' = {
+                num_pn_mb <- num_per_node * 1e-3
+                paste0(num_per_node, 'Kb')
+            }
+            , 'xmb' = {
+                num_pn_mb <- num_per_node
+                paste0(num_per_node, 'Mb')
+            }
+            , 'xgb' = {
+                num_pn_mb <- num_per_node * 1e3
+                paste0(num_per_node, 'Gb')
+            }
+            , 'xtb' = {
+                num_pn_mb <- num_per_node * 1e6
+                paste0(num_per_node, 'Tb')
+            }
+        )
         # be verbose
-        num_per_node <- paste0(sprintf('%1.2g', num / length(cl)), unit)
         cat('\n~~~~ memory limit ~~~~\n')
         cat('Memory is limited to', memory_limit, 'for a total of', length(cl), 'subprocesses.\n')
-        cat('This results in', num_per_node, 'memory per subprocess.\n')
+        cat('This results in', mem_per_node, 'memory per subprocess.\n')
         cat('~~~~~~~~~~~~~~~~~~~~~~\n\n')
+        # fail on too low memory per node
+        if (num_pn_mb < 100) stop('Memory limit per node cannot be below 100Mb')
     }
     options <- parallel:::addClusterOptions(parallel:::defaultClusterOptions, list(...))
     manual <- parallel:::getClusterOption("manual", options)

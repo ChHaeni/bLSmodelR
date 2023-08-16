@@ -5,6 +5,13 @@
 
 ---
 
+# current
+
+## fixed
+- fix Sensors and Sources subsetting by a mixture of regex and fixed matches
+
+---
+
 # v.10-0
 
 ## performance

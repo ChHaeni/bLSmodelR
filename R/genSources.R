@@ -55,11 +55,16 @@ genSources <- function(...){
 # subset Sources by name
 '[.Sources' <- function(x, i, j, perl = FALSE, ...) {
     if (!missing(i) && is.character(i)) {
-        newi <- which(x[[1]] %in% i)
-        if (length(newi) == 0 && length(i) == 1) {
-            newi <- grep(i, x[[1]], perl = perl)
+        xn <- x[[1]]
+        newi <- numeric(0)
+        for (n in unique(i)) {
+            tmp <- xn == n
+            if (!any(tmp)) {
+                tmp <- grepl(n, xn, perl = perl)
+            }
+            newi <- c(newi, which(tmp))
         }
-        i <- newi
+        i <- unique(newi)
     }
     out <- `[.data.frame`(x, i, j, ...)
     if (ncol(out) != 4 && inherits(out, 'data.frame')) {
@@ -69,11 +74,16 @@ genSources <- function(...){
 }
 '[<-.Sources' <- function(x, i, j, perl = FALSE, value) {
     if (!missing(i) && is.character(i)) {
-        newi <- which(x[[1]] %in% i)
-        if (length(newi) == 0 && length(i) == 1) {
-            newi <- grep(i, x[[1]], perl = perl)
+        xn <- x[[1]]
+        newi <- numeric(0)
+        for (n in unique(i)) {
+            tmp <- xn == n
+            if (!any(tmp)) {
+                tmp <- grepl(n, xn, perl = perl)
+            }
+            newi <- c(newi, which(tmp))
         }
-        i <- newi
+        i <- unique(newi)
     }
     out <- `[<-.data.frame`(x, i, j, value)
     if (ncol(out) != 4 && inherits(out, 'data.frame')) {

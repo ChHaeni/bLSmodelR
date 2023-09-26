@@ -5,14 +5,17 @@
 
 ---
 
-# current
+# v.4.10-1
+
+## performance
+- Improve catalog extension algorithm
 
 ## fixed
 - fix Sensors and Sources subsetting by a mixture of regex and fixed matches
 
 ---
 
-# v.10-0
+# v.4.10-0
 
 ## performance
 - changed format of TD catalogs. 

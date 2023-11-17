@@ -70,12 +70,14 @@ export(depoSlurm)
 
 importFrom(Rcpp, evalCpp)
 
-importFrom(sp,Polygon,Polygons,SpatialPolygons)
-importFrom(rgeos,gIntersection)
-importFrom(utils,head,tail)
 importFrom(RgoogleMaps,XY2LatLon,LatLon2XY.centered)
-importFrom(geosphere,distGeo)
-import(parallel,rlecuyer,data.table,maptools)
+#importFrom(geosphere,distGeo)
+#import(maptools)
+#importFrom(rgeos,gIntersection)
+#importFrom(sp,Polygon,Polygons,SpatialPolygons)
+
+importFrom(utils,head,tail)
+import(parallel,rlecuyer,data.table)
 
 importFrom("grDevices", "x11")
 importFrom("graphics", "plot")                                       

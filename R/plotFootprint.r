@@ -15,11 +15,16 @@ plotFootprint <- function(x, SensorName, rn = NULL, MyMap = NULL, type = c("CE",
     useSTRtree = TRUE, avoidGEOS = FALSE, addSB = FALSE, SBpos = 3, StaticMapArgs = NULL,
     showLegend = !fp_only,  verbose = FALSE){
 
-    if(!requireNamespace("maptools")){
-        stop("please install package maptools: install.packages('maptools')")
-    }
-    if(!requireNamespace("rgeos")){
-        stop("please install package rgeos: install.packages('rgeos')")
+    if (fill) {
+        if(!requireNamespace("maptools", quietly = TRUE)){
+            stop('filled polygons are not yet supported without the retired(!) package maptools')
+        }
+        if(!requireNamespace("rgeos", quietly = TRUE)){
+            stop('filled polygons are not yet supported without the retired(!) package rgeos')
+        }
+        if(!requireNamespace("sp", quietly = TRUE)){
+			stop("package 'sp' is required for filled polygons - please install the package by running install.packages('sp')")
+        }
     }
     # Notizen: 
     #	- Sources spaeter hinzufuegen

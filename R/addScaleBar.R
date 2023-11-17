@@ -5,7 +5,7 @@ addScaleBar <- function(pos=3,scale=1,units="meters",frac=5,cuts=c(1,2,5),minors
 	dx <- diff(usr[1:2])
 	dy <- diff(usr[3:4])
 	if(inherits(scale,"staticMap")){
-		if(!requireNamespace("geosphere")){
+		if(!requireNamespace("geosphere", quietly = TRUE)){
 			stop("please install package geosphere: install.packages('geosphere')")
 		}
 		USR <- XY2LatLon(scale,usr[1:2],usr[3:4])

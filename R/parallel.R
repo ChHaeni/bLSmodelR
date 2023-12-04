@@ -154,8 +154,8 @@
     options <- parallel:::addClusterOptions(parallel:::defaultClusterOptions, list(...))
     manual <- parallel:::getClusterOption("manual", options)
     homogeneous <- parallel:::getClusterOption("homogeneous", options)
-    setup_strategy <- match.arg(parallel:::getClusterOption("setup_strategy", 
-        options), c("sequential", "parallel"))
+    setup_strategy <- match.arg(unlist(mget("setup_strategy", 
+        envir = options, ifnotfound = "sequential")), c("sequential", "parallel"))
     setup_timeout <- parallel:::getClusterOption("setup_timeout", options)
     if (!manual && homogeneous && local && setup_strategy == 
         "parallel") {

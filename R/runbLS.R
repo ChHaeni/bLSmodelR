@@ -174,7 +174,8 @@ runbLS <- function(ModelInput, Cat.Path = NULL, ncores = NULL, TDonly = NULL,
 		# sort by row names
 		Out <- Out[order(match(rn, row.names(ModelInput$Interval)))]
 		
-		if(any(grepl("_add$",names(Out))))setnames(Out,gsub("_add$","",names(Out)))
+        # remove passthrough suffix
+		setnames(Out, gsub("_add$", "", names(Out)))
 	
 		if(!asDT){
 			ID <- Out[,paste(match(rn,sort.int(unique(rn))),match(Sensor,sort(unique(Sensor))),match(Source,sort(unique(Source))),sep=".")]
@@ -251,7 +252,7 @@ runbLS <- function(ModelInput, Cat.Path = NULL, ncores = NULL, TDonly = NULL,
 		# sort by row names
 		Out <- Out[order(match(rn, row.names(ModelInput$Interval)))]
 		
-		if(any(grepl("_add$",names(Out))))setnames(Out,gsub("_add$","",names(Out)))
+		setnames(Out, gsub("_add$", "", names(Out)))
 	
 		if(!asDT){
 			ID <- Out[,paste(match(rn,sort.int(unique(rn))),match(Sensor,sort(unique(Sensor))),sep=".")]

@@ -1,5 +1,5 @@
 coreModel <- function(u, v, w, zSens, ustar, L, Zo, bw, sigmaUustar, sigmaVustar, kv, C0, alpha, MaxFetch){
-	if(add <- any(grepl("TDcat",class(u)))){
+    if (add <- any(inherits(u, 'TDcat'))) {
 		name = substitute(u)
 	    Ctlg <- u
 		Head <- unlist(strsplit(attr(u,"header"),"\n"))[-1]

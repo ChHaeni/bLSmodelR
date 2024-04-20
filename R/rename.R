@@ -53,7 +53,7 @@ rename_sensor.bLSresult <- function(x, old, new, ...) {
     attr(x, 'CalcSteps')[Sensor %chin% old, c('Sensor', 'Calc.Sensor') := {
         new_cs <- Calc.Sensor
         for (o in old) {
-            new_cs[Sensor == o] <- gsub(o, new[o], new_cs[Sensor == o])
+            new_cs[Sensor == o] <- gsub(o, new[o], new_cs[Sensor == o], fixed = TRUE)
         }
         .(
             new[Sensor],
@@ -64,7 +64,7 @@ rename_sensor.bLSresult <- function(x, old, new, ...) {
     attr(x, 'Catalogs')[Sensor %chin% old, c('Sensor', 'PointSensor') := {
         new_ps <- PointSensor
         for (o in old) {
-            new_ps[Sensor == o] <- gsub(o, new[o], new_ps[Sensor == o])
+            new_ps[Sensor == o] <- gsub(o, new[o], new_ps[Sensor == o], fixed = TRUE)
         }
         .(
             new[Sensor],

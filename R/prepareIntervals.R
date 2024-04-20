@@ -21,7 +21,7 @@ prepareIntervals <- function(InputList, C.Path = NULL, asDT = TRUE, simpleNames 
 	### procSensors:
 	pSens <- procSensors(InputList[["Sensors"]])
 
-	# update Sensor Names (negative lookahead Buchstabe, positive lookbehind Komma oder Anfang)
+	# update Sensor Names
 	for(sn in names(pSens$PS_list)){
 		Int[, Sensor := gsub(
 			paste0("\\b", sn, "\\b"),
@@ -318,7 +318,8 @@ prepareIntervals <- function(InputList, C.Path = NULL, asDT = TRUE, simpleNames 
 		setnames(IntExt,c("rn","SigmaW/Ustar Height [m]","SensorHeight","Sensor_Swustar"),c("Original Sonic Row","SigmaW/Ustar Height [m above d]","Sensor Height [m above d]","SigmaW/Ustar @ Sensor Height"))
 	}
 
-	if(any(grepl("_removeMeLater$",names(IntExt))))setnames(IntExt,gsub("_removeMeLater$","",names(IntExt)))
+    # remove suffix
+	setnames(IntExt, gsub("_removeMeLater$", "", names(IntExt)))
 
 	if(!asDT){
 		setDF(IntExt)

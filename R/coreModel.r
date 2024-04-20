@@ -3,7 +3,7 @@ coreModel <- function(u, v, w, zSens, ustar, L, Zo, bw, sigmaUustar, sigmaVustar
 		name = substitute(u)
 	    Ctlg <- u
 		Head <- unlist(strsplit(attr(u,"header"),"\n"))[-1]
-		Whead <- matrix(as.numeric(gsub(".*[=] ","",Head)),nrow=1)
+		Whead <- matrix(as.numeric(gsub(".*[=] ", "", Head)), nrow = 1)
 		zSens <- Whead[,2]
 		ustar <- Whead[,3]
 		L <- Whead[,4]

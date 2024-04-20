@@ -171,7 +171,8 @@ runbLS <- function(ModelInput, Cat.Path = NULL, ncores = NULL, TDonly = NULL,
 		# sort by row names
 		Out <- Out[order(match(rn, row.names(ModelInput$Interval)))]
 		
-		if(any(grepl("_add$",names(Out))))setnames(Out,gsub("_add$","",names(Out)))
+        # remove passthrough suffix
+		setnames(Out, gsub("_add$", "", names(Out)))
 	
 		if(!asDT){
 			ID <- Out[,paste(match(rn,sort.int(unique(rn))),match(Sensor,sort(unique(Sensor))),match(Source,sort(unique(Source))),sep=".")]
@@ -195,10 +196,10 @@ runbLS <- function(ModelInput, Cat.Path = NULL, ncores = NULL, TDonly = NULL,
 		SonicList <- vector(length(SensorNames),mode="list")
 		splitSensor <- strsplit(Intervals[,Sensor],",",fixed=TRUE)
 		for(i in seq_along(SensorNames)){
-			SonicList[[i]] <- Intervals[grepl(paste0("(^|,)",SensorNames[i],"([.]+[0-9]+|)(,|$)"),Sensor),]
+			SonicList[[i]] <- Intervals[grepl(paste0("(^|,)",SensorNames[i],"([.][0-9]+)?(,|$)"),Sensor),]
 			if(nrow(SonicList[[i]])){
-				ind <- grep(paste0("(^|,)",SensorNames[i],"([.]+[0-9]+|)(,|$)"),Intervals[,Sensor])
-				SonicList[[i]][,Calc.Sensor:=sapply(splitSensor[ind],function(x)paste0(grep(paste0("^",SensorNames[i],"([.]+[0-9]+|)$"),x,value=TRUE),collapse=","))]				
+				ind <- grep(paste0("(^|,)",SensorNames[i],"([.][0-9]+)?(,|$)"),Intervals[,Sensor])
+				SonicList[[i]][,Calc.Sensor:=sapply(splitSensor[ind],function(x)paste0(grep(paste0("^",SensorNames[i],"([.][0-9]+)?$"),x,value=TRUE),collapse=","))]				
 				SonicList[[i]][,Sensor:=SensorNames[i]]
 			}
 		}
@@ -235,7 +236,7 @@ runbLS <- function(ModelInput, Cat.Path = NULL, ncores = NULL, TDonly = NULL,
 		# sort by row names
 		Out <- Out[order(match(rn, row.names(ModelInput$Interval)))]
 		
-		if(any(grepl("_add$",names(Out))))setnames(Out,gsub("_add$","",names(Out)))
+		setnames(Out, gsub("_add$", "", names(Out)))
 	
 		if(!asDT){
 			ID <- Out[,paste(match(rn,sort.int(unique(rn))),match(Sensor,sort(unique(Sensor))),sep=".")]

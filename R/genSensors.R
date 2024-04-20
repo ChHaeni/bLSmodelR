@@ -18,7 +18,8 @@ genSensors <- function(...){
 			NULL
 		}
 	}))
-	if(any(ResName <- grepl(".*[.]{1}[0-9]*$", c(Names[!isDF], DFNames)))){
+    # TODO: allow below & fix in procSensors
+	if(any(ResName <- grepl("[.][0-9]*$", c(Names[!isDF], DFNames)))){
 			if(sum(ResName)>1){
 				stop("Sensor Names are not allowed to end with .[0-9]*!\n\t -> Sensor Names: ",paste(unique(c(Names[!isDF],DFNames)[ResName]),collapse=", ")," are not valid!\n")
 			} else {

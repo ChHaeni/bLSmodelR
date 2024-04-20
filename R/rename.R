@@ -25,7 +25,8 @@ rename_sensor <- function(x, old, new) {
         stop('arguments "old" and "new" must be of equal length')
     }
     # check if valid names
-	if(any(bad_new <- grepl(".*[.]{1}[0-9]*$", new))){
+    # TODO: allow below
+	if(any(bad_new <- grepl("[.][0-9]*$", new))){
         stop("Sensor Names are not allowed to end with .[0-9]*!\n\t -> Sensor Names: ",
             paste(paste0('"', new[bad_new], '"'), collapse = ", "),
             " are not valid!\n")

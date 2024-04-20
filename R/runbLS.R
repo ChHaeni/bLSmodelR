@@ -236,6 +236,7 @@ runbLS <- function(ModelInput, Cat.Path = NULL, ncores = NULL, TDonly = NULL,
 		# sort by row names
 		Out <- Out[order(match(rn, row.names(ModelInput$Interval)))]
 		
+        # remove passthrough suffix
 		setnames(Out, gsub("_add$", "", names(Out)))
 	
 		if(!asDT){

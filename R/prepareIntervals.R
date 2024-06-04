@@ -272,6 +272,7 @@ prepareIntervals <- function(InputList,C.Path=NULL,asDT=TRUE,simpleNames=TRUE,nc
 
 				cat("** -> Found",Key[,length(unique(Cat_Name))],"matching catalogs.",if(Key[,sum(K_calc)]) paste0("(",Key[,sum(K_calc)]," need extending)\n") else "\n")
 				rm(Key)
+
 			} else {
 				rm(CList)
 				cat("** -> No matching catalog found.\n")
@@ -279,6 +280,9 @@ prepareIntervals <- function(InputList,C.Path=NULL,asDT=TRUE,simpleNames=TRUE,nc
 		} else {
 			cat("** No TD catalogs to check.\n")
 		}
+
+        # browser()
+        # TODO: fix Calc.* from catalogs
 
 
 		if(IntExt[,any(!(Cat.exists))]){
@@ -303,8 +307,16 @@ prepareIntervals <- function(InputList,C.Path=NULL,asDT=TRUE,simpleNames=TRUE,nc
 			CatList[,Zeile := seq.int(.N)]
 			setkey(CatList,Name)
 
-			if(!is.null(cl) && IntExt[,sum(!Cat.exists)] >= length(cl)){
-				# t1p <- Sys.time()
+            if (sum(Tol[1, ]) == 0) {
+                # zero tolerance
+                IntExt[!(Cat.exists), Cat.calc := {
+                    out <- rep(TRUE, .N)
+                    # check MaxFetch
+                    out[which.max(MaxFetch)] <- FALSE
+                    out
+                }, by = .(SensorHeight, Sensor_Swustar, L, Zo, sUu, sVu, kv, A, alpha)]
+            } else if(!is.null(cl) && IntExt[,sum(!Cat.exists)] >= length(cl)){
+                # TODO: fix parallel
 				# split index
                 ind <- parallel::clusterSplit(cl, seq.int(IntExt[,sum(!Cat.exists)]))
 				Key <- rbindlist(parallel::clusterApply(cl,
@@ -325,172 +337,148 @@ prepareIntervals <- function(InputList,C.Path=NULL,asDT=TRUE,simpleNames=TRUE,nc
 					)]),.CrossMatchWrapper,Cat_list=CatList,Tol_=Tol))
 				# t2p <- Sys.time()
 			} else {
-	      # not parallel
-	      
-	      # t1s <- Sys.time()
+                # serial
 
-	      # check matching heights etc.
-	      CheckPart1 <- IntExt[!(Cat.exists), .(rn, SensorHeight, Sensor_Swustar, MaxFetch,
-	        sWu_Upper = Sensor_Swustar*TolUpper[,"SigmaW/Ustar"],
-	        sWu_Lower = Sensor_Swustar*TolLower[,"SigmaW/Ustar"],
-	        SensorHeight_Upper = SensorHeight*TolUpper[,"Sensor Height"],
-	        SensorHeight_Lower = SensorHeight*TolLower[,"Sensor Height"]
-	        )][,{
-	        CatList[
-	          Cat_MaxFetch >= MaxFetch[1] &
-	          Cat_Sensor_Swustar <= sWu_Upper[1] &
-	          Cat_Sensor_Swustar >= sWu_Lower[1] &
-	          Cat_ZSens <= SensorHeight_Upper[1] &
-	          Cat_ZSens >= SensorHeight_Lower[1],{
-	          .(
-	            SensorHeight = SensorHeight[1], 
-	            Sensor_Swustar = Sensor_Swustar[1], 
-	            MaxFetch = MaxFetch[1], 
-	            Zeile = Zeile)
-	        }]    
-	      }, keyby = .(ssm = paste(SensorHeight, Sensor_Swustar, MaxFetch, sep = "/"))]
+                # TODO: 
+                #   - test no matches
 
-	      # check matching MOST
-	      Key <- IntExt[!(Cat.exists),.(rn,Cat.Name,SensorHeight,L,Zo,sUu,sVu,Sensor_Swustar,MaxFetch,Sensor,N0,
-	        sUu_Upper = sUu*TolUpper[,"SigmaU/Ustar"],
-	        sUu_Lower = sUu*TolLower[,"SigmaU/Ustar"],
-	        sVu_Upper = sVu*TolUpper[,"SigmaV/Ustar"],
-	        sVu_Lower = sVu*TolLower[,"SigmaV/Ustar"],
-	        Zo_Upper = Zo*TolUpper[,"Zo"],
-	        Zo_Lower = Zo*TolLower[,"Zo"],
-	        L_Upper = abs(L)*TolUpper[,"L"],
-	        L_Lower = abs(L)*TolLower[,"L"]
-	        )][,{
+                # add row index (zeile)
+                IntExt[, row := .I]
 
-	        ind <- paste(SensorHeight, Sensor_Swustar, MaxFetch, sep = "/")
-	        Sub <- CheckPart1[.(ind), .(Zeile, ssm)]
-	        ind2 <- Sub[,unique(Zeile)]
+                # get calc before for number printing
+                n_before <- IntExt[, sum(Cat.calc)]
 
-	        out <- CatList[match(ind2,Zeile)][
-	          Cat_Su_Ustar <= sUu_Upper[1] &
-	          Cat_Su_Ustar >= sUu_Lower[1] &
-	          Cat_Sv_Ustar <= sVu_Upper[1] &
-	          Cat_Sv_Ustar >= sVu_Lower[1] &
-	          Cat_Zo <= Zo_Upper[1] &
-	          Cat_Zo >= Zo_Lower[1] &
-	          sign(Cat_L) == sign(L[1]) &
-	          abs(Cat_L) <= L_Upper[1] &
-	          abs(Cat_L) >= L_Lower[1],
-	            merge(.SD, Sub, by = "Zeile")]
+                Key <- IntExt[!(Cat.exists), {
+                    # check match within Tolerances & MaxFetch
+                    CatList[
+                        Cat_MaxFetch <= .BY[['MaxFetch']]
+                    ][
+                        Cat_ZSens >= .BY[['z_lo']] & Cat_ZSens <= .BY[['z_up']]
+                    ][
+                        Cat_Sensor_Swustar >= .BY[['sw_lo']] & Cat_Sensor_Swustar <= .BY[['sw_up']]
+                    ][
+                        Cat_L >= .BY[['l_lo']] & Cat_L <= .BY[['l_up']]
+                    ][
+                        Cat_Zo >= .BY[['z0_lo']] & Cat_Zo <= .BY[['z0_up']]
+                    ][
+                        Cat_Su_Ustar >= .BY[['sUu_lo']] & Cat_Su_Ustar <= .BY[['sUu_up']]
+                    ][
+                        Cat_Sv_Ustar >= .BY[['sVu_lo']] & Cat_Sv_Ustar <= .BY[['sVu_up']]
+                    ][, .(
+                        row = row,
+                        cat_name = Cat.Name,
+                        zeilen = list(Zeile), 
+                        N = .N,
+                        devZSens = abs(Cat_ZSens / SensorHeight[1] - 1) / Tol[1], 
+                        devL = abs(Cat_L / L[1] - 1) / Tol[2], 
+                        devZo = abs(Cat_Zo / Zo[1] - 1) / Tol[3], 
+                        devsUu = abs(Cat_Su_Ustar / sUu[1] - 1) / Tol[4], 
+                        devsVu = abs(Cat_Sv_Ustar / sVu[1] - 1) / Tol[5], 
+                        devSensor_Swustar = abs(Cat_Sensor_Swustar / Sensor_Swustar[1] - 1) / Tol[6], 
+                        devN0 = Cat_N0 - .BY[['N0']]
+                    )]
+                }, by = 
+                    .(
+                        kv, A, alpha, MaxFetch, N0,
+                        z_lo = SensorHeight * TolLower[, 'Sensor Height'],
+                        z_up = SensorHeight * TolUpper[, 'Sensor Height'],
+                        l_lo = ifelse(L < 0, L * TolUpper[, 'L'], L * TolLower[, 'L']),
+                        l_up = ifelse(L < 0, L * TolLower[, 'L'], L * TolUpper[, 'L']),
+                        z0_lo = Zo * TolLower[, 'Zo'],
+                        z0_up = Zo * TolUpper[, 'Zo'],
+                        sw_lo = Sensor_Swustar * TolLower[, 'SigmaW/Ustar'],
+                        sw_up = Sensor_Swustar * TolUpper[, 'SigmaW/Ustar'],
+                        sUu_lo = sUu * TolLower[, 'SigmaU/Ustar'],
+                        sUu_up = sUu * TolUpper[, 'SigmaU/Ustar'],
+                        sVu_lo = sVu * TolLower[, 'SigmaV/Ustar'],
+                        sVu_up = sVu * TolUpper[, 'SigmaV/Ustar']
+                    )
+                ][
+                    devZSens <= 1.0000001 &
+                    devL <= 1.0000001 &
+                    devZo <= 1.0000001 &
+                    devsUu <= 1.0000001 &
+                    devsVu <= 1.0000001 &
+                    devSensor_Swustar <= 1.0000001, sumDev := devZSens + devL + devZo + devsUu + devsVu + devSensor_Swustar
+                ]
 
-	        c(
-	          .SD[out[,match(ssm, ind)],],
-	          out
-	          )
-	      }, by = rn][,":="(
-		        devZSens = abs(Cat_ZSens/SensorHeight - 1)/Tol[1],
-		        devL = abs(Cat_L/L - 1)/Tol[2],
-		        devZo = abs(Cat_Zo/Zo - 1)/Tol[3],
-		        devsUu = abs(Cat_Su_Ustar/sUu - 1)/Tol[4],
-		        devsVu = abs(Cat_Sv_Ustar/sVu - 1)/Tol[5],
-		        devSensor_Swustar = abs(Cat_Sensor_Swustar/Sensor_Swustar - 1)/Tol[6],
-		        devN0 = Cat_N0 - N0)][
-	        devZSens <= 1.0000001 &
-	        devL <= 1.0000001 &
-	        devZo <= 1.0000001 &
-	        devsUu <= 1.0000001 &
-	        devsVu <= 1.0000001 &
-	        devSensor_Swustar <= 1.0000001,sumDev:=devZSens+devL+devZo+devsUu+devsVu+devSensor_Swustar
-	        ]
+                # check cross-matches
+                if (nrow(Key) == 0) {
+                    cat("** No cross-matching rows...\n")
+                    IntExt[!(Cat.exists), Cat.calc := TRUE]
+                } else {
 
-	      # t2s <- Sys.time()
-	      rm(CheckPart1)
-	      #   t2s - t1s
+                    # apply bias to catalogs with fewer trajectories, and make exact N0 matches (just) preferable
+                    Key[devN0 > 0, sumDev := sumDev + 0.001]
+                    Key[devN0 < 0, sumDev := sumDev + 6 + log(-devN0)]
 
-	        
+                    # check for most (& best) matching
+                    cat("** Checking best cross-matching catalogs...\n")
+
+                    # sort descending
+                    setorder(Key, -N, sumDev)
+
+                    # loop should be sorted => test!!!
+                    Key[, {
+                        # get first row (sorted!?)
+                        first_row <- row[1]
+                        # check if not yet calculated
+                        if (IntExt[row == first_row, Cat.calc]) {
+                            # assign all zeilen except first_row to FALSE and fix catalog names
+                            IntExt[row %in% zeilen[[1]] & row != first_row, 
+                                c('Cat.calc', 'Cat.Name') := .(FALSE, .BY[['cat_name']])]
+                        }
+                        NULL
+                    }, by = cat_name]
+
+                    cat("** Done. --> Found", n_before - IntExt[, sum(Cat.calc)], "matches.\n\n")
+                }
+
+                rm(Key)
+
+                # remove helper row
+                IntExt[, row := NULL]
 
 			}
 
-			if(nrow(Key)==IntExt[,sum(!Cat.exists)]){
-				cat("** No cross-matching rows...\n")
-				IntExt[!(Cat.exists),Cat.calc := TRUE]
-				# assign Calc.values
-				IntExt[,":="(
-					Calc.ZSens=SensorHeight,
-					Calc.L=L,
-					Calc.Zo=Zo,
-					Calc.Su_Ustar=sUu,
-					Calc.Sv_Ustar=sVu,
-					Calc.Sensor_Swustar=round(calcsigmaW(1,SensorHeight/L,bw),3),
-					Calc.bw=bw,
-					Calc.MaxFetch=MaxFetch,
-					Calc.C0 = C0,
-					Calc.N0 = N0,
-					Calc.Ustar = Ustar,
-					Calc.alpha = alpha,
-					Calc.A = A,
-					Calc.kv = kv
-					)]
-			} else {
-				# note to myself: apply biases in sumDev someday
-				Key[devN0>0,sumDev:=sumDev+0.001]
-				Key[devN0<0,sumDev:=sumDev+6+log(-devN0)]
+            rm(CatList)
 
-				# check for most (& best) matching
-				cat("** Checking best cross-matching catalogs...\n")
-				setorder(Key[,N:=.N,by=Name],-N, sumDev)
-				keys <- Key[,unique(Name)]
-				setkey(Key,Sensor,rn)
-
-				CatNames <- gsub("^Cat_","Calc.",grep("^Cat_",names(CatList)[2:10],value=TRUE))
-				nk <- length(keys)
-				nk10 <- max(round(nk/10), 1)
-				cat(paste0(sprintf("\r** %3.0f%% [",0),paste(rep(c(">>","  "),c(0,10 - 0)),collapse=""),"]"))
-				for(i in seq_along(keys)){
-					if(i%%nk10 == 0){
-						np <- i*100/nk
-						np10 <- round(np/10)
-						cat(paste0(sprintf("\r** %3.0f%% [",np),paste(rep(c(">>","  "),c(np10,10 - np10)),collapse=""),"]"))
-					}
-					k <- keys[i]
-					if(k != ""){
-						k1 <- Key[Name %chin% k, .(Sensor, rn, Cat.Name)]
-						IntExt[k1,c("Cat.Name","Calc.N0","Calc.Ustar","Calc.alpha","Calc.A","Calc.kv",CatNames) := {
-							c(list(k,max(N0),Ustar,alpha,A,kv),CatList[.(k),names(CatList)[2:10],with=FALSE][which.max(Cat_MaxFetch)])
-						}]
-						# set inheriting rows with different Cat.Name
-						IntExt[k1[!(Cat.Name %chin% k)],Cat.calc := FALSE]
-						# set dominant row + inheriting rows with identical Cat.Name
-						IntExt[(Cat.Name %chin% k),Cat.calc := {
-							out <- rep(FALSE,.N)
-							out[which.max(MaxFetch)] <- TRUE
-							out
-						}]
-						### 'delete' rows in Key
-						# keys
-						keys[keys %chin% k1[,Cat.Name]] <- ""
-						# k1 rn/Sensor
-						Key[k1,Name := ""]
-						# rows depending on k1 rows
-						Key[Name %chin% k1[,Cat.Name],Name := ""]
-					}
-				}
-				cat("\n** done.\n")
-			}
-
-			rm(Key,CatList)
 		}
+
+        # assign Calc.values
+        IntExt[!(Cat.exists), ':='(
+            Calc.ZSens = SensorHeight[Cat.calc], 
+            Calc.L = L[Cat.calc], 
+            Calc.Zo = Zo[Cat.calc], 
+            Calc.Su_Ustar = sUu[Cat.calc], 
+            Calc.Sv_Ustar = sVu[Cat.calc], 
+            Calc.Sensor_Swustar = round(calcsigmaW(1, SensorHeight[Cat.calc] / L[Cat.calc], bw[Cat.calc]), 3), 
+            Calc.bw = bw[Cat.calc], 
+            Calc.MaxFetch = MaxFetch[Cat.calc], 
+            Calc.C0 = C0[Cat.calc], 
+            Calc.N0 = N0[Cat.calc], 
+            Calc.Ustar = Ustar[Cat.calc], 
+            Calc.alpha = alpha[Cat.calc], 
+            Calc.A = A[Cat.calc], 
+            Calc.kv = kv[Cat.calc]
+        ), by = Cat.Name]
+
 	} else {
 		# TDread == FALSE: 
-		IntExt[,":="(
-			Calc.ZSens=SensorHeight,
-			Calc.L=L,
-			Calc.Zo=Zo,
-			Calc.Su_Ustar=sUu,
-			Calc.Sv_Ustar=sVu,
-			Calc.Sensor_Swustar=round(calcsigmaW(1,SensorHeight/L,bw),3),
-			Calc.bw=bw,
-			Calc.MaxFetch=MaxFetch,
-			Calc.C0 = C0,
-			Calc.N0 = N0,
-			Calc.Ustar = Ustar,
-			Calc.alpha = alpha,
-			Calc.A = A,
+		IntExt[, ":="(
+			Calc.ZSens = SensorHeight, 
+			Calc.L = L, 
+			Calc.Zo = Zo, 
+			Calc.Su_Ustar = sUu, 
+			Calc.Sv_Ustar = sVu, 
+			Calc.Sensor_Swustar = round(calcsigmaW(1, SensorHeight / L, bw), 3), 
+			Calc.bw = bw, 
+			Calc.MaxFetch = MaxFetch, 
+			Calc.C0 = C0, 
+			Calc.N0 = N0, 
+			Calc.Ustar = Ustar, 
+			Calc.alpha = alpha, 
+			Calc.A = A, 
 			Calc.kv = kv
 			)]
 	}	

@@ -304,7 +304,7 @@ prepareIntervals <- function(InputList,C.Path=NULL,asDT=TRUE,simpleNames=TRUE,nc
 				Cat_rn = rn,
 				Cat_Sensor = Sensor
 				)])
-			CatList[,Zeile := seq.int(.N)]
+			CatList[, Zeile := .I]
 			setkey(CatList,Name)
 
             if (sum(Tol[1, ]) <= 1e-5) {

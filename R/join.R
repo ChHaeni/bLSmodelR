@@ -94,6 +94,7 @@ join.bLSresult <- function(..., asDT = TRUE, keep.rn = FALSE){
         warning("ignored differing tolerance parameters!")
     }
     MInput$Interval <- as.data.frame(rbindlist(lapply(InLists,"[[","Interval"),fill = TRUE))
+    class(MInput$Interval) <- c('Interval', 'data.frame')
     setattr(out,"ModelInput",MInput)
     ### CalcSteps
     setattr(out,"CalcSteps",rbindlist(lapply(allargs,attr,which="CalcSteps"),fill = TRUE))

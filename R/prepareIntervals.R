@@ -315,32 +315,8 @@ prepareIntervals <- function(InputList,C.Path=NULL,asDT=TRUE,simpleNames=TRUE,nc
                     out[which.max(MaxFetch)] <- FALSE
                     out
                 }, by = .(SensorHeight, Sensor_Swustar, L, Zo, sUu, sVu, kv, A, alpha)]
-            } else if(!is.null(cl) && IntExt[,sum(!Cat.exists)] >= length(cl)){
-                # TODO: fix parallel
-				# split index
-                ind <- parallel::clusterSplit(cl, seq.int(IntExt[,sum(!Cat.exists)]))
-				Key <- rbindlist(parallel::clusterApply(cl,
-                        lapply(ind, function(x, y)y[x, ], y = IntExt[!(Cat.exists), 
-                            .(rn, Cat.Name, SensorHeight, L, Zo, sUu, sVu, Sensor_Swustar, MaxFetch, Sensor, N0, 
-                                sUu_Upper = sUu*TolUpper[,"SigmaU/Ustar"],
-                                sUu_Lower = sUu*TolLower[,"SigmaU/Ustar"],
-                                sVu_Upper = sVu*TolUpper[,"SigmaV/Ustar"],
-                                sVu_Lower = sVu*TolLower[,"SigmaV/Ustar"],
-                                sWu_Upper = Sensor_Swustar*TolUpper[,"SigmaW/Ustar"],
-                                sWu_Lower = Sensor_Swustar*TolLower[,"SigmaW/Ustar"],
-                                Zo_Upper = Zo*TolUpper[,"Zo"],
-                                Zo_Lower = Zo*TolLower[,"Zo"],
-                                L_Upper = abs(L)*TolUpper[,"L"],
-                                L_Lower = abs(L)*TolLower[,"L"],
-                                SensorHeight_Upper = SensorHeight*TolUpper[,"Sensor Height"],
-                                SensorHeight_Lower = SensorHeight*TolLower[,"Sensor Height"]
-					)]),.CrossMatchWrapper,Cat_list=CatList,Tol_=Tol))
-				# t2p <- Sys.time()
 			} else {
                 # serial
-
-                # TODO: 
-                #   - test no matches
 
                 # add row index (zeile)
                 IntExt[, row := .I]

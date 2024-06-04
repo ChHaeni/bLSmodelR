@@ -115,7 +115,7 @@ prepareIntervals <- function(InputList,C.Path=NULL,asDT=TRUE,simpleNames=TRUE,nc
 	TolLower <- 1 - Tol
 
 	# set to very low (because of dividing)
-	Tol[,which(Tol[,1:6] == 0)] <- 1E-3
+	Tol[,which(Tol[,1:6] == 0)] <- 1E-6
 
 
 	# create extended Cat_Name name
@@ -307,12 +307,12 @@ prepareIntervals <- function(InputList,C.Path=NULL,asDT=TRUE,simpleNames=TRUE,nc
 			CatList[,Zeile := seq.int(.N)]
 			setkey(CatList,Name)
 
-            if (sum(Tol[1, ]) == 0) {
+            if (sum(Tol[1, ]) <= 1e-5) {
                 # zero tolerance
                 IntExt[!(Cat.exists), Cat.calc := {
-                    out <- rep(TRUE, .N)
+                    out <- rep(FALSE, .N)
                     # check MaxFetch
-                    out[which.max(MaxFetch)] <- FALSE
+                    out[which.max(MaxFetch)] <- TRUE
                     out
                 }, by = .(SensorHeight, Sensor_Swustar, L, Zo, sUu, sVu, kv, A, alpha)]
 			} else {

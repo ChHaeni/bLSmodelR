@@ -123,6 +123,23 @@ prepareIntervals <- function(InputList,C.Path=NULL,asDT=TRUE,simpleNames=TRUE,nc
 		gsub("_$",sprintf("-%05.0f_%05.0f_%05.0f",.BY$sUu*1E4,.BY$sVu*1E4,.BY$Sensor_Swustar*1E4),createCatName(.SD))
 	},by=.(sUu,sVu,Sensor_Swustar)]
 
+    # prepare Calc.* columns
+    IntExt[, ":="(
+        Calc.ZSens = SensorHeight, 
+        Calc.L = L, 
+        Calc.Zo = Zo, 
+        Calc.Su_Ustar = sUu, 
+        Calc.Sv_Ustar = sVu, 
+        Calc.Sensor_Swustar = round(calcsigmaW(1, SensorHeight / L, bw), 3), 
+        Calc.bw = bw, 
+        Calc.MaxFetch = MaxFetch, 
+        Calc.C0 = C0, 
+        Calc.N0 = N0, 
+        Calc.Ustar = Ustar, 
+        Calc.alpha = alpha, 
+        Calc.A = A, 
+        Calc.kv = kv
+        )]
 
 	#### check existing Catalogs:
 	if(InputList[["Model"]][["TDread"]]){
@@ -158,120 +175,126 @@ prepareIntervals <- function(InputList,C.Path=NULL,asDT=TRUE,simpleNames=TRUE,nc
 		]
 		rm(CatList)
 
+        # add row index
+        IntExt[, row := .I]
+
 		if(nrow(CList) > 0){
 			# rename
 			setnames(CList,names(CList)[-1],paste0("Cat_",names(CList)[-1]))
 			# create Cat_Sensor_Swustar
 			CList[,Cat_Sensor_Swustar := round(calcsigmaW(1,Cat_ZSens/Cat_L,Cat_bw),3)]
 
-			if(!is.null(cl) && nrow(IntExt) >= length(cl)){
-				# t1p <- Sys.time()
-				# split index
-                ind <- parallel::clusterSplit(cl, seq.int(nrow(IntExt)))
-				Key <- rbindlist(parallel::clusterApply(cl, lapply(ind, function(x, y)y[x, ], y = IntExt[, c(.SD, .(
-					sUu_Upper = sUu*TolUpper[,"SigmaU/Ustar"],
-					sUu_Lower = sUu*TolLower[,"SigmaU/Ustar"],
-					sVu_Upper = sVu*TolUpper[,"SigmaV/Ustar"],
-					sVu_Lower = sVu*TolLower[,"SigmaV/Ustar"],
-					sWu_Upper = Sensor_Swustar*TolUpper[,"SigmaW/Ustar"],
-					sWu_Lower = Sensor_Swustar*TolLower[,"SigmaW/Ustar"],
-					Zo_Upper = Zo*TolUpper[,"Zo"],
-					Zo_Lower = Zo*TolLower[,"Zo"],
-					L_Upper = abs(L)*TolUpper[,"L"],
-					L_Lower = abs(L)*TolLower[,"L"],
-					SensorHeight_Upper = SensorHeight*TolUpper[,"Sensor Height"],
-					SensorHeight_Lower = SensorHeight*TolLower[,"Sensor Height"]
-					))]),.MatchWrapper,Cat_list=CList,Tol_=Tol))
-				# t2p <- Sys.time()
-			} else { # not parallel
-
-				# t1s <- Sys.time()
-
-				# check matching
-				Key <- IntExt[,c(.SD,.(
-					sUu_Upper = sUu*TolUpper[,"SigmaU/Ustar"],
-					sUu_Lower = sUu*TolLower[,"SigmaU/Ustar"],
-					sVu_Upper = sVu*TolUpper[,"SigmaV/Ustar"],
-					sVu_Lower = sVu*TolLower[,"SigmaV/Ustar"],
-					sWu_Upper = Sensor_Swustar*TolUpper[,"SigmaW/Ustar"],
-					sWu_Lower = Sensor_Swustar*TolLower[,"SigmaW/Ustar"],
-					Zo_Upper = Zo*TolUpper[,"Zo"],
-					Zo_Lower = Zo*TolLower[,"Zo"],
-					L_Upper = abs(L)*TolUpper[,"L"],
-					L_Lower = abs(L)*TolLower[,"L"],
-					SensorHeight_Upper = SensorHeight*TolUpper[,"Sensor Height"],
-					SensorHeight_Lower = SensorHeight*TolLower[,"Sensor Height"]
-					))][,{
-					CList[
-						abs(Cat_kv - .BY$kv) < 1E-2 &
-						abs(Cat_A - .BY$A) < 1E-2 &
-						abs(Cat_alpha - .BY$alpha) < 1E-3 &
-						Cat_MaxFetch >= .BY$MaxFetch &
-						Cat_ZSens <= SensorHeight_Upper &
-						Cat_ZSens >= SensorHeight_Lower &
-						sign(Cat_L) == sign(.BY$L) &
-						abs(Cat_L) <= L_Upper &
-						abs(Cat_L) >= L_Lower &
-						Cat_Zo <= Zo_Upper &
-						Cat_Zo >= Zo_Lower &
-						Cat_Su_Ustar <= sUu_Upper &
-						Cat_Su_Ustar >= sUu_Lower &
-						Cat_Sv_Ustar <= sVu_Upper &
-						Cat_Sv_Ustar >= sVu_Lower &
-						Cat_Sensor_Swustar <= sWu_Upper &
-						Cat_Sensor_Swustar >= sWu_Lower
-					,.SD]
-					},by = .(rn,Cat.Name,SensorHeight,L,Zo,sUu,sVu,Sensor_Swustar,MaxFetch,Sensor,N0,alpha,A,kv)][
-						,":="(
-						devZSens = abs(Cat_ZSens/SensorHeight - 1)/Tol[1],
-						devL = abs(Cat_L/L - 1)/Tol[2],
-						devZo = abs(Cat_Zo/Zo - 1)/Tol[3],
-						devsUu = abs(Cat_Su_Ustar/sUu - 1)/Tol[4],
-						devsVu = abs(Cat_Sv_Ustar/sVu - 1)/Tol[5],
-						devSensor_Swustar = abs(Cat_Sensor_Swustar/Sensor_Swustar - 1)/Tol[6],
-						devN0 = Cat_N0 - N0
-						)
-					][
-						devZSens <= 1.0000001 &
-						devL <= 1.0000001 &
-						devZo <= 1.0000001 &
-						devsUu <= 1.0000001 &
-						devsVu <= 1.0000001 &
-						devSensor_Swustar <= 1.0000001,sumDev:=devZSens+devL+devZo+devsUu+devsVu+devSensor_Swustar]
-
-				# t2s <- Sys.time()
-
-			} # end if(parl)
+            # check matching catalogs 
+            Key <- IntExt[, {
+                # check match within Tolerances & MaxFetch
+                CList[
+                    Cat_MaxFetch >= .BY[['MaxFetch']]
+                ][
+                    Cat_ZSens >= .BY[['z_lo']] & Cat_ZSens <= .BY[['z_up']]
+                ][
+                    Cat_Sensor_Swustar >= .BY[['sw_lo']] & Cat_Sensor_Swustar <= .BY[['sw_up']]
+                ][
+                    Cat_L >= .BY[['l_lo']] & Cat_L <= .BY[['l_up']]
+                ][
+                    Cat_Zo >= .BY[['z0_lo']] & Cat_Zo <= .BY[['z0_up']]
+                ][
+                    Cat_Su_Ustar >= .BY[['sUu_lo']] & Cat_Su_Ustar <= .BY[['sUu_up']]
+                ][
+                    Cat_Sv_Ustar >= .BY[['sVu_lo']] & Cat_Sv_Ustar <= .BY[['sVu_up']]
+                ][, .(
+                    row = row,
+                    cat_name = Name,
+                    cat_n0 = Cat_N0,
+                    Cat_ZSens = Cat_ZSens, 
+                    Cat_L = Cat_L,
+                    Cat_Zo = Cat_Zo,
+                    Cat_Su_Ustar = Cat_Su_Ustar,
+                    Cat_Sv_Ustar = Cat_Sv_Ustar,
+                    Cat_Sensor_Swustar = Cat_Sensor_Swustar,
+                    Cat_bw = Cat_bw,
+                    Cat_MaxFetch = Cat_MaxFetch,
+                    Cat_C0 = Cat_C0,
+                    Cat_alpha = Cat_alpha,
+                    Cat_A = Cat_A,
+                    Cat_kv = Cat_kv,
+                    devZSens = abs(Cat_ZSens / SensorHeight[1] - 1) / Tol[1], 
+                    devL = abs(Cat_L / L[1] - 1) / Tol[2], 
+                    devZo = abs(Cat_Zo / Zo[1] - 1) / Tol[3], 
+                    devsUu = abs(Cat_Su_Ustar / sUu[1] - 1) / Tol[4], 
+                    devsVu = abs(Cat_Sv_Ustar / sVu[1] - 1) / Tol[5], 
+                    devSensor_Swustar = abs(Cat_Sensor_Swustar / Sensor_Swustar[1] - 1) / Tol[6], 
+                    devN0 = Cat_N0 - .BY[['N0']]
+                )]
+            }, by = 
+                .(
+                    kv, A, alpha, MaxFetch, N0,
+                    z_lo = SensorHeight * TolLower[, 'Sensor Height'],
+                    z_up = SensorHeight * TolUpper[, 'Sensor Height'],
+                    l_lo = ifelse(L < 0, L * TolUpper[, 'L'], L * TolLower[, 'L']),
+                    l_up = ifelse(L < 0, L * TolLower[, 'L'], L * TolUpper[, 'L']),
+                    z0_lo = Zo * TolLower[, 'Zo'],
+                    z0_up = Zo * TolUpper[, 'Zo'],
+                    sw_lo = Sensor_Swustar * TolLower[, 'SigmaW/Ustar'],
+                    sw_up = Sensor_Swustar * TolUpper[, 'SigmaW/Ustar'],
+                    sUu_lo = sUu * TolLower[, 'SigmaU/Ustar'],
+                    sUu_up = sUu * TolUpper[, 'SigmaU/Ustar'],
+                    sVu_lo = sVu * TolLower[, 'SigmaV/Ustar'],
+                    sVu_up = sVu * TolUpper[, 'SigmaV/Ustar']
+                )
+            ][
+                devZSens <= 1.0000001 &
+                devL <= 1.0000001 &
+                devZo <= 1.0000001 &
+                devsUu <= 1.0000001 &
+                devsVu <= 1.0000001 &
+                devSensor_Swustar <= 1.0000001, sumDev := devZSens + devL + devZo + devsUu + devsVu + devSensor_Swustar
+            ]
 
 			if(nrow(Key) > 0){
-				# note to myself: apply biases in sumDev someday
-				Key[devN0>0,sumDev:=sumDev+0.001]
-				Key[devN0<0,sumDev:=sumDev+6+log(-devN0)]
-				
-				# get best matches
-				Key <- Key[,.(Cat_Name=Name[which.min(sumDev)],Cat_N0=Cat_N0[which.min(sumDev)],R_N0=N0[which.min(sumDev)]
-					,R_Name=gsub("-[0-9]{5,}_[0-9]{5,}_[0-9]{5,}$","",Cat.Name[which.min(sumDev)])),by=.(R_Sensor=Sensor,R_rn=rn)]
 
-				# check max N0 per Catalog & define Sensor/rn to calculate
-				setkey(CList,Name)
-				Key[,c(names(CList)[-1],"K_exists","K_calc","K_N0") := {
-					cbind(
-						CList[.BY,-1]
-						,TRUE
-						,c(CList[.BY,Cat_N0] < max(R_N0),rep(FALSE,.N-1))
-						,max(R_N0)
-					)},by = Cat_Name]
-				setkey(Key,R_Sensor,R_rn)	
+                # add for cat
+                IntExt[, Cat.extend := FALSE]
+
+				# note to myself: apply biases in sumDev someday (see below for explanation)
+				Key[devN0 > 0, sumDev := sumDev + 0.001]
+				Key[devN0 < 0, sumDev := sumDev + 6 + log(-devN0)]
+
+                # get best match
+                Key[, {
+                    # which min dev
+                    ind <- which.min(sumDev)
+                    # assign catalog name & set cat.exists & cat.calc
+                    IntExt[row == .BY[['row']], ':='(
+                            Cat.exists = TRUE,
+                            Cat.calc = FALSE, 
+                            Cat.Name = cat_name[ind],
+                            Cat.extend = cat_n0[ind] < N0,
+                            Calc.ZSens = Cat_ZSens[ind], 
+                            Calc.L = Cat_L[ind],
+                            Calc.Zo = Cat_Zo[ind],
+                            Calc.Su_Ustar = Cat_Su_Ustar[ind],
+                            Calc.Sv_Ustar = Cat_Sv_Ustar[ind],
+                            Calc.Sensor_Swustar = Cat_Sensor_Swustar[ind],
+                            Calc.bw = Cat_bw[ind],
+                            Calc.MaxFetch = Cat_MaxFetch[ind],
+                            Calc.C0 = Cat_C0[ind],
+                            Calc.alpha = Cat_alpha[ind],
+                            Calc.A = Cat_A[ind],
+                            Calc.kv = Cat_kv[ind]
+                        )]
+                    NULL
+                }, by = row]
 
 				rm(CList)
 
-				# merge with IntExt
-				IntExt[Key,c(gsub("^Cat_","Calc.",grep("^Cat_",names(Key),value=TRUE)[-(1:2)]),"Cat.Name","Cat.exists","Cat.calc","Calc.N0") := {
-					c(mget(grep("^Cat_",names(Key),value=TRUE)[-(1:2)]),list(Cat_Name,K_exists,K_calc,K_N0))
-				}]
+				cat("** -> Found", IntExt[, sum(Cat.exists)], "matching catalogs.",
+                    if (IntExt[, any(Cat.extend)]) paste0("(", IntExt[, sum(Cat.extend)], 
+                        " need extending)\n") else "\n")
 
-				cat("** -> Found",Key[,length(unique(Cat_Name))],"matching catalogs.",if(Key[,sum(K_calc)]) paste0("(",Key[,sum(K_calc)]," need extending)\n") else "\n")
 				rm(Key)
+
+                # remove again
+                IntExt[, Cat.extend := NULL]
 
 			} else {
 				rm(CList)
@@ -280,10 +303,6 @@ prepareIntervals <- function(InputList,C.Path=NULL,asDT=TRUE,simpleNames=TRUE,nc
 		} else {
 			cat("** No TD catalogs to check.\n")
 		}
-
-        # browser()
-        # TODO: fix Calc.* from catalogs
-
 
 		if(IntExt[,any(!(Cat.exists))]){
 			cat("* Checking for cross-matches in supplied intervals...\n")
@@ -317,9 +336,6 @@ prepareIntervals <- function(InputList,C.Path=NULL,asDT=TRUE,simpleNames=TRUE,nc
                 }, by = .(SensorHeight, Sensor_Swustar, L, Zo, sUu, sVu, kv, A, alpha)]
 			} else {
                 # serial
-
-                # add row index (zeile)
-                IntExt[, row := .I]
 
                 # get calc before for number printing
                 n_before <- IntExt[, sum(Cat.calc)]
@@ -412,14 +428,14 @@ prepareIntervals <- function(InputList,C.Path=NULL,asDT=TRUE,simpleNames=TRUE,nc
 
                 rm(Key)
 
-                # remove helper row
-                IntExt[, row := NULL]
-
 			}
 
             rm(CatList)
 
 		}
+
+        # remove helper row
+        IntExt[, row := NULL]
 
         # assign Calc.values
         IntExt[!(Cat.exists), ':='(
@@ -439,24 +455,6 @@ prepareIntervals <- function(InputList,C.Path=NULL,asDT=TRUE,simpleNames=TRUE,nc
             Calc.kv = kv[Cat.calc]
         ), by = Cat.Name]
 
-	} else {
-		# TDread == FALSE: 
-		IntExt[, ":="(
-			Calc.ZSens = SensorHeight, 
-			Calc.L = L, 
-			Calc.Zo = Zo, 
-			Calc.Su_Ustar = sUu, 
-			Calc.Sv_Ustar = sVu, 
-			Calc.Sensor_Swustar = round(calcsigmaW(1, SensorHeight / L, bw), 3), 
-			Calc.bw = bw, 
-			Calc.MaxFetch = MaxFetch, 
-			Calc.C0 = C0, 
-			Calc.N0 = N0, 
-			Calc.Ustar = Ustar, 
-			Calc.alpha = alpha, 
-			Calc.A = A, 
-			Calc.kv = kv
-			)]
 	}	
 	cat("Finishing preparation...\n")
 

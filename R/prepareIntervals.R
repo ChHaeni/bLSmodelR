@@ -178,10 +178,6 @@ prepareIntervals <- function(InputList,C.Path=NULL,asDT=TRUE,simpleNames=TRUE,nc
         # add row index
         IntExt[, row := .I]
 
-        cat('\n~~~~~~~~~~~~~~~~~~\n')
-        data.table::getDTthreads(TRUE)
-        cat('\n~~~~~~~~~~~~~~~~~~\n\n')
-
 		if(nrow(CList) > 0){
 			# rename
 			setnames(CList,names(CList)[-1],paste0("Cat_",names(CList)[-1]))
@@ -189,9 +185,8 @@ prepareIntervals <- function(InputList,C.Path=NULL,asDT=TRUE,simpleNames=TRUE,nc
 			CList[,Cat_Sensor_Swustar := round(calcsigmaW(1,Cat_ZSens/Cat_L,Cat_bw),3)]
 
             # check matching catalogs 
-            cat('=== check matching catalogs:\n')
             Key <- IntExt[, {
-                cat('\r\r', .GRP, '/', .NGRP)
+                cat('\r\r** check grouped intervals:', .GRP, '/', .NGRP)
                 # check match within Tolerances & MaxFetch
                 CList[
                     Cat_MaxFetch >= .BY[['MaxFetch']]
@@ -208,7 +203,8 @@ prepareIntervals <- function(InputList,C.Path=NULL,asDT=TRUE,simpleNames=TRUE,nc
                 ][
                     Cat_Sv_Ustar >= .BY[['sVu_lo']] & Cat_Sv_Ustar <= .BY[['sVu_up']]
                 ][, .(
-                    row = row,
+                    index = paste(row, collapse = '-'),
+                    rows = list(row),
                     cat_name = Name,
                     cat_n0 = Cat_N0,
                     Cat_ZSens = Cat_ZSens, 
@@ -266,14 +262,13 @@ prepareIntervals <- function(InputList,C.Path=NULL,asDT=TRUE,simpleNames=TRUE,nc
 				Key[devN0 > 0, sumDev := sumDev + 0.001]
 				Key[devN0 < 0, sumDev := sumDev + 6 + log(-devN0)]
 
-                cat('=== get best matches:\n')
                 # get best match
                 Key[, {
-                    cat('\r\r', .GRP, '/', .NGRP)
+                    cat('\r\r** check best matches:', .GRP, '/', .NGRP)
                     # which min dev
                     ind <- which.min(sumDev)
                     # assign catalog name & set cat.exists & cat.calc
-                    IntExt[row == .BY[['row']], ':='(
+                    IntExt[row %in% rows[[ind]], ':='(
                             Cat.exists = TRUE,
                             Cat.calc = FALSE, 
                             Cat.Name = cat_name[ind],
@@ -292,7 +287,7 @@ prepareIntervals <- function(InputList,C.Path=NULL,asDT=TRUE,simpleNames=TRUE,nc
                             Calc.kv = Cat_kv[ind]
                         )]
                     NULL
-                }, by = row]
+                }, by = index]
                 cat('\n')
 
 				rm(CList)
@@ -331,9 +326,9 @@ prepareIntervals <- function(InputList,C.Path=NULL,asDT=TRUE,simpleNames=TRUE,nc
 				Cat_C0 = C0,
 				Cat_N0 = N0,
 				Cat_rn = rn,
-				Cat_Sensor = Sensor
+				Cat_Sensor = Sensor,
+                Zeile = row
 				)])
-			CatList[, Zeile := .I]
 			setkey(CatList,Name)
 
             if (sum(Tol[1, ]) <= 1e-5) {
@@ -350,12 +345,11 @@ prepareIntervals <- function(InputList,C.Path=NULL,asDT=TRUE,simpleNames=TRUE,nc
                 # get calc before for number printing
                 n_before <- IntExt[, sum(Cat.calc)]
 
-                cat('=== check cross-matching catalogs:\n')
                 Key <- IntExt[!(Cat.exists), {
-                    cat('\r\r', .GRP, '/', .NGRP)
+                    cat('\r\r** check grouped intervals:', .GRP, '/', .NGRP)
                     # check match within Tolerances & MaxFetch
                     CatList[
-                        Cat_MaxFetch <= .BY[['MaxFetch']]
+                        Cat_MaxFetch >= .BY[['MaxFetch']]
                     ][
                         Cat_ZSens >= .BY[['z_lo']] & Cat_ZSens <= .BY[['z_up']]
                     ][
@@ -368,19 +362,23 @@ prepareIntervals <- function(InputList,C.Path=NULL,asDT=TRUE,simpleNames=TRUE,nc
                         Cat_Su_Ustar >= .BY[['sUu_lo']] & Cat_Su_Ustar <= .BY[['sUu_up']]
                     ][
                         Cat_Sv_Ustar >= .BY[['sVu_lo']] & Cat_Sv_Ustar <= .BY[['sVu_up']]
-                    ][, .(
-                        row = row,
-                        cat_name = Cat.Name,
-                        zeilen = list(Zeile), 
-                        N = .N,
-                        devZSens = abs(Cat_ZSens / SensorHeight[1] - 1) / Tol[1], 
-                        devL = abs(Cat_L / L[1] - 1) / Tol[2], 
-                        devZo = abs(Cat_Zo / Zo[1] - 1) / Tol[3], 
-                        devsUu = abs(Cat_Su_Ustar / sUu[1] - 1) / Tol[4], 
-                        devsVu = abs(Cat_Sv_Ustar / sVu[1] - 1) / Tol[5], 
-                        devSensor_Swustar = abs(Cat_Sensor_Swustar / Sensor_Swustar[1] - 1) / Tol[6], 
-                        devN0 = Cat_N0 - .BY[['N0']]
-                    )]
+                    ][, {
+                        # row: -> identical intervals which can read the same catalog
+                        # Zeile: -> index for possible catalog rows for given row(s)
+                        .(
+                            index = paste(row, collapse = '-'),
+                            rows = list(row),
+                            cat_row = Zeile,
+                            cat_name = Name,
+                            devZSens = abs(Cat_ZSens / SensorHeight[1] - 1) / Tol[1], 
+                            devL = abs(Cat_L / L[1] - 1) / Tol[2], 
+                            devZo = abs(Cat_Zo / Zo[1] - 1) / Tol[3], 
+                            devsUu = abs(Cat_Su_Ustar / sUu[1] - 1) / Tol[4], 
+                            devsVu = abs(Cat_Sv_Ustar / sVu[1] - 1) / Tol[5], 
+                            devSensor_Swustar = abs(Cat_Sensor_Swustar / Sensor_Swustar[1] - 1) / Tol[6], 
+                            devN0 = Cat_N0 - .BY[['N0']]
+                        )
+                    }]
                 }, by = 
                     .(
                         kv, A, alpha, MaxFetch, N0,
@@ -413,33 +411,42 @@ prepareIntervals <- function(InputList,C.Path=NULL,asDT=TRUE,simpleNames=TRUE,nc
                     IntExt[!(Cat.exists), Cat.calc := TRUE]
                 } else {
 
+                    # get total N
+                    Key[, N := .N, by = cat_name]
+
                     # apply bias to catalogs with fewer trajectories, and make exact N0 matches (just) preferable
                     Key[devN0 > 0, sumDev := sumDev + 0.001]
                     Key[devN0 < 0, sumDev := sumDev + 6 + log(-devN0)]
 
-                    # check for most (& best) matching
-                    cat("** Checking best cross-matching intervals...\n")
-
                     # sort descending
                     setorder(Key, -N, sumDev)
 
-                    cat('=== get best cross-matches:\n')
-                    # loop should be sorted => test!!!
+                    # add helper column (don't count already checked...)
+                    IntExt[, cat_calc := Cat.exists]
+
+                    # loop is sorted (see ?data.table -> by)
                     Key[, {
-                        cat('\r\r', .GRP, '/', .NGRP)
-                        # get first row (sorted!?)
-                        first_row <- row[1]
+                        cat('\r\r** check best cross-matches:', .GRP, '/', .NGRP)
                         # check if not yet calculated
-                        if (IntExt[row == first_row, Cat.calc]) {
-                            # assign all zeilen except first_row to FALSE and fix catalog names
-                            IntExt[row %in% zeilen[[1]] & row != first_row, 
-                                c('Cat.calc', 'Cat.Name') := .(FALSE, .BY[['cat_name']])]
+                        if (IntExt[row %in% cat_row, any(!cat_calc)]) {
+                            # find first cat row not yet calculated
+                            first_row <- IntExt[row %in% cat_row & !cat_calc, row[1]]
+                            # indicate first column
+                            IntExt[row == first_row, cat_calc := TRUE]
+                            # assign all rows except first_row to FALSE and fix catalog names
+                            # only assign to not yet assigned rows
+                            IntExt[row %in% c(cat_row, rows[[1]]) & !cat_calc, 
+                                c('Cat.calc', 'Cat.Name') := .(FALSE, cat_name[1])]
                         }
                         NULL
-                    }, by = cat_name]
+                    }, by = index]
                     cat('\n')
 
-                    cat("** Done. --> Found", n_before - IntExt[, sum(Cat.calc)], "cross-matches.\n\n")
+                    # remove helper column
+                    IntExt[, cat_calc := NULL]
+
+                    cat("** Done. --> Found", n_before - IntExt[!(Cat.exists), sum(Cat.calc)], "cross-matches.\n\n")
+
                 }
 
                 rm(Key)
@@ -450,7 +457,7 @@ prepareIntervals <- function(InputList,C.Path=NULL,asDT=TRUE,simpleNames=TRUE,nc
 
 		}
 
-        # remove helper row
+        # remove helper index column
         IntExt[, row := NULL]
 
         # assign Calc.values

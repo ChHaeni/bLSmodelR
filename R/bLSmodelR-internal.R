@@ -46,7 +46,7 @@
 	return(cbind(x1/sd(x1),x2/sd(x2),x3/sd(x3)))
 }
 
-.CheckCatMatches <- function(cat_list, int_ext, tol, tol_lower, tol_upper){
+.CheckCatMatches <- function(int_ext, cat_list, tol, tol_lower, tol_upper){
     # rename
     setnames(cat_list, names(cat_list)[-1], paste0("Cat_", names(cat_list)[-1]))
     # create Cat_Sensor_Swustar
@@ -159,25 +159,113 @@
         }, by = index]
         cat('\n')
 
-        final_msg <- paste("** -> Found", int_ext[, sum(Cat.exists)], "matching catalogs.",
-            if (int_ext[, any(Cat.extend)]) paste0("(", int_ext[, sum(Cat.extend)], 
-                " need extending)\n") else "\n")
-
-        # remove again
-        int_ext[, Cat.extend := NULL]
-
-    } else {
-        final_msg <- paste("** -> No matching catalog found.\n")
     }
 
-    cat(final_msg)
-
-    return(final_msg)
+    invisible(int_ext)
 
 }
 
-.CheckCrossMatches <- function(){
+.CheckCrossMatches <- function(int_ext, cat_list, tol, tol_lower, tol_upper){
 
+                Key <- int_ext[!(Cat.exists), {
+                    cat('\r\r** check grouped intervals:', .GRP, '/', .NGRP)
+                    # check match within Tolerances & MaxFetch
+                    cat_list[
+                        Cat_MaxFetch >= .BY[['MaxFetch']]
+                    ][
+                        Cat_ZSens >= .BY[['z_lo']] & Cat_ZSens <= .BY[['z_up']]
+                    ][
+                        Cat_Sensor_Swustar >= .BY[['sw_lo']] & Cat_Sensor_Swustar <= .BY[['sw_up']]
+                    ][
+                        Cat_L >= .BY[['l_lo']] & Cat_L <= .BY[['l_up']]
+                    ][
+                        Cat_Zo >= .BY[['z0_lo']] & Cat_Zo <= .BY[['z0_up']]
+                    ][
+                        Cat_Su_Ustar >= .BY[['sUu_lo']] & Cat_Su_Ustar <= .BY[['sUu_up']]
+                    ][
+                        Cat_Sv_Ustar >= .BY[['sVu_lo']] & Cat_Sv_Ustar <= .BY[['sVu_up']]
+                    ][, {
+                        # row: -> identical intervals which can read the same catalog
+                        # Zeile: -> index for possible catalog rows for given row(s)
+                        .(
+                            index = paste(row, collapse = '-'),
+                            rows = list(row),
+                            cat_row = Zeile,
+                            cat_name = Name,
+                            devZSens = abs(Cat_ZSens / SensorHeight[1] - 1) / tol[1], 
+                            devL = abs(Cat_L / L[1] - 1) / tol[2], 
+                            devZo = abs(Cat_Zo / Zo[1] - 1) / tol[3], 
+                            devsUu = abs(Cat_Su_Ustar / sUu[1] - 1) / tol[4], 
+                            devsVu = abs(Cat_Sv_Ustar / sVu[1] - 1) / tol[5], 
+                            devSensor_Swustar = abs(Cat_Sensor_Swustar / Sensor_Swustar[1] - 1) / tol[6], 
+                            devN0 = Cat_N0 - .BY[['N0']]
+                        )
+                    }]
+                }, by = 
+                    .(
+                        kv, A, alpha, MaxFetch, N0,
+                        z_lo = SensorHeight * tol_lower[, 'Sensor Height'],
+                        z_up = SensorHeight * tol_upper[, 'Sensor Height'],
+                        l_lo = ifelse(L < 0, L * tol_upper[, 'L'], L * tol_lower[, 'L']),
+                        l_up = ifelse(L < 0, L * tol_lower[, 'L'], L * tol_upper[, 'L']),
+                        z0_lo = Zo * tol_lower[, 'Zo'],
+                        z0_up = Zo * tol_upper[, 'Zo'],
+                        sw_lo = Sensor_Swustar * tol_lower[, 'SigmaW/Ustar'],
+                        sw_up = Sensor_Swustar * tol_upper[, 'SigmaW/Ustar'],
+                        sUu_lo = sUu * tol_lower[, 'SigmaU/Ustar'],
+                        sUu_up = sUu * tol_upper[, 'SigmaU/Ustar'],
+                        sVu_lo = sVu * tol_lower[, 'SigmaV/Ustar'],
+                        sVu_up = sVu * tol_upper[, 'SigmaV/Ustar']
+                    )
+                ][
+                    devZSens <= 1.0000001 &
+                    devL <= 1.0000001 &
+                    devZo <= 1.0000001 &
+                    devsUu <= 1.0000001 &
+                    devsVu <= 1.0000001 &
+                    devSensor_Swustar <= 1.0000001, sumDev := devZSens + devL + devZo + devsUu + devsVu + devSensor_Swustar
+                ]
+                cat('\n')
+
+                # check cross-matches
+                if (nrow(Key) == 0) {
+                    int_ext[!(Cat.exists), Cat.calc := TRUE]
+                } else {
+
+                    # get total N
+                    Key[, N := .N, by = cat_name]
+
+                    # apply bias to catalogs with fewer trajectories, and make exact N0 matches (just) preferable
+                    Key[devN0 > 0, sumDev := sumDev + 0.001]
+                    Key[devN0 < 0, sumDev := sumDev + 6 + log(-devN0)]
+
+                    # sort descending
+                    setorder(Key, -N, sumDev)
+
+                    # add helper column (don't count already checked...)
+                    int_ext[, cat_calc := Cat.exists]
+
+                    # loop is sorted (see ?data.table -> by)
+                    Key[, {
+                        cat('\r\r** check best cross-matches:', .GRP, '/', .NGRP)
+                        # check if not yet calculated
+                        if (int_ext[row %in% cat_row, any(!cat_calc)]) {
+                            # find first cat row not yet calculated
+                            first_row <- int_ext[row %in% cat_row & !cat_calc, row[1]]
+                            # indicate first column
+                            int_ext[row == first_row, cat_calc := TRUE]
+                            # assign all rows except first_row to FALSE and fix catalog names
+                            # only assign to not yet assigned rows
+                            int_ext[row %in% c(cat_row, rows[[1]]) & !cat_calc, 
+                                c('Cat.calc', 'Cat.Name') := .(FALSE, cat_name[1])]
+                        }
+                        NULL
+                    }, by = index]
+                    cat('\n')
+
+                }
+
+                invisible(int_ext)
 }
 
 .MaxFetchWrapper <- function(Int_Ext, p_Sens, Input_List){

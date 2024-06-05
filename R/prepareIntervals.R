@@ -184,12 +184,14 @@ prepareIntervals <- function(InputList, C.Path = NULL, asDT = TRUE, simpleNames 
             # throttle idea taken from ?setDTthreads
             if (ncores > 1 && IntExt[, uniqueN(Cat.Name) > throttle * ncores]) {
                 # split by cat name
-                IntSplit <- lapply(IntExt[, unique(Cat.Name)], \(cn) IntExt[Cat.Name == cn, ])
+                IntSplit <- split(IntExt, by = 'Cat.Name')
                 # run load balanced
                 out <- .clusterApplyLB(cl, IntSplit, .CheckCatMatches, cat_list = CList,
                     tol = Tol, tol_lower = TolLower, tol_upper = TolUpper)
                 # rbind results
                 IntExt <- rbindlist(out, fill = TRUE)
+                # fix order
+                setorder(IntExt, row)
             } else {
                 .CheckCatMatches(IntExt, CList, Tol, TolLower, TolUpper)
             }
@@ -246,12 +248,14 @@ prepareIntervals <- function(InputList, C.Path = NULL, asDT = TRUE, simpleNames 
                 n_before <- IntExt[, sum(Cat.calc)]
                 if (ncores > 1 && IntExt[!(Cat.exists), uniqueN(Cat.Name) > throttle * ncores]) {
                     # split by cat name
-                    IntSplit <- lapply(IntExt[!(Cat.exists), unique(Cat.Name)], \(cn) IntExt[Cat.Name == cn, ])
+                    IntSplit <- split(IntExt[!(Cat.exists)], by = 'Cat.Name')
                     # run load balanced
                     out <- .clusterApplyLB(cl, IntSplit, .CheckCrossMatches, cat_list = CatList,
                         tol = Tol, tol_lower = TolLower, tol_upper = TolUpper)
                     # rbind results
                     IntExt <- rbindlist(out, fill = TRUE)
+                    # fix order
+                    setorder(IntExt, row)
                 } else {
                     .CheckCrossMatches(IntExt, CatList, Tol, TolLower, TolUpper)
                 }

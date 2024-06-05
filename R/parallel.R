@@ -53,7 +53,7 @@
 		if (progress) {
             cat('\r', paste(rep(' ', 40), collapse = ''), '\r')
             cat(paste0("\r[", paste0(rep(">", 20), collapse = ""), "] 100%\n"))
-            cat('<done>\n\n')
+            cat('<done>\n')
         }
         parallel:::checkForRemoteErrors(val)
     }

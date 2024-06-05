@@ -243,13 +243,21 @@ prepareIntervals <- function(InputList, C.Path = NULL, asDT = TRUE, simpleNames 
 			} else {
                 # get calc before for number printing
                 n_before <- IntExt[, sum(Cat.calc)]
-            # TODO: add parallelism
-                .CheckCrossMatches(IntExt, CatList, Tol, TolLower, TolUpper)
+                if (ncores > 1 && IntExt[!(Cat.exists), uniqueN(Cat.Name) > throttle * ncores]) {
+                    # split by cat name
+                    IntSplit <- lapply(IntExt[!(Cat.exists), unique(Cat.Name)], \(cn) IntExt[Cat.Name == cn, ])
+                    # run load balanced
+                    out <- .clusterApplyLB(cl, IntSplit, .CheckCrossMatches, cat_list = CatList,
+                        tol = Tol, tol_lower = TolLower, tol_upper = TolUpper)
+                    # rbind results
+                    IntExt <- rbindlist(out, fill = TRUE)
+                } else {
+                    .CheckCrossMatches(IntExt, CatList, Tol, TolLower, TolUpper)
+                }
                 # be verbose
                 if ('cat_calc' %in% names(IntExt)) {
                     # remove helper column
                     IntExt[, cat_calc := NULL]
-
                     cat("** Done. --> Found", n_before - IntExt[!(Cat.exists), sum(Cat.calc)], "cross-matches",
                         paste0("(",IntExt[!Cat.exists & Cat.calc, uniqueN(Cat.Name)], " catalogs)."),"\n\n")
                 } else {

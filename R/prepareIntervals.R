@@ -1,4 +1,5 @@
-prepareIntervals <- function(InputList,C.Path=NULL,asDT=TRUE,simpleNames=TRUE,ncores=1){
+prepareIntervals <- function(InputList, C.Path = NULL, asDT = TRUE, simpleNames = TRUE, 
+    ncores = 1, throttle = 4) {
 	cat("Preparing intervals for model run:\n")
 	# check NA in Interval data.frame:
 	whichNA <- as.logical(rowSums(is.na(InputList[["Interval"]][,1:13])))
@@ -179,15 +180,27 @@ prepareIntervals <- function(InputList,C.Path=NULL,asDT=TRUE,simpleNames=TRUE,nc
         IntExt[, row := .I]
 
 		if (nrow(CList) > 0) {
-            # TODO: add parallelism
-            .CheckCatMatches(IntExt, CList, Tol, TolLower, TolUpper)
+            # throttle idea taken from ?setDTthreads
+            if (ncores > 1 && IntExt[, uniqueN(Cat.Name) > throttle * ncores]) {
+                # split by cat name
+                IntSplit <- lapply(IntExt[, unique(Cat.Name)], \(cn) IntExt[Cat.Name == cn, ])
+                # run load balanced
+                out <- .clusterApplyLB(cl, IntSplit, .CheckCatMatches, cat_list = CList,
+                    tol = Tol, tol_lower = TolLower, tol_upper = TolUpper)
+                # rbind results
+                IntExt <- rbindlist(out, fill = TRUE)
+            } else {
+                .CheckCatMatches(IntExt, CList, Tol, TolLower, TolUpper)
+            }
             # be verbose
             if ('Cat.extend' %in% names(IntExt)) {
+                # fix any NA due to parallelism
+                IntExt[is.na(Cat.extend), Cat.extend := FALSE]
+                # be verbose
                 cat("** -> Found", IntExt[, sum(Cat.exists)], "rows matching", 
                     IntExt[(Cat.exists), uniqueN(Cat.Name)], "catalogs.",
                     if (IntExt[, any(Cat.extend)]) paste0("(", IntExt[(Cat.extend), uniqueN(Cat.Name)], 
                         " need extending)\n") else "\n")
-
                 # remove again
                 IntExt[, Cat.extend := NULL]
             } else {
@@ -230,6 +243,7 @@ prepareIntervals <- function(InputList,C.Path=NULL,asDT=TRUE,simpleNames=TRUE,nc
 			} else {
                 # get calc before for number printing
                 n_before <- IntExt[, sum(Cat.calc)]
+            # TODO: add parallelism
                 .CheckCrossMatches(IntExt, CatList, Tol, TolLower, TolUpper)
                 # be verbose
                 if ('cat_calc' %in% names(IntExt)) {

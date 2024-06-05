@@ -1,6 +1,6 @@
 runbLS <- function(ModelInput, Cat.Path = NULL, ncores = NULL, TDonly = NULL, 
     asDT = TRUE, simpleNames = asDT, memory_limit = NULL, show_progress = TRUE,
-    variables = 'CE') {
+    variables = 'CE', skipCrossCheck = FALSE) {
 
 	cat("\n**********************************************\n")
     cat("                MAIN MODEL RUN\n")
@@ -125,7 +125,8 @@ runbLS <- function(ModelInput, Cat.Path = NULL, ncores = NULL, TDonly = NULL,
 
 	ModelInput[["Model"]] <- Model
 
-	Intervals <- prepareIntervals(ModelInput, Cat.Path, TRUE, ncores = cl)
+	Intervals <- prepareIntervals(ModelInput, Cat.Path, TRUE, ncores = cl, 
+        throttle = 100, skipCrossCheck = skipCrossCheck)
 	
 	.calcCatalogs(Intervals, ModelInput, Cat.Path, cl)
 

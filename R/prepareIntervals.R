@@ -1,5 +1,5 @@
 prepareIntervals <- function(InputList, C.Path = NULL, asDT = TRUE, simpleNames = TRUE, 
-    ncores = 1, throttle = 100) {
+    ncores = 1, throttle = 100, skipCrossCheck = FALSE) {
     # throttle argument idea taken from ?setDTthreads. Value is arbitrary
 	cat("Preparing intervals for model run:\n")
 	# check NA in Interval data.frame:
@@ -214,7 +214,6 @@ prepareIntervals <- function(InputList, C.Path = NULL, asDT = TRUE, simpleNames 
 		}
 
 		if (IntExt[, any(!(Cat.exists))]) {
-			cat("* Checking for cross-matches in supplied intervals...\n")
 			
 			#### check Catalog joins:
 			CatList <- unique(IntExt[!(Cat.exists),.(
@@ -235,7 +234,8 @@ prepareIntervals <- function(InputList, C.Path = NULL, asDT = TRUE, simpleNames 
 				)])
 			setkey(CatList,Name)
 
-            if (sum(Tol[1, ]) <= 1e-5) {
+            if (skipCrossCheck || sum(Tol[1, ]) <= 1e-5) {
+                cat("* Get exact matches in supplied intervals...\n")
                 # zero tolerance
                 IntExt[!(Cat.exists), Cat.calc := {
                     out <- rep(FALSE, .N)
@@ -244,6 +244,7 @@ prepareIntervals <- function(InputList, C.Path = NULL, asDT = TRUE, simpleNames 
                     out
                 }, by = .(SensorHeight, Sensor_Swustar, L, Zo, sUu, sVu, kv, A, alpha)]
 			} else {
+                cat("* Checking for cross-matches in supplied intervals...\n")
                 # get calc before for number printing
                 n_before <- IntExt[, sum(Cat.calc)]
                 if (ncores > 1 && IntExt[!(Cat.exists), uniqueN(Cat.Name) > throttle * ncores]) {

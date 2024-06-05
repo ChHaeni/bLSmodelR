@@ -45,46 +45,138 @@
 	x3 <- Y2[ , 2] + (1 / tan(theta)) * Y[ , 1]    # final new vector
 	return(cbind(x1/sd(x1),x2/sd(x2),x3/sd(x3)))
 }
-.MatchWrapper <- function(Int_Ext,Cat_list,Tol_){
-	# check matching
-	Int_Ext[,{
-		# browser()
-		Cat_list[
-			abs(Cat_kv - .BY$kv) < 1E-2 &
-			abs(Cat_A - .BY$A) < 1E-2 &
-			abs(Cat_alpha - .BY$alpha) < 1E-3 &
-			Cat_MaxFetch >= .BY$MaxFetch &
-			Cat_ZSens <= SensorHeight_Upper &
-			Cat_ZSens >= SensorHeight_Lower &
-			sign(Cat_L) == sign(.BY$L) &
-			abs(Cat_L) <= L_Upper &
-			abs(Cat_L) >= L_Lower &
-			Cat_Zo <= Zo_Upper &
-			Cat_Zo >= Zo_Lower &
-			Cat_Su_Ustar <= sUu_Upper &
-			Cat_Su_Ustar >= sUu_Lower &
-			Cat_Sv_Ustar <= sVu_Upper &
-			Cat_Sv_Ustar >= sVu_Lower &
-			Cat_Sensor_Swustar <= sWu_Upper &
-			Cat_Sensor_Swustar >= sWu_Lower
-		,.SD]
-		},by = .(rn,Cat.Name,SensorHeight,L,Zo,sUu,sVu,Sensor_Swustar,MaxFetch,Sensor,N0,alpha,A,kv)][
-			,":="(
-			devZSens = abs(Cat_ZSens/SensorHeight - 1)/Tol_[1],
-			devL = abs(Cat_L/L - 1)/Tol_[2],
-			devZo = abs(Cat_Zo/Zo - 1)/Tol_[3],
-			devsUu = abs(Cat_Su_Ustar/sUu - 1)/Tol_[4],
-			devsVu = abs(Cat_Sv_Ustar/sVu - 1)/Tol_[5],
-			devSensor_Swustar = abs(Cat_Sensor_Swustar/Sensor_Swustar - 1)/Tol_[6],
-			devN0 = Cat_N0 - N0
-			)
-		][
-			devZSens <= 1.0000001 &
-			devL <= 1.0000001 &
-			devZo <= 1.0000001 &
-			devsUu <= 1.0000001 &
-			devsVu <= 1.0000001 &
-			devSensor_Swustar <= 1.0000001,sumDev:=devZSens+devL+devZo+devsUu+devsVu+devSensor_Swustar]
+
+.CheckCatMatches <- function(cat_list, int_ext, tol, tol_lower, tol_upper){
+    # rename
+    setnames(cat_list, names(cat_list)[-1], paste0("Cat_", names(cat_list)[-1]))
+    # create Cat_Sensor_Swustar
+    cat_list[, Cat_Sensor_Swustar := round(calcsigmaW(1, Cat_ZSens / Cat_L, Cat_bw), 3)]
+
+    # check matching catalogs 
+    Key <- int_ext[, {
+        cat('\r\r** check grouped intervals:', .GRP, '/', .NGRP)
+        # check match within Tolerances & MaxFetch
+        cat_list[
+            Cat_MaxFetch >= .BY[['MaxFetch']]
+        ][
+            Cat_ZSens >= .BY[['z_lo']] & Cat_ZSens <= .BY[['z_up']]
+        ][
+            Cat_Sensor_Swustar >= .BY[['sw_lo']] & Cat_Sensor_Swustar <= .BY[['sw_up']]
+        ][
+            Cat_L >= .BY[['l_lo']] & Cat_L <= .BY[['l_up']]
+        ][
+            Cat_Zo >= .BY[['z0_lo']] & Cat_Zo <= .BY[['z0_up']]
+        ][
+            Cat_Su_Ustar >= .BY[['sUu_lo']] & Cat_Su_Ustar <= .BY[['sUu_up']]
+        ][
+            Cat_Sv_Ustar >= .BY[['sVu_lo']] & Cat_Sv_Ustar <= .BY[['sVu_up']]
+        ][, .(
+            index = paste(row, collapse = '-'),
+            rows = list(row),
+            cat_name = Name,
+            cat_n0 = Cat_N0,
+            Cat_ZSens = Cat_ZSens, 
+            Cat_L = Cat_L,
+            Cat_Zo = Cat_Zo,
+            Cat_Su_Ustar = Cat_Su_Ustar,
+            Cat_Sv_Ustar = Cat_Sv_Ustar,
+            Cat_Sensor_Swustar = Cat_Sensor_Swustar,
+            Cat_bw = Cat_bw,
+            Cat_MaxFetch = Cat_MaxFetch,
+            Cat_C0 = Cat_C0,
+            Cat_alpha = Cat_alpha,
+            Cat_A = Cat_A,
+            Cat_kv = Cat_kv,
+            devZSens = abs(Cat_ZSens / SensorHeight[1] - 1) / tol[1], 
+            devL = abs(Cat_L / L[1] - 1) / tol[2], 
+            devZo = abs(Cat_Zo / Zo[1] - 1) / tol[3], 
+            devsUu = abs(Cat_Su_Ustar / sUu[1] - 1) / tol[4], 
+            devsVu = abs(Cat_Sv_Ustar / sVu[1] - 1) / tol[5], 
+            devSensor_Swustar = abs(Cat_Sensor_Swustar / Sensor_Swustar[1] - 1) / tol[6], 
+            devN0 = Cat_N0 - .BY[['N0']]
+        )]
+    }, by = 
+        .(
+            kv, A, alpha, MaxFetch, N0,
+            z_lo = SensorHeight * tol_lower[, 'Sensor Height'],
+            z_up = SensorHeight * tol_upper[, 'Sensor Height'],
+            l_lo = ifelse(L < 0, L * tol_upper[, 'L'], L * tol_lower[, 'L']),
+            l_up = ifelse(L < 0, L * tol_lower[, 'L'], L * tol_upper[, 'L']),
+            z0_lo = Zo * tol_lower[, 'Zo'],
+            z0_up = Zo * tol_upper[, 'Zo'],
+            sw_lo = Sensor_Swustar * tol_lower[, 'SigmaW/Ustar'],
+            sw_up = Sensor_Swustar * tol_upper[, 'SigmaW/Ustar'],
+            sUu_lo = sUu * tol_lower[, 'SigmaU/Ustar'],
+            sUu_up = sUu * tol_upper[, 'SigmaU/Ustar'],
+            sVu_lo = sVu * tol_lower[, 'SigmaV/Ustar'],
+            sVu_up = sVu * tol_upper[, 'SigmaV/Ustar']
+        )
+    ][
+        devZSens <= 1.0000001 &
+        devL <= 1.0000001 &
+        devZo <= 1.0000001 &
+        devsUu <= 1.0000001 &
+        devsVu <= 1.0000001 &
+        devSensor_Swustar <= 1.0000001, sumDev := devZSens + devL + devZo + devsUu + devsVu + devSensor_Swustar
+    ]
+    cat('\n')
+
+    if(nrow(Key) > 0){
+
+        # add for cat
+        int_ext[, Cat.extend := FALSE]
+
+        # note to myself: apply biases in sumDev someday (see below for explanation)
+        Key[devN0 > 0, sumDev := sumDev + 0.001]
+        Key[devN0 < 0, sumDev := sumDev + 6 + log(-devN0)]
+
+        # get best match
+        Key[, {
+            cat('\r\r** check best matches:', .GRP, '/', .NGRP)
+            # which min dev
+            ind <- which.min(sumDev)
+            # assign catalog name & set cat.exists & cat.calc
+            int_ext[row %in% rows[[ind]], ':='(
+                    Cat.exists = TRUE,
+                    Calc.N0 = max(N0),
+                    Cat.calc = c(cat_n0[ind] < max(N0), rep(FALSE, .N - 1)), 
+                    Cat.Name = cat_name[ind],
+                    Cat.extend = c(cat_n0[ind] < max(N0), rep(FALSE, .N - 1)),
+                    Calc.ZSens = Cat_ZSens[ind], 
+                    Calc.L = Cat_L[ind],
+                    Calc.Zo = Cat_Zo[ind],
+                    Calc.Su_Ustar = Cat_Su_Ustar[ind],
+                    Calc.Sv_Ustar = Cat_Sv_Ustar[ind],
+                    Calc.Sensor_Swustar = Cat_Sensor_Swustar[ind],
+                    Calc.bw = Cat_bw[ind],
+                    Calc.MaxFetch = Cat_MaxFetch[ind],
+                    Calc.C0 = Cat_C0[ind],
+                    Calc.alpha = Cat_alpha[ind],
+                    Calc.A = Cat_A[ind],
+                    Calc.kv = Cat_kv[ind]
+                )]
+            NULL
+        }, by = index]
+        cat('\n')
+
+        final_msg <- paste("** -> Found", int_ext[, sum(Cat.exists)], "matching catalogs.",
+            if (int_ext[, any(Cat.extend)]) paste0("(", int_ext[, sum(Cat.extend)], 
+                " need extending)\n") else "\n")
+
+        # remove again
+        int_ext[, Cat.extend := NULL]
+
+    } else {
+        final_msg <- paste("** -> No matching catalog found.\n")
+    }
+
+    cat(final_msg)
+
+    return(final_msg)
+
+}
+
+.CheckCrossMatches <- function(){
 
 }
 

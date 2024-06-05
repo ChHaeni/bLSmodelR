@@ -1,5 +1,6 @@
 prepareIntervals <- function(InputList, C.Path = NULL, asDT = TRUE, simpleNames = TRUE, 
-    ncores = 1, throttle = 4) {
+    ncores = 1, throttle = 100) {
+    # throttle argument idea taken from ?setDTthreads. Value is arbitrary
 	cat("Preparing intervals for model run:\n")
 	# check NA in Interval data.frame:
 	whichNA <- as.logical(rowSums(is.na(InputList[["Interval"]][,1:13])))

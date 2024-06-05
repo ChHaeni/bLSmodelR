@@ -178,6 +178,10 @@ prepareIntervals <- function(InputList,C.Path=NULL,asDT=TRUE,simpleNames=TRUE,nc
         # add row index
         IntExt[, row := .I]
 
+        cat('\n~~~~~~~~~~~~~~~~~~\n')
+        data.table::getDTthreads(TRUE)
+        cat('\n~~~~~~~~~~~~~~~~~~\n\n')
+
 		if(nrow(CList) > 0){
 			# rename
 			setnames(CList,names(CList)[-1],paste0("Cat_",names(CList)[-1]))
@@ -185,7 +189,9 @@ prepareIntervals <- function(InputList,C.Path=NULL,asDT=TRUE,simpleNames=TRUE,nc
 			CList[,Cat_Sensor_Swustar := round(calcsigmaW(1,Cat_ZSens/Cat_L,Cat_bw),3)]
 
             # check matching catalogs 
+            cat('=== check matching catalogs:\n')
             Key <- IntExt[, {
+                cat('\r\r', .GRP, '/', .NGRP)
                 # check match within Tolerances & MaxFetch
                 CList[
                     Cat_MaxFetch >= .BY[['MaxFetch']]
@@ -249,6 +255,7 @@ prepareIntervals <- function(InputList,C.Path=NULL,asDT=TRUE,simpleNames=TRUE,nc
                 devsVu <= 1.0000001 &
                 devSensor_Swustar <= 1.0000001, sumDev := devZSens + devL + devZo + devsUu + devsVu + devSensor_Swustar
             ]
+            cat('\n')
 
 			if(nrow(Key) > 0){
 
@@ -259,8 +266,10 @@ prepareIntervals <- function(InputList,C.Path=NULL,asDT=TRUE,simpleNames=TRUE,nc
 				Key[devN0 > 0, sumDev := sumDev + 0.001]
 				Key[devN0 < 0, sumDev := sumDev + 6 + log(-devN0)]
 
+                cat('=== get best matches:\n')
                 # get best match
                 Key[, {
+                    cat('\r\r', .GRP, '/', .NGRP)
                     # which min dev
                     ind <- which.min(sumDev)
                     # assign catalog name & set cat.exists & cat.calc
@@ -284,6 +293,7 @@ prepareIntervals <- function(InputList,C.Path=NULL,asDT=TRUE,simpleNames=TRUE,nc
                         )]
                     NULL
                 }, by = row]
+                cat('\n')
 
 				rm(CList)
 
@@ -340,7 +350,9 @@ prepareIntervals <- function(InputList,C.Path=NULL,asDT=TRUE,simpleNames=TRUE,nc
                 # get calc before for number printing
                 n_before <- IntExt[, sum(Cat.calc)]
 
+                cat('=== check cross-matching catalogs:\n')
                 Key <- IntExt[!(Cat.exists), {
+                    cat('\r\r', .GRP, '/', .NGRP)
                     # check match within Tolerances & MaxFetch
                     CatList[
                         Cat_MaxFetch <= .BY[['MaxFetch']]
@@ -393,6 +405,7 @@ prepareIntervals <- function(InputList,C.Path=NULL,asDT=TRUE,simpleNames=TRUE,nc
                     devsVu <= 1.0000001 &
                     devSensor_Swustar <= 1.0000001, sumDev := devZSens + devL + devZo + devsUu + devsVu + devSensor_Swustar
                 ]
+                cat('\n')
 
                 # check cross-matches
                 if (nrow(Key) == 0) {
@@ -405,13 +418,15 @@ prepareIntervals <- function(InputList,C.Path=NULL,asDT=TRUE,simpleNames=TRUE,nc
                     Key[devN0 < 0, sumDev := sumDev + 6 + log(-devN0)]
 
                     # check for most (& best) matching
-                    cat("** Checking best cross-matching catalogs...\n")
+                    cat("** Checking best cross-matching intervals...\n")
 
                     # sort descending
                     setorder(Key, -N, sumDev)
 
+                    cat('=== get best cross-matches:\n')
                     # loop should be sorted => test!!!
                     Key[, {
+                        cat('\r\r', .GRP, '/', .NGRP)
                         # get first row (sorted!?)
                         first_row <- row[1]
                         # check if not yet calculated
@@ -422,8 +437,9 @@ prepareIntervals <- function(InputList,C.Path=NULL,asDT=TRUE,simpleNames=TRUE,nc
                         }
                         NULL
                     }, by = cat_name]
+                    cat('\n')
 
-                    cat("** Done. --> Found", n_before - IntExt[, sum(Cat.calc)], "matches.\n\n")
+                    cat("** Done. --> Found", n_before - IntExt[, sum(Cat.calc)], "cross-matches.\n\n")
                 }
 
                 rm(Key)

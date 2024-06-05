@@ -126,7 +126,7 @@ runbLS <- function(ModelInput, Cat.Path = NULL, ncores = NULL, TDonly = NULL,
 	ModelInput[["Model"]] <- Model
 
 	Intervals <- prepareIntervals(ModelInput, Cat.Path, TRUE, ncores = cl, 
-        throttle = 100, skipCrossCheck = skipCrossCheck)
+        throttle = getOption('bls.throttle', 100), skipCrossCheck = skipCrossCheck)
 	
 	.calcCatalogs(Intervals, ModelInput, Cat.Path, cl)
 

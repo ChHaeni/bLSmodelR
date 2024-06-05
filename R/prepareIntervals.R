@@ -183,8 +183,9 @@ prepareIntervals <- function(InputList, C.Path = NULL, asDT = TRUE, simpleNames 
 		if (nrow(CList) > 0) {
             # throttle idea taken from ?setDTthreads
             if (ncores > 1 && IntExt[, uniqueN(Cat.Name) > throttle * ncores]) {
-                # split by cat name
-                IntSplit <- split(IntExt, by = 'Cat.Name')
+                # split by reduced cat name
+                IntExt[, cn := sub('.*_(L[^-]*)-.*', '\\1', Cat.Name)]
+                IntSplit <- split(IntExt[!(Cat.exists)], by = 'cn', keep.by = FALSE)
                 # run load balanced
                 out <- .clusterApplyLB(cl, IntSplit, .CheckCatMatches, cat_list = CList,
                     tol = Tol, tol_lower = TolLower, tol_upper = TolUpper)
@@ -248,8 +249,9 @@ prepareIntervals <- function(InputList, C.Path = NULL, asDT = TRUE, simpleNames 
                 # get calc before for number printing
                 n_before <- IntExt[, sum(Cat.calc)]
                 if (ncores > 1 && IntExt[!(Cat.exists), uniqueN(Cat.Name) > throttle * ncores]) {
-                    # split by cat name
-                    IntSplit <- split(IntExt[!(Cat.exists)], by = 'Cat.Name')
+                    # split by reduced cat name
+                    IntExt[, cn := sub('.*_(L[^-]*)-.*', '\\1', Cat.Name)]
+                    IntSplit <- split(IntExt[!(Cat.exists)], by = 'cn', keep.by = FALSE)
                     # run load balanced
                     out <- .clusterApplyLB(cl, IntSplit, .CheckCrossMatches, cat_list = CatList,
                         tol = Tol, tol_lower = TolLower, tol_upper = TolUpper)

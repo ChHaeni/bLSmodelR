@@ -270,9 +270,10 @@ prepareIntervals <- function(InputList,C.Path=NULL,asDT=TRUE,simpleNames=TRUE,nc
                     # assign catalog name & set cat.exists & cat.calc
                     IntExt[row %in% rows[[ind]], ':='(
                             Cat.exists = TRUE,
-                            Cat.calc = FALSE, 
+                            Calc.N0 = max(N0),
+                            Cat.calc = c(cat_n0[ind] < max(N0), rep(FALSE, .N - 1)), 
                             Cat.Name = cat_name[ind],
-                            Cat.extend = cat_n0[ind] < N0,
+                            Cat.extend = c(cat_n0[ind] < max(N0), rep(FALSE, .N - 1)),
                             Calc.ZSens = Cat_ZSens[ind], 
                             Calc.L = Cat_L[ind],
                             Calc.Zo = Cat_Zo[ind],

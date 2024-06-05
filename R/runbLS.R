@@ -81,7 +81,7 @@ runbLS <- function(ModelInput, Cat.Path = NULL, ncores = NULL, TDonly = NULL,
 		cl <- ncores
         # get number of cores, but set ncores to 1 to keep running at end
         Model[['ncores']] <- length(cl)
-		ncores <- 1
+		ncores <- length(cl)
         if (!is.null(memory_limit)) {
             warning('argument "memory_limit" has been provided,\nbut memory limitation',
                 ' is not possible on already running workers.')
@@ -117,6 +117,8 @@ runbLS <- function(ModelInput, Cat.Path = NULL, ncores = NULL, TDonly = NULL,
         if (.is_recording()) {
             parallel::clusterEvalQ(cl, bLSmodelR:::.start_recording())
         }
+        # set data.table threads to ncores on main
+        data.table::setDTthreads(ncores)
         # set data.table threads to 1 on slaves
         parallel::clusterEvalQ(cl, data.table::setDTthreads(1L))
     }

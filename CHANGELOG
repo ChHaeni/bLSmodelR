@@ -5,6 +5,15 @@
 
 ---
 
+# v.4.10-4
+FIX: Fix method dispatch error (passing R objects to method calls)
+
+# v.4.10-3
+FIX: Fix parallel error occuring with R versions < 4.0
+
+# v.4.10-2
+FIX: Add temporary fix to dismiss dependencies to retired packages (rgeos and maptools)
+
 # v.4.10-1
 
 ## performance

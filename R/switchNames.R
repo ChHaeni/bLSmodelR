@@ -29,12 +29,16 @@ switchNames <- function(DT,simple=TRUE){
 	UseMethod("switchNames",DT)
 }
 switchNames.data.table <- function(DT,simple=TRUE){
+    from <- get('from', sys.frame(-1))
+    to <- get('to', sys.frame(-1))
 	cn <- names(DT)
 	ex <- from %chin% cn
 	setnames(DT,from[ex],to[ex])
 	invisible(DT)
 }
 switchNames.data.frame <- function(DT,simple=TRUE){
+    from <- get('from', sys.frame(-1))
+    to <- get('to', sys.frame(-1))
 	cn <- names(DT)
 	ex <- chmatch(from,cn,nomatch=0)
 	names(DT)[ex] <- to[as.logical(ex)]

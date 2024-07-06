@@ -46,7 +46,7 @@ Rcpp::List csFs(
 	const double s2inv = 0.5/(sigmaU2*sigmaW2 - ustar4);
 	const double alpha2sW2 = alphaIn*2.0*sigmaW2;
 	const double bisqdT = std::sqrt(alpha2sW2);
-	double Time, u, v, w, x, y, z, U, bsquare, deltaT, deltaXz, fracZ;
+	double Time, u, uU, v, w, x, y, z, U, bsquare, deltaT, deltaXz, fracZ;
 
 	
 	const int N = uIn.size();
@@ -63,10 +63,11 @@ Rcpp::List csFs(
 			U = ukv*(std::log(z/ZoIn) + z*dpsiMdz - psiMZo);
 			bsquare = cu3kv*(1.0/z + 5.0*LinvIn);
 			deltaT = -alpha2sW2/bsquare;
+            uU = u - U;
 
-			u += (s2inv*bsquare*(sigmaW2*(u - U) + ustar2*w) + w*ukv*(1.0/z + dpsiMdz))*deltaT + R::rnorm(0.0, 1.0)*bisqdT;
+			u += (s2inv*bsquare*(sigmaW2*uU + ustar2*w) + w*ukv*(1.0/z + dpsiMdz))*deltaT + R::rnorm(0.0, 1.0)*bisqdT;
 			v += bsquare*v*sigmaV22inv*deltaT + R::rnorm(0.0, 1.0)*bisqdT;
-			w += s2inv*bsquare*(ustar2*(u - U) + sigmaU2*w)*deltaT + R::rnorm(0.0, 1.0)*bisqdT;
+			w += s2inv*bsquare*(ustar2*uU + sigmaU2*w)*deltaT + R::rnorm(0.0, 1.0)*bisqdT;
 
 			deltaXz = w*deltaT;
 			
@@ -148,7 +149,7 @@ Rcpp::List csFi(
 	const double cu3kv = C0In*ustar2*ukv;
 	const double psiMZo = std::log(8.0/(1.0+2.0*xZo+x2Zo)/(1.0+x2Zo)) + 2.0*std::atan(xZo) - PI*0.5;
 	const double alpha2 = 2.0*alphaIn;
-	double Time, u, v, w, x, y, z, zL, xi, xi2, sigmaW2, s2inv, U, powW, bsquare, deltaT, bisqdT, deltaXz, fracZ;
+	double Time, u, uU, v, w, x, y, z, zL, xi, xi2, sigmaW2, s2inv, U, powW, bsquare, deltaT, bisqdT, deltaXz, fracZ;
 
 
 	const int N = uIn.size();
@@ -177,10 +178,11 @@ Rcpp::List csFi(
 			bsquare = cu3kv*(bw2*bw2*(1.0 - 3.0*zL) + 1.0/powW)/((bw2*bw2 + 1.0)*std::sqrt(std::sqrt(1.0 - 6.0*zL)))/z;
 			deltaT = -alpha2*sigmaW2/bsquare;
 			bisqdT = std::sqrt(alpha2*sigmaW2);
+            uU = u - U;
 
-			u += (s2inv*bsquare*(sigmaW2*(u - U) + ustar2*w) + w*ukv/z/xi)*deltaT + R::rnorm(0.0, 1.0)*bisqdT;
+			u += (s2inv*bsquare*(sigmaW2*uU + ustar2*w) + w*ukv/z/xi)*deltaT + R::rnorm(0.0, 1.0)*bisqdT;
 			v += bsquare*v*sigmaV22inv*deltaT + R::rnorm(0.0, 1.0)*bisqdT;
-			w += (s2inv*bsquare*(ustar2*(u - U) + sigmaU2*w) - 2.0*LinvIn/powW*bw2*ustar2*(0.5 + s2inv*(ustar2*(u - U)*w + sigmaU2*w*w)))*deltaT + R::rnorm(0.0, 1.0)*bisqdT;
+			w += (s2inv*bsquare*(ustar2*uU + sigmaU2*w) - 2.0*LinvIn/powW*bw2*ustar2*(0.5 + s2inv*(ustar2*uU*w + sigmaU2*w*w)))*deltaT + R::rnorm(0.0, 1.0)*bisqdT;
 
 			deltaXz = w*deltaT;
 

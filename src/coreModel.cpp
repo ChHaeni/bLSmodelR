@@ -51,13 +51,13 @@ Rcpp::List csFs(
 	
 	const int N = uIn.size();
 	
-	for(int ID = 0; ID < N; ID++){
+	for(int ID = 1; ID <= N; ID++){
 		x = 0.0;
 		y = 0.0;
 		z = ZIn;
-		u = uIn[ID];
-		v = vIn[ID];
-		w = wIn[ID];
+		u = uIn[ID - 1];
+		v = vIn[ID - 1];
+		w = wIn[ID - 1];
 		Time = 0.0;
 		while((z < 1000.0) && (x > -MaxFetchIn)){
 			U = ukv*(std::log(z/ZoIn) + z*dpsiMdz - psiMZo);
@@ -76,7 +76,7 @@ Rcpp::List csFs(
 				y += v*deltaT*fracZ;
 				Time += deltaT*fracZ;
 
-				IDOut.push_back(ID + 1);
+				IDOut.push_back(ID);
 				xOut.push_back(x);
 				yOut.push_back(y);
 				TimeOut.push_back(Time);
@@ -154,13 +154,13 @@ Rcpp::List csFi(
 	const int N = uIn.size();
 
 
-	for(int ID = 0; ID < N; ID++){
+	for(int ID = 1; ID <= N; ID++){
 		x = 0.0;
 		y = 0.0;
 		z = ZIn;
-		u = uIn[ID];
-		v = vIn[ID];
-		w = wIn[ID];
+		u = uIn[ID - 1];
+		v = vIn[ID - 1];
+		w = wIn[ID - 1];
 		Time = 0.0;
 
 		while((z < 1000.0) && (x > -MaxFetchIn)){
@@ -190,7 +190,7 @@ Rcpp::List csFi(
 				y += v*deltaT*fracZ;
 				Time += deltaT*fracZ;
 
-				IDOut.push_back(ID + 1);
+				IDOut.push_back(ID);
 				xOut.push_back(x);
 				yOut.push_back(y);
 				TimeOut.push_back(Time);

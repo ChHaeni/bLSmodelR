@@ -27,8 +27,6 @@ Rcpp::List csFs(
 	{
 	Rcpp::RNGScope scope;
 
-	/* Rcpp::NumericVector Ri(1003); */
-    double Ri;
 	std::vector<double> xOut;
 	std::vector<double> yOut;
 	std::vector<double> wTDOut;
@@ -62,14 +60,13 @@ Rcpp::List csFs(
 		w = wIn[ID];
 		Time = 0.0;
 		while((z < 1000.0) && (x > -MaxFetchIn)){
-            Ri = R::rnorm(0.0, 1.0);
 			U = ukv*(std::log(z/ZoIn) + z*dpsiMdz - psiMZo);
 			bsquare = cu3kv*(1.0/z + 5.0*LinvIn);
 			deltaT = -alpha2sW2/bsquare;
 
-			u += (s2inv*bsquare*(sigmaW2*(u - U) + ustar2*w) + w*ukv*(1.0/z + dpsiMdz))*deltaT + Ri*bisqdT;
-			v += bsquare*v*sigmaV22inv*deltaT + Ri*bisqdT;
-			w += s2inv*bsquare*(ustar2*(u - U) + sigmaU2*w)*deltaT + Ri*bisqdT;
+			u += (s2inv*bsquare*(sigmaW2*(u - U) + ustar2*w) + w*ukv*(1.0/z + dpsiMdz))*deltaT + R::rnorm(0.0, 1.0)*bisqdT;
+			v += bsquare*v*sigmaV22inv*deltaT + R::rnorm(0.0, 1.0)*bisqdT;
+			w += s2inv*bsquare*(ustar2*(u - U) + sigmaU2*w)*deltaT + R::rnorm(0.0, 1.0)*bisqdT;
 
 			deltaXz = w*deltaT;
 			
@@ -133,8 +130,6 @@ Rcpp::List csFi(
 	Rcpp::RNGScope scope;
 
 
-	/* Rcpp::NumericVector Ri(1003); */
-    double Ri;
 	std::vector<double> xOut;
 	std::vector<double> yOut;
 	std::vector<double> wTDOut;
@@ -169,7 +164,6 @@ Rcpp::List csFi(
 		Time = 0.0;
 
 		while((z < 1000.0) && (x > -MaxFetchIn)){
-            Ri = R::rnorm(0.0, 1.0);
 			zL = z*LinvIn;
 			xi2 = std::sqrt(1.0-16.0*zL);
 			xi = std::sqrt(xi2);
@@ -184,9 +178,9 @@ Rcpp::List csFi(
 			deltaT = -alpha2*sigmaW2/bsquare;
 			bisqdT = std::sqrt(alpha2*sigmaW2);
 
-			u += (s2inv*bsquare*(sigmaW2*(u - U) + ustar2*w) + w*ukv/z/xi)*deltaT + Ri*bisqdT;
-			v += bsquare*v*sigmaV22inv*deltaT + Ri*bisqdT;
-			w += (s2inv*bsquare*(ustar2*(u - U) + sigmaU2*w) - 2.0*LinvIn/powW*bw2*ustar2*(0.5 + s2inv*(ustar2*(u - U)*w + sigmaU2*w*w)))*deltaT + Ri*bisqdT;
+			u += (s2inv*bsquare*(sigmaW2*(u - U) + ustar2*w) + w*ukv/z/xi)*deltaT + R::rnorm(0.0, 1.0)*bisqdT;
+			v += bsquare*v*sigmaV22inv*deltaT + R::rnorm(0.0, 1.0)*bisqdT;
+			w += (s2inv*bsquare*(ustar2*(u - U) + sigmaU2*w) - 2.0*LinvIn/powW*bw2*ustar2*(0.5 + s2inv*(ustar2*(u - U)*w + sigmaU2*w*w)))*deltaT + R::rnorm(0.0, 1.0)*bisqdT;
 
 			deltaXz = w*deltaT;
 

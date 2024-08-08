@@ -190,21 +190,26 @@ runbLS <- function(ModelInput, Cat.Path = NULL, ncores = NULL, TDonly = NULL,
 	} else {
 		### prep output:
 		pSens <- procSensors(ModelInput[["Sensors"]])
-		SensorNames <- unique(pSens$"Calc.Sensors"[,1])
-		Intervals[,Calc.Sensor:=""]
-		SonicList <- vector(length(SensorNames),mode="list")
-		splitSensor <- strsplit(Intervals[,Sensor],",",fixed=TRUE)
-		for(i in seq_along(SensorNames)){
-			SonicList[[i]] <- Intervals[grepl(paste0("(^|,)",SensorNames[i],"([.]+[0-9]+|)(,|$)"),Sensor),]
-			if(nrow(SonicList[[i]])){
-				ind <- grep(paste0("(^|,)",SensorNames[i],"([.]+[0-9]+|)(,|$)"),Intervals[,Sensor])
-				SonicList[[i]][,Calc.Sensor:=sapply(splitSensor[ind],function(x)paste0(grep(paste0("^",SensorNames[i],"([.]+[0-9]+|)$"),x,value=TRUE),collapse=","))]				
-				SonicList[[i]][,Sensor:=SensorNames[i]]
-			}
-		}
+		SensorNames <- unique(pSens$"Calc.Sensors"[, 1])
+		Intervals[, Calc.Sensor := ""]
+		SonicList <- vector(length(SensorNames), mode = "list")
+		splitSensor <- strsplit(Intervals[, Sensor], ",", fixed = TRUE)
+        for(i in seq_along(SensorNames)){
+            # use exact matching
+            sensor_points <- unlist(strsplit(pSens$PS_list[[SensorNames[i]]], split = ',', fixed = TRUE))
+            find_points <- lapply(splitSensor, function(x) x %in% sensor_points)
+            ind <- which(unlist(lapply(find_points, any)))
+            if(length(ind) > 0){
+                SonicList[[i]] <- Intervals[ind,]
+                SonicList[[i]][, Calc.Sensor := unlist(lapply(ind, function(x) paste(
+                    splitSensor[[x]][find_points[[x]]], collapse = ',')))]
+                SonicList[[i]][, Sensor := SensorNames[i]]
+            }
+        }
 		Intervals <- Out <- rbindlist(SonicList)
 		setattr(Intervals,"class",c("SncExt","data.table","data.frame"))
 		setkey(Intervals,rn,Sensor)
+
 		Catalogs <- Intervals[,{
 			ps <- unlist(strsplit(Calc.Sensor,","))
 			.(

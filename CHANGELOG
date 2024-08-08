@@ -5,6 +5,9 @@
 
 ---
 
+# v.4.10-5
+FIX: Fix sensor to row mapping if TDonly=TRUE
+
 # v.4.10-4
 FIX: Fix method dispatch error (passing R objects to method calls)
 

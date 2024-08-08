@@ -192,6 +192,14 @@ runbLS <- function(ModelInput, Cat.Path = NULL, ncores = NULL, TDonly = NULL,
 		pSens <- procSensors(ModelInput[["Sensors"]])
 		SensorNames <- unique(pSens$"Calc.Sensors"[, 1])
 		Intervals[, Calc.Sensor := ""]
+        # get seeds from catalogs
+        Intervals[, seed := {
+            attr(
+                readCatalog(file.path(Cat.Path, .BY[['Cat.Name']])),
+                'UVWseed'
+            )
+        }, by = Cat.Name]
+
 		SonicList <- vector(length(SensorNames), mode = "list")
 		splitSensor <- strsplit(Intervals[, Sensor], ",", fixed = TRUE)
         for(i in seq_along(SensorNames)){
@@ -210,14 +218,14 @@ runbLS <- function(ModelInput, Cat.Path = NULL, ncores = NULL, TDonly = NULL,
 		setattr(Intervals,"class",c("SncExt","data.table","data.frame"))
 		setkey(Intervals,rn,Sensor)
 
-		Catalogs <- Intervals[,{
-			ps <- unlist(strsplit(Calc.Sensor,","))
+		Catalogs <- Intervals[, {
+			ps <- unlist(strsplit(Calc.Sensor, ","))
 			.(
-				PointSensor = ps,
-				Cat.Name = rep(Cat.Name, length(ps)),
-				seed = rep(NA_integer_, length(ps))
+				PointSensor = ps, 
+				Cat.Name = rep(Cat.Name, length(ps)), 
+				seed = rep(seed, length(ps))
 				)
-		},by=.(rn,Sensor,Calc.Sensor)][,Calc.Sensor:=NULL]
+		}, by = .(rn, Sensor, Calc.Sensor)][, Calc.Sensor := NULL]
 		setkey(Catalogs,rn,Sensor,PointSensor)
 
 		setattr(Out,"CalcSteps",Intervals)

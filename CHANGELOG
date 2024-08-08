@@ -6,6 +6,7 @@
 ---
 
 # v.4.10-5
+FIX: Fix missing seed info if TDonly = TRUE
 FIX: Fix sensor to row mapping if TDonly=TRUE
 
 # v.4.10-4

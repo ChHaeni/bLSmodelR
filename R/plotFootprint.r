@@ -107,7 +107,13 @@ plotFootprint <- function(x, SensorName, rn = NULL, MyMap = NULL, type = c("CE",
         z <- x[index,SensorHeight]
         L <- x[index,L]
         Zo <- x[index,Zo]
-        Source <- attr(procSources(attr(x,"ModelInput")$Sources),"SourceList")
+
+        Sources <- attr(x, 'ModelInput')[['Sources']]
+        if (is.null(Sources)) {
+            addSource <- FALSE
+        } else {
+            Source <- attr(procSources(Sources),"SourceList")
+        }
 
         if(length(index)>1){
             WDmean <- (360 + atan2(sum(sin(WD/180*pi)*Ustar)/sum(Ustar),sum(cos(WD/180*pi)*Ustar)/sum(Ustar))/pi*180) %% 360

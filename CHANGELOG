@@ -5,6 +5,15 @@
 
 ---
 
+# v.4.11-0
+- Improve performance of core bLS function by switching to R namespace rnorm in C++ code
+    -> this breaks 1:1 reproduction of any previous calculations since seed will no 
+       longer be "representative"
+- Improve TD catalog matching and cross-matching algorithm
+- Minor changes:
+    * improved grep and sub calls
+    * fix missing Interval class after using 'join()'
+
 # v.4.10-5
 FIX: Fix missing seed info if TDonly = TRUE
 FIX: Fix sensor to row mapping if TDonly=TRUE

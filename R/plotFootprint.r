@@ -216,13 +216,23 @@ plotFootprint <- function(x, SensorName, rn = NULL, MyMap = NULL, type = c("CE",
         xlimOriginal <- xlim
         ylimOriginal <- ylim
 
-        if(!is.null(xy_transform)){
-            parscale1 <- max(c(xlim[1],ylim[1]))
-            parscale2 <- max(c(xlim[2],ylim[2]))
-            lim1 <-  optim(c(-1,-1),function(x)sum((unlist(do.call(xy_transform,c(list(x=x[1],y=x[2]),transformArgs))) - c(xlim[1],ylim[1]))^2),control=list(reltol=sqrt(.Machine$double.eps)/parscale1))$par
-            lim2 <-  optim(c(1,1),function(x)sum((unlist(do.call(xy_transform,c(list(x=x[1],y=x[2]),transformArgs))) - c(xlim[2],ylim[2]))^2),control=list(reltol=sqrt(.Machine$double.eps)/parscale2))$par
-            xlim <- c(lim1[1],lim2[1])
-            ylim <- c(lim1[2],lim2[2])
+        if (!is.null(xy_transform)) {
+            parscale1 <- max(c(xlim[1], ylim[1]))
+            parscale2 <- max(c(xlim[2], ylim[2]))
+            lim1 <- optim(
+                c(-1, -1), 
+                function(x) {
+                    sum((unlist(do.call(xy_transform, c(list(x = x[1], y = x[2]), transformArgs))) - c(xlim[1], ylim[1])) ^ 2)
+                }, 
+                control = list(reltol = sqrt(.Machine$double.eps) / parscale1))$par
+            lim2 <- optim(
+                c(1, 1), 
+                function(x) {
+                    sum((unlist(do.call(xy_transform, c(list(x = x[1], y = x[2]), transformArgs))) - c(xlim[2], ylim[2])) ^ 2)
+                },
+                control = list(reltol = sqrt(.Machine$double.eps) / parscale2))$par
+            xlim <- c(lim1[1], lim2[1])
+            ylim <- c(lim1[2], lim2[2])
         }
 
         xylim <- cbind(x=c(xlim,rev(xlim)),y=rep(ylim,each=2))

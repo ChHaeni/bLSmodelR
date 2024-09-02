@@ -25,4 +25,6 @@ writeCatalog <- function(Ctlg, Name, compactTDcat = TRUE, ...) {
     writeBin(h_s, con, endian = 'little')
     # catalog
     writeBin(c_s, con, endian = 'little')
+    # TODO: update catfile
+    # -> lock file (.00LOCK-catfile) -> same in rebuildCatListFile()
 }

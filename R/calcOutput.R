@@ -60,8 +60,9 @@
 		Key <- Key[order(sort_nindex)]
 		####
 
-		ilist <- lapply(strsplit(Key[,V1],",",fixed=TRUE),as.numeric)
-		SncList <- lapply(ilist,function(x,y)y[x,], as.data.frame(SncRun))
+        # prepare parallel input list
+        SncList <- SncRun[, I(lapply(Key[, I(strsplit(V1, split = ','))], \(i) 
+                .SD[as.numeric(i), ]))]
 
 		cat("\n***********\n")
 		cat("Parallel computing C/E ratios.\n")

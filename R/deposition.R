@@ -5,7 +5,7 @@ deposition <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL,
 	cat("\n**********************************************\n")
     cat("             DEPOSITION CALCULATION\n")
 	cat("\nLocal Date/Time: ",format(Start <- Sys.time(),format="%d-%m-%Y %H:%M:%S"),"\n")
-	cat("\n**********************************************\n")
+	cat("\n**********************************************\n\n")
 
 	# argument names better!
 	RNG <- RNGkind(kind="L'Ecuyer-CMRG")
@@ -256,9 +256,7 @@ deposition <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL,
             ntd_order <- Run[index_g0, order(N_TD, decreasing = TRUE)]
 
             # prepare row list
-            InputList <- lapply(index_g0[ntd_order], function(x) {
-                as.data.frame(Run[x, ])
-                })
+            InputList <- split(Run[index_g0[ntd_order]], seq_along(index_g0))
 
             # run parallel
             cat("\n***********\n")

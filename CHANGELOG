@@ -5,6 +5,11 @@
 
 ---
 
+# v4.11-1
+- Hugely improve performance of deposition run by replacing memory inefficient lapply 
+    call by a data.table loop
+- Improve preformance of standard run by moving lapply call inside data.table
+
 # v.4.11-0
 - Improve performance of core bLS function by switching to R namespace rnorm in C++ code
     -> this breaks 1:1 reproduction of any previous calculations since seed will no 

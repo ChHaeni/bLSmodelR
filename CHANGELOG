@@ -5,6 +5,10 @@
 
 ---
 
+# v4.11-2
+- Add rename function for class "Sources"
+- combine* functions provide value for "no touchdown situations"
+
 # v4.11-1
 - Hugely improve performance of deposition run by replacing memory inefficient lapply 
     call by a data.table loop

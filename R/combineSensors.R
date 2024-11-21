@@ -260,6 +260,8 @@ avgCE_sensors <- function(ce, paths){
     sum(paths * ce) / sum(paths)
 }
 avgCE_sensors_se <- function(ce_se, paths){
+    ce_se <- copy(ce_se)
+    ce_se[is.na(ce_se)] <- 0
     sqrt(sum(paths ^ 2 * ce_se ^ 2)) / sum(paths)
 }
 

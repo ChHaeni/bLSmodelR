@@ -222,6 +222,8 @@ avgCE_sources <- function(ce, weights){
   sum(weights * ce)
 }
 avgCE_sources_se <- function(ce_se, weights){
-  sqrt(sum(weights ^ 2 * ce_se ^ 2))
+    ce_se <- copy(ce_se)
+    ce_se[is.na(ce_se)] <- 0
+    sqrt(sum(weights ^ 2 * ce_se ^ 2))
 }
 

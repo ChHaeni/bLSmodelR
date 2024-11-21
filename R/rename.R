@@ -112,3 +112,88 @@ rename_sensor.Sensors <- function(x, old, new, ...) {
     # return
     x
 }
+
+#' Rename sources
+#'
+#' @param x object where sources should be renamed
+#' @param old character. Old source names.
+#' @param new character. New source names.
+#' @param \dots further arguments which are passed to methods. Ignored.
+#' @return the original object with modified source names
+#' @export
+#'
+rename_source <- function(x, old, new) {
+    # check if old is character
+    if (length(old) < 1 || !is.character(old)) {
+        stop('argument "old" is not valid')
+    }
+    # check if new is character
+    if (length(new) < 1 || !is.character(new)) {
+        stop('argument "new" is not valid')
+    }
+    # check equal lengths old = new
+    if (length(old) != length(new)) {
+        stop('arguments "old" and "new" must be of equal length')
+    }
+    # convert if version <4.2+
+    x <- convert(x)
+    # call method -> default => warning
+    UseMethod('rename_source')
+}
+
+rename_source.Sources <- function(x, old, new, ...) {
+    # check if old exists in x
+    if (!all(old_exists <- old %in% x[[1]])) {
+        stop('Old source name(s): ', 
+            paste(paste0('"', old[!old_exists],
+                    '"'), collapse = ', '),
+            ' do not exist')
+    }
+    # check if new already exists
+    if (any(new_exists <- new %in% x[[1]])) {
+        stop('New source name(s): ', 
+            paste(paste0('"', new[new_exists],
+                    '"'), collapse = ', '),
+            ' does already exist. This may be allowed in a future package version.')
+    }
+    # prepare key
+    names(new) <- old
+    # replace
+    x[[1]][x[[1]] %in% old] <- new[x[[1]][x[[1]] %in% old]]
+    # return
+    x
+}
+
+rename_source.bLSresult <- function(x, old, new, ...) {
+    # leave original x as is
+    x <- copy(x)
+    # prepare key
+    names(new) <- old
+    # fix ModelInput & check old
+    attr(x, 'ModelInput') <- rename_source.InputList(
+        attr(x, 'ModelInput'), old, new, ...)
+    # fix results
+    if (switch_df <- !is.data.table(x)) setDT(x)
+    x[Source %chin% old, Source := new[Source]]
+    if (switch_df) setDF(x)
+    # fix CalcSteps
+    attr(x, 'CalcSteps')[Source %chin% old, Source := new[Source]]
+    # return
+    x
+}
+
+rename_source.InputList <- function(x, old, new, ...) {
+    # fix Sources (and check if old exists)
+    x[['Sources']] <- rename_source.Sources(x[['Sources']],
+        old, new, ...)
+    # fix Interval
+    old_pattern <- paste0('\\b', old, '\\b')
+    for (i in seq_along(old_pattern)) {
+        x[['Interval']][, 'Source Names (sep = ",")'] <-
+            gsub(old_pattern[i], new[i], 
+                x[['Interval']][, 'Source Names (sep = ",")'])
+    }
+    # return
+    x
+}
+

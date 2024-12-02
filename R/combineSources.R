@@ -140,59 +140,68 @@ combineSources <- function(res, comb_list = NULL, weight_units = c("m/A/t", "m/t
   # adjust attributes part 1
   CalcSteps <- copy(attr(res, "CalcSteps"))
   ModelInput <- attr(res, "ModelInput")
+  Interval <- as.data.table(ModelInput$Interval)
 
   # prepare out
   out <- rbindlist(outlist)
   setcolorder(out, names(res))
 
-  if(add){
-    # add sources to Source
-    for(source_to in names(comb_list)){
-      # source_to <- names(comb_list)[1]
-      pattern <- paste0("\\b", names(comb_list[[source_to]]), "\\b")
-      # get rows
-      ind <- CalcSteps[, do.call(mapply, c(FUN = all, lapply(pattern, function(x) grepl(x, Source))))]
-      # CalcSteps
-      CalcSteps[ind, Source := paste(Source, source_to, sep = ",")]
-      # Sources
-      Srcs <- ModelInput$Sources[ModelInput$Sources[, 1] %in% names(comb_list[[source_to]]),]
-      Srcs[, 4] <- as.integer(as.factor(Srcs[, 1]))
-      Srcs[, 1] <- source_to
-      ModelInput$Sources <- rbind(
-        ModelInput$Sources,
-        Srcs
-        )
+  # add dummy column
+  CalcSteps[, Source__new := ""]
+  Interval[, Source__new := ""]
+  setnames(Interval, 'Source Names (sep = ",")', 'Source')
+  # add sources to Source
+  ModelInput_Sources <- NULL
+
+  # add sources to Source
+  for(source_to in names(comb_list)){
+    # define patterns
+    pattern <- paste0("\\b", names(comb_list[[source_to]]), "\\b")
+    # get rows in CalcSteps
+    ind <- rowSums(CalcSteps[, lapply(pattern, \(x) grepl(x, Source))]) == length(pattern)
+    # get rows in Interval
+    ind_I <- rowSums(Interval[, lapply(pattern, \(x) grepl(x, Source))]) == length(pattern)
+    # Sources
+    Srcs <- ModelInput$Sources[ModelInput$Sources[, 1] %in% names(comb_list[[source_to]]),]
+    Srcs[, 4] <- as.integer(as.factor(Srcs[, 1]))
+    Srcs[, 1] <- source_to
+    # update
+    if (add) {
+        CalcSteps[ind, Source := paste(Source, source_to, sep = ",")]
+        Interval[ind_I, Source := paste(Source, source_to, sep = ",")]
+        ModelInput$Sources <- rbind(ModelInput$Sources, Srcs)
+    } else {
+        CalcSteps[ind, Source__new := paste(Source__new, source_to, sep = ",")]
+        Interval[ind_I, Source__new := paste(Source__new, source_to, sep = ",")]
+        ModelInput_Sources <- rbind(ModelInput_Sources, Srcs)
     }
-    out <- rbind(
-      res,
-      out
-      )
-  } else {
-    CalcSteps[, Source__new := ""]
-    # add sources to Source
-    ModelInput_Sources <- NULL
-    for(source_to in names(comb_list)){
-      # source_to <- names(comb_list)[1]
-      pattern <- paste0("\\b", names(comb_list[[source_to]]), "\\b")
-      # get rows
-      ind <- CalcSteps[, do.call(mapply, c(FUN = all, lapply(pattern, function(x) grepl(x, Source))))]
-      # CalcSteps
-      CalcSteps[ind, Source__new := paste(Source__new, source_to, sep = ",")]
-      # Sources
-      Srcs <- ModelInput$Sources[ModelInput$Sources[, 1] %in% names(comb_list[[source_to]]),]
-      Srcs[, 4] <- as.integer(as.factor(Srcs[, 1]))
-      Srcs[, 1] <- source_to
-      ModelInput_Sources <- rbind(ModelInput_Sources, Srcs)
-    }
-    ModelInput$Sources <- ModelInput_Sources
-    # get relevant rows and rewrite Source
-    CalcSteps <- CalcSteps[Source__new != ""][, ":="(
-      Source = Source__new,
-      Source__new = NULL
-      )]
-    # remove first comma
-    CalcSteps[, Source := sub("^[,]", "", Source)]
   }
+  
+  # fix output
+  if (add) {
+      out <- rbind(
+        res,
+        out
+        )
+  } else {
+      # fix sources
+      ModelInput$Sources <- ModelInput_Sources
+      # get relevant rows and rewrite Source
+      CalcSteps <- CalcSteps[Source__new != ""][, Source := Source__new]
+      Interval <- Interval[Source__new != ""][, Source := Source__new]
+      # remove first comma
+      CalcSteps[, Source := sub("^[,]", "", Source)]
+      Interval[, Source := sub("^[,]", "", Source)]
+  }
+  # remove dummy columns
+  CalcSteps[, Source__new := NULL]
+  Interval[, Source__new := NULL]
+  # rename back
+  setnames(Interval, 'Source', 'Source Names (sep = ",")')
+
+  # assign Interval to ModelInput
+  ModelInput$Interval <- as.data.frame(Interval)
+
 
   # adjust attributes part 2
   for(att in names(attributes(res)) %w/o% c("row.names", 

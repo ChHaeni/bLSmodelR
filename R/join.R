@@ -114,14 +114,14 @@ join.bLSresult <- function(..., asDT = TRUE, keep.rn = FALSE){
 
 join.deposition <- function(...){
     allargs <- list(...)
-    allargs <- allargs[sapply(allargs,inherits,what="deposition")]
-    out <- rbindlist(allargs,fill = TRUE)
+    allargs <- allargs[sapply(allargs, inherits, what = "deposition")]
+    out <- do.call(join.bLSresult, allargs)
     ### vDep
-    vdList <- lapply(allargs,attr,which="vDep")
-    vDep <- sapply(vdList,"[[","vDep")
+    vdList <- lapply(allargs, attr, which = "vDep")
+    vDep <- sapply(vdList, "[[", "vDep")
     names(vDep) <- NULL
-    vDepSpatial <- lapply(vdList,"[[","vDepSpatial")
-    setattr(out,"vDep",list(vDep=vDep,vDepSpatial=vDepSpatial))
+    vDepSpatial <- lapply(vdList, "[[", "vDepSpatial")
+    setattr(out, "vDep", list(vDep = vDep, vDepSpatial = vDepSpatial))
     ### class bLSresult, deposition
     setattr(out, "class", c("deposition", "bLSresult", "data.table", "data.frame"))
     out

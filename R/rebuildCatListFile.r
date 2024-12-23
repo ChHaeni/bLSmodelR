@@ -87,42 +87,46 @@ rebuildCatListFile <- function(C.Path, fromScratch = FALSE, ncores = NULL) {
                     # data.table::setDTthreads(ncores)
                 }
                 parallel::clusterEvalQ(cl, data.table::setDTthreads(1L))
-                CatAdd <- setNames(
-                    parallel::clusterApplyLB(cl, check_index, \(i) {
-                        # read catalog
-                        CatHeader <- readCatalog(ExistingFull[i], header_only = TRUE)
-                        # convert from old serialization?
-                        if (is.null(CatHeader)) {
-                            # old qs format
-                            Cat <- try(qs::qread(ExistingFull[i], strict = TRUE), silent = TRUE)
-                            if (inherits(Cat, 'try-error')) {
-                                # old rds format
-                                Cat <- try(readRDS(ExistingFull[i]))
-                            }
-                            if (inherits(Cat, 'try-error')) {
-                                # file corrupt
-                                file.remove(ExistingFull[i])
-                            } else {
-                                # save with new binary format
-                                writeCatalog(Cat, ExistingFull[i])
-                                CatHeader <- attr(Cat, 'header')
-                            }
+                CatAdd_list <- .clusterApplyLB(cl, check_index, \(i) {
+                    # read catalog
+                    CatHeader <- readCatalog(ExistingFull[i], header_only = TRUE)
+                    # convert from old serialization?
+                    if (is.null(CatHeader)) {
+                        # old qs format
+                        Cat <- try(qs::qread(ExistingFull[i], strict = TRUE), silent = TRUE)
+                        if (inherits(Cat, 'try-error')) {
+                            # old rds format
+                            Cat <- try(readRDS(ExistingFull[i]))
                         }
-                        if (!is.null(CatHeader)) {
-                            Head <- unlist(strsplit(CatHeader, "\n"))[-1]
-                            cbind(
+                        if (inherits(Cat, 'try-error')) {
+                            # file corrupt
+                            file.remove(ExistingFull[i])
+                        } else {
+                            # save with new binary format
+                            writeCatalog(Cat, ExistingFull[i])
+                            CatHeader <- attr(Cat, 'header')
+                        }
+                    }
+                    if (!is.null(CatHeader)) {
+                        Head <- unlist(strsplit(CatHeader, "\n"))[-1]
+                        c(
+                            list(
                                 # get file name
                                 Existing[i], 
                                 # get file modified
-                                file.mtime(ExistingFull[i]),
-                                # get header
-                                matrix(as.numeric(gsub(".*[=] ", "", Head)), nrow = 1)
-                            )
-                        } else {
-                            NULL
-                        }
-                    }),
-                    c("Name", "mtime", "N0", "ZSens", "Ustar", "L", "Zo", "Su_Ustar", "Sv_Ustar", "bw", "C0", "kv", "A", "alpha", "MaxFetch"))
+                                file.mtime(ExistingFull[i])
+                            ),
+                            # get header
+                            as.numeric(gsub(".*[=] ", "", Head))
+                        )
+                    } else {
+                        NULL
+                    }
+                })
+                CatAdd <- setNames(
+                    rbindlist(CatAdd_list),
+                    c("Name", "mtime", "N0", "ZSens", "Ustar", "L", "Zo", "Su_Ustar", "Sv_Ustar", "bw", "C0", "kv", "A", "alpha", "MaxFetch")
+                )
             } else {
                 # create CatAdd to append at bottom
                 nr <- sum(checkCat)

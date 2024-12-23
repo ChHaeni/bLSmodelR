@@ -66,7 +66,7 @@ rebuildCatListFile <- function(C.Path, fromScratch = FALSE, ncores = NULL) {
             # get check index
             check_index <- which(checkCat)
             # run in parallel?
-            if (!is.null(ncores) && !isTRUE(ncores == 1)) {
+            if (!is.null(ncores) && (inherits(ncores, 'cluster') || (is.numeric(ncores) && ncores != 1))) {
                 # prepare parallelism
                 if (inherits(ncores, 'cluster')) {
                     # get clusters
@@ -166,10 +166,10 @@ rebuildCatListFile <- function(C.Path, fromScratch = FALSE, ncores = NULL) {
                         CatAdd[j, 1] <- Existing[i]
                     }
                 }
+                cat('\r                                               \r   done\n')
             }
             # bind together
 			CatList <- na.omit(rbind(CatList, CatAdd))
-            cat('\r                                               \r   done\n')
 		}
         # add catalog flag as attribute
         setattr(CatList, 'cat_flag', catalog_flag)

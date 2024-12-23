@@ -1,16 +1,33 @@
-rebuildCatListFile <- function(C.Path, fromScratch = FALSE) {
+rebuildCatListFile <- function(C.Path, fromScratch = FALSE, ncores = NULL) {
     # catalog flag -> same as readCatalog/writeCatalog
     catalog_flag <- 'A'
     # check if cats exist & list them
 	Existing <- dir(C.Path, pattern = "Cat_Zm.*_[0-9]{14}$")
     # define path to CatList file
-	Catfile <- paste0(C.Path, "/.cats")
+	Catfile <- file.path(C.Path, ".catalogs")
+    # check if exists otherwise try old names
+    legacy_names <- '.cats'
+    if (Catfile_exists <- file.exists(Catfile)) {
+        # remove old file names
+        for (nm in legacy_names) {
+            if (file.exists(file.path(C.Path, nm))) {
+                file.remove(file.path(C.Path, nm))
+            }
+        }
+    } else {
+        # try old file names & rename (latest version has highest priority)
+        for (nm in legacy_names) {
+            if (file.exists(file.path(C.Path, nm))) {
+                Catfile_exists <- suppressWarnings(file.rename(file.path(C.Path, nm), Catfile))
+            }
+        }
+    }
     # check length of Existing
 	if (length(Existing) > 0) {
         # full path names
         ExistingFull <- paste(C.Path, Existing, sep = "/")
         # get CatList (read file)
-		if (file.exists(Catfile)) {
+		if (Catfile_exists) {
             # try to read file
             CatList <- try(qread(Catfile, strict = TRUE), silent = TRUE)
             # try again on error
@@ -46,46 +63,106 @@ rebuildCatListFile <- function(C.Path, fromScratch = FALSE) {
         # check catalogs not in CatList
 		if (any(checkCat <- CatList[, !(Existing %chin% Name)])){
             cat('-> updating catalog db...\n')
-            # create CatAdd to append at bottom
-            nr <- sum(checkCat)
-			CatAdd <- setNames(
-                as.data.frame(c(list(a = character(nr), b = as.POSIXct(rep(Sys.time(), nr), tz = 'GMT')), rep(list(a = numeric(nr)), 13)), stringsAsFactors = FALSE),
-			    c("Name", "mtime", "N0", "ZSens", "Ustar", "L", "Zo", "Su_Ustar", "Sv_Ustar", "bw", "C0", "kv", "A", "alpha", "MaxFetch"))
             # get check index
             check_index <- which(checkCat)
-			for(j in seq_along(check_index)){
-                cat('\r', j, '/', length(check_index))
-                # get i
-                i <- check_index[j]
-                # read catalog
-				CatHeader <- readCatalog(ExistingFull[i], header_only = TRUE)
-                # convert from old serialization?
-                if (is.null(CatHeader)) {
-                    # old qs format
-                    Cat <- try(qs::qread(ExistingFull[i], strict = TRUE), silent = TRUE)
-                    if (inherits(Cat, 'try-error')) {
-                        # old rds format
-                        Cat <- try(readRDS(ExistingFull[i]))
+            # run in parallel?
+            if (!is.null(ncores) && !isTRUE(ncores == 1)) {
+                # prepare parallelism
+                if (inherits(ncores, 'cluster')) {
+                    # get clusters
+                    cl <- ncores
+                } else if (!is.integer(ncores)) {
+                    stop("Argument 'ncores' is not of type integer!")
+                } else if (ncores < 1) {
+                    stop("Number of cores must be greater or equal to 1!")
+                } else {
+                    on.exit(
+                        {
+                        if (exists('cl')) parallel::stopCluster(cl)
+                        }, add = TRUE
+                    )
+                    # set up PSOCK clusters
+                    cl <- .makePSOCKcluster(ncores)
+                    # set data.table threads to ncores on master
+                    # data.table::setDTthreads(ncores)
+                }
+                parallel::clusterEvalQ(cl, data.table::setDTthreads(1L))
+                CatAdd <- setNames(
+                    parallel::clusterApplyLB(cl, check_index, \(i) {
+                        # read catalog
+                        CatHeader <- readCatalog(ExistingFull[i], header_only = TRUE)
+                        # convert from old serialization?
+                        if (is.null(CatHeader)) {
+                            # old qs format
+                            Cat <- try(qs::qread(ExistingFull[i], strict = TRUE), silent = TRUE)
+                            if (inherits(Cat, 'try-error')) {
+                                # old rds format
+                                Cat <- try(readRDS(ExistingFull[i]))
+                            }
+                            if (inherits(Cat, 'try-error')) {
+                                # file corrupt
+                                file.remove(ExistingFull[i])
+                            } else {
+                                # save with new binary format
+                                writeCatalog(Cat, ExistingFull[i])
+                                CatHeader <- attr(Cat, 'header')
+                            }
+                        }
+                        if (!is.null(CatHeader)) {
+                            Head <- unlist(strsplit(CatHeader, "\n"))[-1]
+                            cbind(
+                                # get file name
+                                Existing[i], 
+                                # get file modified
+                                file.mtime(ExistingFull[i]),
+                                # get header
+                                matrix(as.numeric(gsub(".*[=] ", "", Head)), nrow = 1)
+                            )
+                        } else {
+                            NULL
+                        }
+                    }),
+                    c("Name", "mtime", "N0", "ZSens", "Ustar", "L", "Zo", "Su_Ustar", "Sv_Ustar", "bw", "C0", "kv", "A", "alpha", "MaxFetch"))
+            } else {
+                # create CatAdd to append at bottom
+                nr <- sum(checkCat)
+                CatAdd <- setNames(
+                    as.data.frame(c(list(a = character(nr), b = as.POSIXct(rep(Sys.time(), nr), tz = 'GMT')), rep(list(a = numeric(nr)), 13)), stringsAsFactors = FALSE),
+                    c("Name", "mtime", "N0", "ZSens", "Ustar", "L", "Zo", "Su_Ustar", "Sv_Ustar", "bw", "C0", "kv", "A", "alpha", "MaxFetch"))
+                for(j in seq_along(check_index)){
+                    cat('\r', j, '/', length(check_index))
+                    # get i
+                    i <- check_index[j]
+                    # read catalog
+                    CatHeader <- readCatalog(ExistingFull[i], header_only = TRUE)
+                    # convert from old serialization?
+                    if (is.null(CatHeader)) {
+                        # old qs format
+                        Cat <- try(qs::qread(ExistingFull[i], strict = TRUE), silent = TRUE)
+                        if (inherits(Cat, 'try-error')) {
+                            # old rds format
+                            Cat <- try(readRDS(ExistingFull[i]))
+                        }
+                        if (inherits(Cat, 'try-error')) {
+                            # file corrupt
+                            file.remove(ExistingFull[i])
+                        } else {
+                            # save with new binary format
+                            writeCatalog(Cat, ExistingFull[i])
+                            CatHeader <- attr(Cat, 'header')
+                        }
                     }
-                    if (inherits(Cat, 'try-error')) {
-                        # file corrupt
-                        file.remove(ExistingFull[i])
-                    } else {
-                        # save with new binary format
-                        writeCatalog(Cat, ExistingFull[i])
-                        CatHeader <- attr(Cat, 'header')
+                    if (!is.null(CatHeader)) {
+                        Head <- unlist(strsplit(CatHeader, "\n"))[-1]
+                        Whead <- matrix(as.numeric(gsub(".*[=] ", "", Head)), nrow=1)
+                        CatAdd[j, -(1:2)] <- Whead
+                        # get file modified
+                        CatAdd[j, 2] <- file.mtime(ExistingFull[i])
+                        # get file name
+                        CatAdd[j, 1] <- Existing[i]
                     }
                 }
-                if (!is.null(CatHeader)) {
-                    Head <- unlist(strsplit(CatHeader, "\n"))[-1]
-                    Whead <- matrix(as.numeric(gsub(".*[=] ", "", Head)), nrow=1)
-                    CatAdd[j, -(1:2)] <- Whead
-                    # get file modified
-                    CatAdd[j, 2] <- file.mtime(ExistingFull[i])
-                    # get file name
-                    CatAdd[j, 1] <- Existing[i]
-                }
-			}
+            }
             # bind together
 			CatList <- na.omit(rbind(CatList, CatAdd))
             cat('\r                                               \r   done\n')

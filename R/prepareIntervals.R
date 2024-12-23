@@ -146,6 +146,10 @@ prepareIntervals <- function(InputList, C.Path = NULL, asDT = TRUE, simpleNames 
 	#### check existing Catalogs:
 	if(InputList[["Model"]][["TDread"]]){
 
+        # update catalogs file
+		if(is.null(C.Path))stop("Please supply a path to a TD catalog folder (argument 'C.Path')!")
+		CatList <- data.table(rebuildCatListFile(C.Path, ncores = cl))
+
 		cat("* Checking for matches in existing TD catalogs...\n")
 
 		### get ranges for catalog testing
@@ -158,10 +162,6 @@ prepareIntervals <- function(InputList, C.Path = NULL, asDT = TRUE, simpleNames 
 		Tol_check[2,c("Tol_SensorHeight","Tol_L","Tol_Zo","Tol_sUu","Tol_sVu") := {
 			as.list(c(Tol_SensorHeight,Tol_L,Tol_Zo,Tol_sUu,Tol_sVu)*TolUpper[1:5])
 		}]
-
-
-		if(is.null(C.Path))stop("Please supply a path to a TD catalog folder (argument 'C.Path')!")
-		CatList <- data.table(rebuildCatListFile(C.Path))
 
 		# pre-check CatList
 		CList <- CatList[

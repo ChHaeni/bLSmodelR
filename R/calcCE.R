@@ -38,7 +38,7 @@
         SensorHeight := as.character(SensorHeight)]
     # get Sensor heights
 	Sheight <- unique(range(InputList$Sensors$"Calc.Sensors"[
-        InputList[['Sensors']][['Calc.Sensors']][, 'Sensor Name'] == Out[, Sensor]
+        InputList[['Sensors']][['Calc.Sensors']][, 'Sensor Name'] == SubRun[, Sensor]
         , "Sensor Height (m)"]))
 	if (length(Sheight) > 1) {
 		Sheight <- paste(sprintf("%1.2f", Sheight), collapse = " to ")

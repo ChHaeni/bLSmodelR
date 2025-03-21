@@ -5,6 +5,13 @@
 
 ---
 
+# v4.11-3
+- Fix NA in SensorHeight output
+- Add parallelism to catalog db rebuilding function
+- Fix providing cluster directly
+- Fix passing all attributes when using join with bls deposition results
+- Fix updating Interval in attributes when using combineSources() function
+
 # v4.11-2
 - Add rename function for class "Sources"
 - combine* functions provide value for "no touchdown situations"

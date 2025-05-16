@@ -8,6 +8,10 @@ vertices are within the polygon.
 #include <R.h> 
 #include <Rinternals.h>
 
+#ifndef PI 
+#define PI 3.14159265
+#endif
+
 double TWOPI = 2 * PI;
 double epsilon = 0.000000000001; // threshold value
 

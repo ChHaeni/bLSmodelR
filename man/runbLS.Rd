@@ -9,7 +9,8 @@ Run \sQuote{bLSmodelR} using the specified model input.
 }
 \usage{
 runbLS(ModelInput, Cat.Path = NULL, ncores = NULL, TDonly = NULL, asDT = TRUE, 
-    simpleNames = asDT, memory_limit = NULL, show_progress = TRUE, variables = "CE")
+    simpleNames = asDT, memory_limit = NULL, show_progress = TRUE, variables = "CE",
+    skipCrossCheck = FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -39,6 +40,9 @@ logical. Show progress when computing output variables in prallel. Defaults to \
 }
   \item{variables}{
 character vector specifying the output variables of line sensors to calculate (any combination of \code{"CE"}, \code{"wCE"}, \code{"uCE"}, \code{"vCE"}). Defaults to \code{"CE"} only which can reduce calculation time significantly.
+}
+  \item{skipCrossCheck}{
+logical. Skip checking TD catalog matches within provided intervals.
 }
 }
 \details{

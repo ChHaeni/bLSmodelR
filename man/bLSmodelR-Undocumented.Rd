@@ -55,7 +55,12 @@
 \alias{print.InputList}
 \alias{print.Interval}
 \alias{splitSource}
-
+\alias{collect_results}
+\alias{depoSlurm}
+\alias{find_partition}
+\alias{rename_sensor}
+\alias{rename_source}
+\alias{runbLSlurm}
 
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
@@ -122,6 +127,12 @@ List of undocumented bLSmodelR functions:
 \item{\code{print.InputList}}
 \item{\code{print.Interval}}
 \item{\code{splitSource}}
+\item{\code{collect_results}}
+\item{\code{depoSlurm}}
+\item{\code{find_partition}}
+\item{\code{rename_sensor}}
+\item{\code{rename_source}}
+\item{\code{runbLSlurm}}
 
 }
 }

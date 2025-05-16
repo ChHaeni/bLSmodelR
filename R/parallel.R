@@ -4,7 +4,7 @@
     .dynamicClusterApply(cl, fun, length(x), argfun, progress = progress)
 }
 .dynamicClusterApply <- function (cl = NULL, fun, n, argfun, progress = TRUE) {
-    cl <- parallel:::defaultCluster(cl)
+    cl <- .defaultCluster(cl)
     p <- length(cl)
     if (n > 0L && p) {
         if (progress) {
@@ -22,7 +22,7 @@
                 )
             )
         }
-        submit <- function(node, job) parallel:::sendCall(cl[[node]], fun, 
+        submit <- function(node, job) .sendCall(cl[[node]], fun, 
             argfun(job), tag = job)
         for (i in 1:min(n, p)) submit(i, i)
         val <- vector("list", n)
@@ -55,15 +55,15 @@
             cat(paste0("\r[", paste0(rep(">", 20), collapse = ""), "] 100%\n"))
             cat('<done>\n')
         }
-        parallel:::checkForRemoteErrors(val)
+        .checkForRemoteErrors(val)
     }
 }
 .recvOneResult <- function (cl) {
-    if (parallel:::.snowTimingData$running()) {
+    if (.psnowTimingData$running()) {
         start <- proc.time()[3]
         v <- .recvOneData_SOCK(cl)
         end <- proc.time()[3]
-        parallel:::.snowTimingData$enterRecv(v$node, start, end, v$value$time[3])
+        .psnowTimingData$enterRecv(v$node, start, end, v$value$time[3])
     }
     else v <- .recvOneData_SOCK(cl)
     list(value = v$value$value, node = v$node, tag = v$value$tag)
@@ -90,7 +90,7 @@
             stop("numeric 'names' must be >= 1")
         names <- rep("localhost", names)
     }
-    parallel:::.check_ncores(length(names))
+    .pcheck_ncores(length(names))
     cl <- vector("list", length(names))
     # check memory limit
     if (.Platform$OS.type != 'windows' && !is.null(memory_limit)) {
@@ -151,18 +151,18 @@
         # fail on too low memory per node
         if (num_pn_mb < 100) stop('Memory limit per node cannot be below 100Mb')
     }
-    options <- parallel:::addClusterOptions(parallel:::defaultClusterOptions, list(...))
-    manual <- parallel:::getClusterOption("manual", options)
-    homogeneous <- parallel:::getClusterOption("homogeneous", options)
+    options <- .addClusterOptions(.defaultClusterOptions, list(...))
+    manual <- .getClusterOption("manual", options)
+    homogeneous <- .getClusterOption("homogeneous", options)
     setup_strategy <- match.arg(unlist(mget("setup_strategy", 
         envir = options, ifnotfound = "sequential")), c("sequential", "parallel"))
-    setup_timeout <- parallel:::getClusterOption("setup_timeout", options)
+    setup_timeout <- .getClusterOption("setup_timeout", options)
     if (!manual && homogeneous && local && setup_strategy == 
         "parallel") {
-        port <- parallel:::getClusterOption("port", options)
-        timeout <- parallel:::getClusterOption("timeout", options)
-        useXDR <- parallel:::getClusterOption("useXDR", options)
-        cmd <- parallel:::workerCommand("localhost", options, setup_strategy = "parallel")
+        port <- .getClusterOption("port", options)
+        timeout <- .getClusterOption("timeout", options)
+        useXDR <- .getClusterOption("useXDR", options)
+        cmd <- .workerCommand("localhost", options, setup_strategy = "parallel")
         socket <- serverSocket(port = port)
         on.exit(close(socket), add = TRUE)
         if (.Platform$OS.type == "windows") {
@@ -208,13 +208,13 @@
                 scon <- structure(list(con = con, host = "localhost", 
                   rank = ready), class = cls)
                 tryCatch({
-                    parallel:::sendCall(scon, eval, list(quote(Sys.getpid())))
+                    .sendCall(scon, eval, list(quote(Sys.getpid())))
                 }, error = identity)
                 pending <- append(pending, list(scon))
             }
             for (scon in pending[canReceive]) {
                 pid <- tryCatch({
-                    parallel:::recvResult(scon)
+                    .recvResult(scon)
                 }, error = identity)
                 if (is.integer(pid)) {
                   ready <- ready + 1
@@ -227,11 +227,22 @@
         }
     }
     else {
-        for (i in seq_along(cl)) cl[[i]] <- parallel:::newPSOCKnode(names[[i]], 
+        for (i in seq_along(cl)) cl[[i]] <- .newPSOCKnode(names[[i]], 
             options = options, rank = i)
     }
     class(cl) <- c("SOCKcluster", "cluster")
     cl
 }
 
-
+# fix unexported objects WARNINGS in GitHub R CMD check
+.newPSOCKnode <- getFromNamespace('newPSOCKnode', 'parallel')
+.defaultCluster <- getFromNamespace('defaultCluster', 'parallel')
+.sendCall <- getFromNamespace('sendCall', 'parallel')
+.checkForRemoteErrors <- getFromNamespace('checkForRemoteErrors', 'parallel')
+.psnowTimingData <- getFromNamespace('.snowTimingData', 'parallel')
+.pcheck_ncores <- getFromNamespace('.check_ncores', 'parallel')
+.addClusterOptions <- getFromNamespace('addClusterOptions', 'parallel')
+.defaultClusterOptions <- getFromNamespace('defaultClusterOptions', 'parallel')
+.getClusterOption <- getFromNamespace('getClusterOption', 'parallel')
+.sendCall <- getFromNamespace('sendCall', 'parallel')
+.recvResult <- getFromNamespace('recvResult', 'parallel')

@@ -70,7 +70,8 @@ export(depoSlurm)
 
 importFrom(Rcpp, evalCpp)
 
-importFrom(RgoogleMaps,XY2LatLon,LatLon2XY.centered)
+# deprecated -> only imported if needed
+#importFrom(RgoogleMaps,XY2LatLon,LatLon2XY.centered)
 #importFrom(geosphere,distGeo)
 #import(maptools)
 #importFrom(rgeos,gIntersection)

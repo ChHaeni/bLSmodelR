@@ -8,6 +8,9 @@ addScaleBar <- function(pos=3,scale=1,units="meters",frac=5,cuts=c(1,2,5),minors
 		if(!requireNamespace("geosphere", quietly = TRUE)){
 			stop("please install package geosphere: install.packages('geosphere')")
 		}
+		if(!requireNamespace("RgoogleMaps", quietly = TRUE)){
+			stop("please install package RgoogleMaps: install.packages('RgoogleMaps')")
+		}
 		USR <- XY2LatLon(scale,usr[1:2],usr[3:4])
 		scale <- sqrt((usr[1]-usr[2])^2+(usr[3]-usr[4])^2)/distGeo(USR[1,2:1],USR[2,2:1])
 	}

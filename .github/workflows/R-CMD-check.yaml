@@ -7,7 +7,8 @@ on:
 
 name: R-CMD-check
 
-permissions: read-all
+permissions: 
+  contents: write
 
 jobs:
   R-CMD-check:
@@ -50,25 +51,27 @@ jobs:
           build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
 
       - name: Build R package
-        if: runner.os == 'Windows'
+        if: matrix.config.r == 'release'
         run: |
-          Rscript -e 'devtools::build(binary = TRUE, path = "artifacts")'
+          Rscript -e 'dir.create("artifacts", showWarnings = FALSE);devtools::build(binary = TRUE, path = "artifacts")'
 
       - name: Upload R package artifact
-        if: runner.os == 'Windows'
+        if: matrix.config.r == 'release'
         uses: actions/upload-artifact@v4
         with:
           name: r-package-binary
-          path: artifacts/*
+          path: artifacts/bLSmodelR_*
+          overwrite: true
 
       - name: Create GitHub Release
-        if: runner.os == 'Windows'
+        if: matrix.config.r == 'release'
         uses: ncipollo/release-action@v1
         with:
-          artifacts: artifacts/*
+          artifacts: artifacts/bLSmodelR_*
           token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
           body: "Automatically generated release for version ${{ github.ref_name }}"
           draft: false
           prerelease: false
+          allowUpdates: true

@@ -5,6 +5,10 @@
 
 ---
 
+# v4.11-4
+- Remove dependency on sp, geosphere and RgoogleMaps
+- Fix: define PI if undefined in C code
+
 # v4.11-3
 - Fix NA in SensorHeight output
 - Add parallelism to catalog db rebuilding function

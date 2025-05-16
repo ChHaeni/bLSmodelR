@@ -52,24 +52,20 @@ jobs:
       - name: Build R package
         if: runner.os == 'Windows'
         run: |
-          Rscript -e 'devtools::build(binary = TRUE, path = "artifacts", args = "--no-staged-install")'
+          Rscript -e 'devtools::build(binary = TRUE, path = "artifacts")'
 
       - name: Upload R package artifact
         if: runner.os == 'Windows'
         uses: actions/upload-artifact@v4
         with:
           name: r-package-binary
-          path: |
-            - artifacts/*.tar.gz
-            - artifacts/*.zip
+          path: artifacts/*
 
       - name: Create GitHub Release
         if: runner.os == 'Windows'
         uses: ncipollo/release-action@v1
         with:
-          artifacts: |
-            - artifacts/*.tar.gz
-            - artifacts/*.zip
+          artifacts: artifacts/*
           token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}

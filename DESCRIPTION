@@ -11,3 +11,4 @@ Depends: R (>= 3.6.0), rlecuyer, data.table (>= 1.13.0), qs
 Imports: Rcpp (>= 0.12.17), parallel
 Suggests: rgeos, maptools, sp, RgoogleMaps, geosphere 
 LinkingTo: Rcpp
+StagedInstall: no

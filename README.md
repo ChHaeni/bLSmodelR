@@ -1,5 +1,9 @@
 # bLSmodelR - An R package to set up and run a short-range atmospheric dispersion model
 
+<!-- badges: start -->
+[![R-CMD-check](https://github.com/ChHaeni/bLSmodelR/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/ChHaeni/bLSmodelR/actions/workflows/R-CMD-check.yaml)
+<!-- badges: end -->
+
 ## Description
 The package bLSmodelR provides functions to run a backward Lagrangian stochastic (bLS) dispersion model with the [R programming language](https://www.r-project.org/). Results from bLSmodelR are consistent with results from the freeware [WindTrax](http://www.thunderbeachscientific.com/).
 

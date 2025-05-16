@@ -24,6 +24,8 @@ install.packages(c('Rcpp', 'rlecuyer', 'data.table', 'qs'))
 devtools::install_github('ChHaeni/bLSmodelR', dependencies = FALSE)
 ```
 
+Or download and install the [latest release](https://github.com/ChHaeni/bLSmodelR/releases/latest).
+
 ## Bugs and Contact
 
 If you have questions related to the package, it is best to contact me by email at contact@blsmodelr.slmail.me

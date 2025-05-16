@@ -1,0 +1,63 @@
+# Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
+# Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
+on:
+  workflow_run:
+    workflows: ["R-CMD-check"]
+    types:
+      - success
+  pull_request:
+
+name: build package release
+
+permissions: read-all
+
+jobs:
+
+  build-and-release:
+
+    runs-on: ${{ matrix.config.os }}
+
+    name: ${{ matrix.config.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - {os: ubuntu-latest,   r: 'release'}
+          #- {os: windows-latest, r: 'release'}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ matrix.config.r }}
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::devtools
+
+      - name: Build R package
+        run: |
+          Rscript -e 'devtools::build(binary = TRUE, path = "artifacts")'
+
+      - name: Upload R package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: r-package-binary
+          path: |
+            - artifacts/*.tar.gz
+            - artifacts/*.zip
+
+      - name: Create GitHub Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: |
+            - artifacts/*.tar.gz
+            - artifacts/*.zip
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          body: "Automatically generated release for version ${{ github.ref_name }}"
+          draft: false
+          prerelease: false

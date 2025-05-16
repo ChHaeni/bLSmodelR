@@ -42,9 +42,37 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::rcmdcheck, rgeos=?ignore, maptools=?ignore, sp=?ignore, RgoogleMaps=?ignore, geosphere=?ignore
+          extra-packages: any::rcmdcheck, devtools, rgeos=?ignore, maptools=?ignore, sp=?ignore, RgoogleMaps=?ignore, geosphere=?ignore
           needs: check
 
       - uses: r-lib/actions/check-r-package@v2
         with:
           build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
+
+      - name: Build R package
+        if: runner.os == 'Windows'
+        run: |
+          Rscript -e 'devtools::build(binary = TRUE, path = "artifacts", args = "--no-staged-install")'
+
+      - name: Upload R package artifact
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: r-package-binary
+          path: |
+            - artifacts/*.tar.gz
+            - artifacts/*.zip
+
+      - name: Create GitHub Release
+        if: runner.os == 'Windows'
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: |
+            - artifacts/*.tar.gz
+            - artifacts/*.zip
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          body: "Automatically generated release for version ${{ github.ref_name }}"
+          draft: false
+          prerelease: false

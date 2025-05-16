@@ -12,7 +12,7 @@ The package bLSmodelR provides functions to run a backward Lagrangian stochastic
 ### Install package dependencies
 ```r
 # install required packages
-install.packages(c('Rcpp', 'rlecuyer', 'snow', 'snowfall', 'data.table', 'qs'))
+install.packages(c('Rcpp', 'rlecuyer', 'data.table', 'qs'))
 
 # install optional packages for footprint plotting
 # install.packages(c('sp', 'rgeos', 'geosphere', 'RgoogleMaps', 'maptools'))
@@ -23,6 +23,12 @@ install.packages(c('Rcpp', 'rlecuyer', 'snow', 'snowfall', 'data.table', 'qs'))
 # install bLSmodelR
 devtools::install_github('ChHaeni/bLSmodelR', dependencies = FALSE)
 ```
+
+## Bugs and Contact
+
+If you have questions related to the package, it is best to contact me by email at contact@blsmodelr.slmail.me
+
+Bugs and issues should be reported either through GitHub or via email at bugs@blsmodelr.slmail.me
 
 ## How to run the model
 Guide to bLSmodelR: [https://github.com/ChHaeni/bLSmodelR/blob/main/Guide2bLSmodelR.r](https://github.com/ChHaeni/bLSmodelR/blob/main/Guide2bLSmodelR.r)

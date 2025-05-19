@@ -5,6 +5,9 @@
 
 ---
 
+# v4.11-5
+- Fix attaching parallel package (removed in previous commits)
+
 # v4.11-4
 - Remove dependency on sp, geosphere and RgoogleMaps
 - Fix: define PI if undefined in C code

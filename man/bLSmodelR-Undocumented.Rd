@@ -101,7 +101,7 @@ List of undocumented bLSmodelR functions:
 \item{\code{rotateCatalog}: }{rotate Catalog (into WD)}
 \item{\code{round125}: }{round digits to nearest predefined numbers}
 \item{\code{siteMap}: }{plot site map}
-\item{\code{sortData}: }{sort data, partially adopted from \code{\link{setorderv}}}
+\item{\code{sortData}: }{sort data, partially adopted from \code{\link[data.table:setorderv]{setorderv}}}
 \item{\code{tag_inside}: }{tag TDs inside source area}
 \item{\code{updatePath}: }{update path to TD catalogs}
 \item{\code{uvw0}: }{get initial (t=0) velocities from TD catalog}

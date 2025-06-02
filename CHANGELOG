@@ -5,6 +5,9 @@
 
 ---
 
+# v4.11-6
+- (Possibly) Fix data.table nthreads issue, causing too many threads open on parallel runs
+
 # v4.11-5
 - Fix attaching parallel package (removed in previous commits)
 

@@ -67,7 +67,11 @@
 			cat("\nCalculating TDs...\n")
 			if (!is.null(cl)) {
                 pindex <- parallel::clusterSplit(cl, uvwind)
+                # fix DTthreads
+                old_nthreads <- data.table::setDTthreads(1L)
 				pList <- parallel::clusterApply(cl, pindex, coreModelWrapper, uvw[, "u0"], uvw[, "v0"], uvw[, "w0"], SnRun)
+                # fix DTthreads
+                data.table::setDTthreads(old_nthreads)
 				attCat <- attributes(Catalog)
 				for(p in 1:length(pindex)){
 					Catalog <- rbind(Catalog,list(as.integer(pindex[[p]][pList[[p]]$Traj_IDOut]),pList[[p]]$TimeOut,pList[[p]]$xOut,pList[[p]]$yOut,pList[[p]]$wTDOut))

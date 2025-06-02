@@ -83,9 +83,9 @@ rebuildCatListFile <- function(C.Path, fromScratch = FALSE, ncores = NULL) {
                     )
                     # set up PSOCK clusters
                     cl <- .makePSOCKcluster(ncores)
-                    # set data.table threads to ncores on master
-                    # data.table::setDTthreads(ncores)
                 }
+                # Fix data.table nthreads
+                old_nthreads <- data.table::setDTthreads(1L)
                 parallel::clusterEvalQ(cl, data.table::setDTthreads(1L))
                 CatAdd_list <- .clusterApplyLB(cl, check_index, \(i) {
                     # read catalog
@@ -123,6 +123,8 @@ rebuildCatListFile <- function(C.Path, fromScratch = FALSE, ncores = NULL) {
                         NULL
                     }
                 })
+                # fix nthreads
+                data.table::setDTthreads(old_nthreads)
                 CatAdd <- setNames(
                     rbindlist(CatAdd_list),
                     c("Name", "mtime", "N0", "ZSens", "Ustar", "L", "Zo", "Su_Ustar", "Sv_Ustar", "bw", "C0", "kv", "A", "alpha", "MaxFetch")

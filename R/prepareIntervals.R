@@ -80,6 +80,12 @@ prepareIntervals <- function(InputList, C.Path = NULL, asDT = TRUE, simpleNames 
 		stop("Number of cores must be greater or equal to 1!")
     }
 
+    # fix DTthreads
+    if (ncores > 1) {
+        old_nthreads <- data.table::setDTthreads(1L)
+        on.exit(data.table::setDTthreads(old_nthreads), add = TRUE)
+    }
+
 	# optimize MaxFetch
 	if(IntExt[,any(MaxFetch < 0)]){
 		cat("* Optimizing 'MaxFetch'...\n")

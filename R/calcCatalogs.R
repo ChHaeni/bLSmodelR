@@ -99,7 +99,7 @@
 				cat("Writing new TD Catalog\n")
 			}
 			writeCatalog(Catalog,paste0(C.Path,"/",CatNameNew))
-			SncRun[i,Cat.exists:=TRUE]
+			SncRun[Cat.Name %chin% CatNameNew, Cat.exists := TRUE]
 		}
 	}
 

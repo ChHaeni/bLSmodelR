@@ -165,108 +165,110 @@
 
 }
 
-.CheckCrossMatches <- function(int_ext, cat_list, tol, tol_lower, tol_upper){
-
-                Key <- int_ext[!(Cat.exists), {
-                    cat('\r\r** check grouped intervals:', .GRP, '/', .NGRP)
-                    # check match within Tolerances & MaxFetch
-                    cat_list[
-                        Cat_MaxFetch >= .BY[['MaxFetch']]
-                    ][
-                        Cat_ZSens >= .BY[['z_lo']] & Cat_ZSens <= .BY[['z_up']]
-                    ][
-                        Cat_Sensor_Swustar >= .BY[['sw_lo']] & Cat_Sensor_Swustar <= .BY[['sw_up']]
-                    ][
-                        Cat_L >= .BY[['l_lo']] & Cat_L <= .BY[['l_up']]
-                    ][
-                        Cat_Zo >= .BY[['z0_lo']] & Cat_Zo <= .BY[['z0_up']]
-                    ][
-                        Cat_Su_Ustar >= .BY[['sUu_lo']] & Cat_Su_Ustar <= .BY[['sUu_up']]
-                    ][
-                        Cat_Sv_Ustar >= .BY[['sVu_lo']] & Cat_Sv_Ustar <= .BY[['sVu_up']]
-                    ][, {
-                        # row: -> identical intervals which can read the same catalog
-                        # Zeile: -> index for possible catalog rows for given row(s)
-                        .(
-                            index = paste(row, collapse = '-'),
-                            rows = list(row),
-                            cat_row = Zeile,
-                            cat_name = Name,
-                            devZSens = abs(Cat_ZSens / SensorHeight[1] - 1) / tol[1], 
-                            devL = abs(Cat_L / L[1] - 1) / tol[2], 
-                            devZo = abs(Cat_Zo / Zo[1] - 1) / tol[3], 
-                            devsUu = abs(Cat_Su_Ustar / sUu[1] - 1) / tol[4], 
-                            devsVu = abs(Cat_Sv_Ustar / sVu[1] - 1) / tol[5], 
-                            devSensor_Swustar = abs(Cat_Sensor_Swustar / Sensor_Swustar[1] - 1) / tol[6], 
-                            devN0 = Cat_N0 - .BY[['N0']]
-                        )
-                    }]
-                }, by = 
-                    .(
-                        kv, A, alpha, MaxFetch, N0,
-                        z_lo = SensorHeight * tol_lower[, 'Sensor Height'],
-                        z_up = SensorHeight * tol_upper[, 'Sensor Height'],
-                        l_lo = ifelse(L < 0, L * tol_upper[, 'L'], L * tol_lower[, 'L']),
-                        l_up = ifelse(L < 0, L * tol_lower[, 'L'], L * tol_upper[, 'L']),
-                        z0_lo = Zo * tol_lower[, 'Zo'],
-                        z0_up = Zo * tol_upper[, 'Zo'],
-                        sw_lo = Sensor_Swustar * tol_lower[, 'SigmaW/Ustar'],
-                        sw_up = Sensor_Swustar * tol_upper[, 'SigmaW/Ustar'],
-                        sUu_lo = sUu * tol_lower[, 'SigmaU/Ustar'],
-                        sUu_up = sUu * tol_upper[, 'SigmaU/Ustar'],
-                        sVu_lo = sVu * tol_lower[, 'SigmaV/Ustar'],
-                        sVu_up = sVu * tol_upper[, 'SigmaV/Ustar']
-                    )
-                ][
+.getKey <- function(int_ext, row_list, tol, tol_lower, tol_upper){
+    # subset only missing
+    int_miss <- int_ext[!(Cat.exists)]
+    # add limits
+    int_miss[, ':='(
+        z_lo = SensorHeight * tol_lower[, 'Sensor Height'],
+        z_up = SensorHeight * tol_upper[, 'Sensor Height'],
+        l_lo = ifelse(L < 0, L * tol_upper[, 'L'], L * tol_lower[, 'L']),
+        l_up = ifelse(L < 0, L * tol_lower[, 'L'], L * tol_upper[, 'L']),
+        z0_lo = Zo * tol_lower[, 'Zo'],
+        z0_up = Zo * tol_upper[, 'Zo'],
+        sw_lo = Sensor_Swustar * tol_lower[, 'SigmaW/Ustar'],
+        sw_up = Sensor_Swustar * tol_upper[, 'SigmaW/Ustar'],
+        sUu_lo = sUu * tol_lower[, 'SigmaU/Ustar'],
+        sUu_up = sUu * tol_upper[, 'SigmaU/Ustar'],
+        sVu_lo = sVu * tol_lower[, 'SigmaV/Ustar'],
+        sVu_up = sVu * tol_upper[, 'SigmaV/Ustar']
+    )]
+    # prepare Key
+    Key <- int_miss[, {
+        cat('\r\r** check grouped intervals:', .GRP, '/', .NGRP)
+        # check matches within Tolerances & MaxFetch
+        # -> .SD provides TD catalog, row_list provides possible matching rows
+        row_list[
+            Cat_MaxFetch <= .BY[['MaxFetch']]
+        ][
+            Cat_ZSens >= .BY[['z_lo']] & Cat_ZSens <= .BY[['z_up']]
+        ][
+            Cat_Sensor_Swustar >= .BY[['sw_lo']] & Cat_Sensor_Swustar <= .BY[['sw_up']]
+        ][
+            Cat_L >= .BY[['l_lo']] & Cat_L <= .BY[['l_up']]
+        ][
+            Cat_Zo >= .BY[['z0_lo']] & Cat_Zo <= .BY[['z0_up']]
+        ][
+            Cat_Su_Ustar >= .BY[['sUu_lo']] & Cat_Su_Ustar <= .BY[['sUu_up']]
+        ][
+            Cat_Sv_Ustar >= .BY[['sVu_lo']] & Cat_Sv_Ustar <= .BY[['sVu_up']]
+        ][, {
+            # row: -> identical intervals which can read the same catalog
+            # Zeile: -> index for possible catalog rows for given row(s)
+            # first_row: provides TD catalog
+            .(
+                # index = paste(row, collapse = '-'),
+                first_row = row[1],
+                matched_rows = list(Zeile),
+                n_matched = .N,
+                cat_name = Cat.Name[1],
+                devZSens = max(abs(Cat_ZSens / SensorHeight[1] - 1) / tol[1]), 
+                devL = max(abs(Cat_L / L[1] - 1) / tol[2]), 
+                devZo = max(abs(Cat_Zo / Zo[1] - 1) / tol[3]), 
+                devsUu = max(abs(Cat_Su_Ustar / sUu[1] - 1) / tol[4]), 
+                devsVu = max(abs(Cat_Sv_Ustar / sVu[1] - 1) / tol[5]), 
+                devSensor_Swustar = max(abs(Cat_Sensor_Swustar / Sensor_Swustar[1] - 1) / tol[6]), 
+                devN0 = max(Cat_N0 - .BY[['N0']])
+            )
+        }]
+    }, by = .(kv, A, alpha, MaxFetch, N0, 
+        z_lo, z_up, l_lo, l_up, z0_lo, z0_up, 
+        sw_lo, sw_up, sUu_lo, sUu_up, sVu_lo, sVu_up)][
                     devZSens <= 1.0000001 &
                     devL <= 1.0000001 &
                     devZo <= 1.0000001 &
                     devsUu <= 1.0000001 &
                     devsVu <= 1.0000001 &
-                    devSensor_Swustar <= 1.0000001, sumDev := devZSens + devL + devZo + devsUu + devsVu + devSensor_Swustar
-                ]
-                cat('\n')
+                    devSensor_Swustar <= 1.0000001, 
+            sumDev := devZSens + devL + devZo + devsUu + devsVu + devSensor_Swustar
+    ]
+    cat('\n')
+    Key
+}
 
-                # check cross-matches
-                if (nrow(Key) == 0) {
-                    int_ext[!(Cat.exists), Cat.calc := TRUE]
-                } else {
-
-                    # get total N
-                    Key[, N := .N, by = cat_name]
-
-                    # apply bias to catalogs with fewer trajectories, and make exact N0 matches (just) preferable
-                    Key[devN0 > 0, sumDev := sumDev + 0.001]
-                    Key[devN0 < 0, sumDev := sumDev + 6 + log(-devN0)]
-
-                    # sort descending
-                    setorder(Key, -N, sumDev)
-
-                    # add helper column (don't count already checked...)
-                    int_ext[, cat_calc := Cat.exists]
-
-                    # loop is sorted (see ?data.table -> by)
-                    Key[, {
-                        cat('\r\r** check best cross-matches:', .GRP, '/', .NGRP)
-                        # check if not yet calculated
-                        if (int_ext[row %in% cat_row, any(!cat_calc)]) {
-                            # get cross-matching rows
-                            icm <- int_ext[row %in% cat_row & !cat_calc, row]
-                            # set cat_calc to TRUE (to skip in next checks)
-                            int_ext[icm, cat_calc := TRUE]
-                            # assign all rows except first_row to FALSE and fix catalog names
-                            int_ext[icm, 
-                                c('Cat.calc', 'Cat.Name') := .(FALSE, cat_name[1])]
-                            # fix first row (Cat.calc must be TRUE)
-                            int_ext[icm[1], Cat.calc := TRUE]
-                        }
-                        NULL
-                    }, by = index]
-                    cat('\n')
-
-                }
-
-                invisible(int_ext)
+.CheckCrossMatches <- function(int_ext, Key){
+    # check cross-matches
+    if (nrow(Key) == 0) {
+        int_ext[!(Cat.exists), Cat.calc := TRUE]
+    } else {
+        # apply bias to catalogs with fewer trajectories, 
+        #   and make exact N0 matches (just) preferable
+        Key[devN0 > 0, sumDev := sumDev + 0.001]
+        Key[devN0 < 0, sumDev := sumDev + 6 + log(-devN0)]
+        # sort descending
+        setorder(Key, -n_matched, sumDev)
+        # add helper column (don't count already checked...)
+        int_ext[, cat_calc := Cat.exists]
+        # loop is sorted (see ?data.table -> by)
+        Key[, {
+            cat('\r\r** check best cross-matches:', .GRP, '/', .NGRP)
+            # check if not yet calculated
+            if (int_ext[.BY[[1]], !cat_calc]) {
+                # get cross-matching rows which are not yet covered
+                icm <- int_ext[matched_rows[[1]]][!(cat_calc), row]
+                # set cat_calc to TRUE (to skip in next checks)
+                int_ext[icm, cat_calc := TRUE]
+                # assign all rows except first_row to FALSE and fix catalog names
+                int_ext[icm, 
+                    c('Cat.calc', 'Cat.Name') := .(FALSE, cat_name)]
+                # fix first row (Cat.calc must be TRUE)
+                int_ext[icm[1], Cat.calc := TRUE]
+            }
+            NULL
+        }, by = first_row]
+        cat('\n')
+    }
+    invisible(int_ext)
 }
 
 .MaxFetchWrapper <- function(Int_Ext, p_Sens, Input_List){

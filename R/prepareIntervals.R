@@ -224,7 +224,7 @@ prepareIntervals <- function(InputList, C.Path = NULL, asDT = TRUE, simpleNames 
 		if (IntExt[, any(!(Cat.exists))]) {
 			
 			#### check Catalog joins:
-			CatList <- unique(IntExt[!(Cat.exists),.(
+			RowList <- unique(IntExt[!(Cat.exists),.(
 				Name=Cat.Name,
 				Cat_ZSens=SensorHeight,
 				Cat_L=L,
@@ -240,7 +240,7 @@ prepareIntervals <- function(InputList, C.Path = NULL, asDT = TRUE, simpleNames 
 				Cat_Sensor = Sensor,
                 Zeile = row
 				)])
-			setkey(CatList,Name)
+			setkey(RowList,Name)
 
             if (skipCrossCheck || sum(Tol[1, ]) <= 1e-5) {
                 cat("* Get exact matches in supplied intervals...\n")
@@ -259,16 +259,17 @@ prepareIntervals <- function(InputList, C.Path = NULL, asDT = TRUE, simpleNames 
                     # split by reduced cat name
                     IntExt[, cn := sub('.*_(L[^-]*)-.*', '\\1', Cat.Name)]
                     IntSplit <- split(IntExt[!(Cat.exists)], by = 'cn', keep.by = FALSE)
-                    # run load balanced
-                    out <- .clusterApplyLB(cl, IntSplit, .CheckCrossMatches, cat_list = CatList,
+                    # get Key load balanced
+                    out <- .clusterApplyLB(cl, IntSplit, .getKey, row_list = RowList,
                         tol = Tol, tol_lower = TolLower, tol_upper = TolUpper)
                     # rbind results
-                    IntExt <- rbindlist(out, fill = TRUE)
-                    # fix order
-                    setorder(IntExt, row)
+                    Key <- rbindlist(out, fill = TRUE)
                 } else {
-                    .CheckCrossMatches(IntExt, CatList, Tol, TolLower, TolUpper)
+                    # get Key
+                    Key <- .getKey(IntExt, RowList, Tol, TolLower, TolUpper)
                 }
+                # check matches not possible in parallel
+                .CheckCrossMatches(IntExt, Key)
                 # be verbose
                 if ('cat_calc' %in% names(IntExt)) {
                     # remove helper column
@@ -280,7 +281,7 @@ prepareIntervals <- function(InputList, C.Path = NULL, asDT = TRUE, simpleNames 
                 }
 			}
 
-            rm(CatList)
+            rm(RowList)
 
 		}
 

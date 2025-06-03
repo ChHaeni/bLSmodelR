@@ -128,8 +128,9 @@ prepareIntervals <- function(InputList, C.Path = NULL, asDT = TRUE, simpleNames 
 
 	# create extended Cat_Name name
 	IntExt[,Cat.Name := {
-		gsub("_$",sprintf("-%05.0f_%05.0f_%05.0f",.BY$sUu*1E4,.BY$sVu*1E4,.BY$Sensor_Swustar*1E4),createCatName(.SD))
-	},by=.(sUu,sVu,Sensor_Swustar)]
+		gsub("_$", sprintf("-%05.0f_%05.0f_%05.0f", .BY$sUu * 1E4, .BY$sVu * 1E4, 
+                .BY$Sensor_Swustar * 1E4), createCatName(.SD))
+	}, by = .(sUu, sVu, Sensor_Swustar)]
 
     # prepare Calc.* columns
     IntExt[, ":="(

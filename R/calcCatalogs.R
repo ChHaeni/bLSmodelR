@@ -28,11 +28,11 @@
 						CatNameNew <- createCatName(SnRun,format(Sys.time(),"%Y%m%d%H%M%S"))					
 					}					
 				} else {
-					CatNameNew <- paste0(gsub("-[0-9]{5,}_[0-9]{5,}_[0-9]{5,}$","_",SnRun[,Cat.Name]),format(Sys.time(),"%Y%m%d%H%M%S"))
+					CatNameNew <- paste0(gsub("-[0-9]{5,}_[0-9]{5,}_[0-9]{5,}$", "_", 
+                            SnRun[, Cat.Name]), format(Sys.time(), "%Y%m%d%H%M%S"))
 				}
 				# rename Catalog correctly
-				ind <- SncRun[,which(Cat.Name==Cat.Name[i])]
-				SncRun[ind,Cat.Name := CatNameNew]
+				SncRun[Cat.Name %chin% Cat.Name[i], Cat.Name := CatNameNew]
 			} else {
 				CatNameNew <- createCatName(SnRun,format(Sys.time(),"%Y%m%d%H%M%S"))
 				# rename Catalog correctly

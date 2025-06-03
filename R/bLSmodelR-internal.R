@@ -250,14 +250,15 @@
                         cat('\r\r** check best cross-matches:', .GRP, '/', .NGRP)
                         # check if not yet calculated
                         if (int_ext[row %in% cat_row, any(!cat_calc)]) {
-                            # find first cat row not yet calculated
-                            first_row <- int_ext[row %in% cat_row & !cat_calc, row[1]]
-                            # indicate first column
-                            int_ext[row == first_row, cat_calc := TRUE]
+                            # get cross-matching rows
+                            icm <- int_ext[row %in% cat_row & !cat_calc, row]
+                            # set cat_calc to TRUE (to skip in next checks)
+                            int_ext[icm, cat_calc := TRUE]
                             # assign all rows except first_row to FALSE and fix catalog names
-                            # only assign to not yet assigned rows
-                            int_ext[row %in% c(cat_row, rows[[1]]) & !cat_calc, 
+                            int_ext[icm, 
                                 c('Cat.calc', 'Cat.Name') := .(FALSE, cat_name[1])]
+                            # fix first row (Cat.calc must be TRUE)
+                            int_ext[icm[1], Cat.calc := TRUE]
                         }
                         NULL
                     }, by = index]

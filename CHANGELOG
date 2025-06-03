@@ -6,6 +6,7 @@
 ---
 
 # v4.11-6
+- Fix error when cross-matching catalogs exist (cross-matching rows' catalog names were not updated correctly)
 - (Possibly) Fix data.table nthreads issue, causing too many threads open on parallel runs
 
 # v4.11-5

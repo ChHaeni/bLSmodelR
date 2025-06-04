@@ -262,7 +262,7 @@
                 int_ext[icm, 
                     c('Cat.calc', 'Cat.Name') := .(FALSE, cat_name)]
                 # fix first row (Cat.calc must be TRUE)
-                int_ext[icm[1], Cat.calc := TRUE]
+                int_ext[.BY[[1]], Cat.calc := TRUE]
             }
             NULL
         }, by = first_row]

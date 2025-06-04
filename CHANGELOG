@@ -5,6 +5,9 @@
 
 ---
 
+# v4.11-8
+- Fix possible bug in cross-matches
+
 # v4.11-7
 - Fix cross-match checks which cannot be run in parallel
 

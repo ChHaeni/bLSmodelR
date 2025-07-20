@@ -29,6 +29,9 @@ genInterval <- function(Data=NULL,Ustar=0.25,L=-2000,Zo=0.01,sUu=2.5,sVu=2,sWu=1
 		if(!is.data.frame(Data)){
 			stop("Argument 'Data' needs to be of class 'data.frame'!")
 		}
+        if (data.table::is.data.table(Data)) {
+            Data <- as.data.frame(Data)
+        }
 		nms <- names(Data)
 		sind_Input <- sNames13 %in% nms
 		if(any(sind_Input)){

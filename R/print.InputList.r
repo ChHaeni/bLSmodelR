@@ -89,19 +89,7 @@ print.InputList <- function(x,...){
 	# Interval:
 	x <- X$Interval
 	cat("*** Interval Input:\n")
-	if(length(x)>13)cat(" ->",length(x)-13,"columns providing model unspecific data not shown <-\n")
-	if(nrow(x)>6){
-		y <- rbind(x[1:3,1:13],rep(NA,13),x[nrow(x)-(2:0),1:13])
-		rownames(y) <- c("1","2","3","",as.character(nrow(x)-(2:0)))
-		z <- capture.output(print(y))
-		lin <- grepl("NA",z)
-		z[lin] <- gsub("<NA>"," ***",z[lin])
-		z[lin] <- gsub(" NA","***",z[lin])
-		z[1] <- paste0(" ",z[1])
-		cat(paste0(z,"\n"))
-	} else {
-		print(x[,1:13])
-	}
+    print(x, show_all = FALSE, n_split = 3)
 }
 
 

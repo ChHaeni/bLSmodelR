@@ -1,7 +1,7 @@
 genSources <- function(...){
 	ArgList <- list(...)
 	if(length(ArgList)==0)stop("no input supplied\n")
-	if(class(ArgList[[1]][[1]])=="list"){
+	if(class(ArgList[[1]][[1]])[1]=="list"){
 		ArgList <- c(ArgList[[1]],ArgList[-1])
 	}
 	Out <- data.frame("SourceArea Name"=character(0),"x-Coord (m)"=numeric(0),"y-Coord (m)"=numeric(0),"Polygon ID"=numeric(0),stringsAsFactors=FALSE,check.names=FALSE)
@@ -25,7 +25,7 @@ genSources <- function(...){
 			for(j in seq_along(nindex)){
 				al <- ArgList[[nindex[j]]]
 				if(any(is.na(al)))stop(paste0("Supplied argument (",Names[i],") contains NA values!\n"))
-				if(class(al)=="data.frame"){
+				if(inherits(al, "data.frame")){
 					appxy <- data.frame(al$x,al$y)
 				} else if(length(al)==2){
 					appxy <- data.frame(al$x,al$y)

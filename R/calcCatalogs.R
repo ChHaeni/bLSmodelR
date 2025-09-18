@@ -66,10 +66,13 @@
 			# calculate TDs:
 			cat("\nCalculating TDs...\n")
 			if (!is.null(cl)) {
-                pindex <- parallel::clusterSplit(cl, uvwind)
                 # fix DTthreads
                 old_nthreads <- data.table::setDTthreads(1L)
-				pList <- parallel::clusterApply(cl, pindex, coreModelWrapper, uvw[, "u0"], uvw[, "v0"], uvw[, "w0"], SnRun)
+                # split up and run load balanced
+                pindex <- clusterSplit(cl, seq_len(nrow(uvw)))
+                uvw_list <- lapply(pindex, \(x) uvw[x, , drop = FALSE])
+                # run model
+				pList <- .clusterApplyLB(cl, uvw_list, coreModelWrapper, SnRun)
                 # fix DTthreads
                 data.table::setDTthreads(old_nthreads)
 				attCat <- attributes(Catalog)

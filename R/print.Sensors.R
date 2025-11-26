@@ -39,7 +39,7 @@ print.Sensors <- function(x, Nrows = 30, ...){
 		cat(" - Line Sensors:", nLs, "\n")
 		if(nLs > 0){
 			for(i in seq(LSnames)){
-                ind <- match(LSnames[i], x[, 'Sensor Name'])
+                ind <- which(x[, 'Sensor Name'] %in% LSnames[i])
 				l <- by(x[ind,], x[ind, "Sensor ID"], function(y){
 					ord <- order(y[, "Node"])
 					sum(sqrt(diff(y[ord, "x-Coord (m)"]) ^ 2 + diff(y[ord, "y-Coord (m)"]) ^ 2 + diff(y[ord, "Sensor Height (m)"]) ^ 2))

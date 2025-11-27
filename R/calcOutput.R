@@ -62,7 +62,7 @@
 
         # prepare parallel input list
         SncList <- SncRun[, I(lapply(Key[, I(strsplit(V1, split = ','))], \(i) 
-                .SD[as.numeric(i), ]))]
+                as.data.frame(.SD[as.numeric(i), ])))]
 
         # fix DTthreads
         old_nthreads <- data.table::setDTthreads(1L)
@@ -70,8 +70,10 @@
 		cat("\n***********\n")
 		cat("Parallel computing C/E ratios.\n")
 		cat("\n\t-> This might take some time depending on the calculation load!!! <-\n\n")
-		OutList <- .clusterApplyLB(cl, SncList, .calcCE, InputList, Srcs, C.Path, 
-            progress = show_progress, variables = variables)
+		OutList <- .clusterApplyLB(cl, SncList, .calcCE, 
+            InputList$Sensors$Calc.Sensors, attr(InputList$Sources, 'SAreas'), Srcs, 
+            C.Path, progress = show_progress, variables = variables
+        )
 
         # fix DTthreads
         data.table::setDTthreads(old_nthreads)
@@ -90,8 +92,9 @@
 			cat("Sensor:",Key[i,Sensor],"\n")
 			cat("Count:",i,"/",nk,"\n")
 
-			OutList[[i]] <- .calcCE(SncRun[ilist, ], InputList, Srcs, C.Path, 
-                variables = variables)
+			OutList[[i]] <- .calcCE(SncRun[ilist, ], InputList$Sensors$Calc.Sensors,
+                attr(InputList$Sources, 'SAreas'), Srcs, C.Path, variables = variables
+            )
 
 		}
 	}

@@ -1,4 +1,4 @@
-.calcCE <- function(SubRun, InputList, Srcs, C.Path, variables = 'CE') {
+.calcCE <- function(SubRun, CSens, SAreas, Srcs, C.Path, variables = 'CE') {
 
     # which additional variables?
     which_vars <- c('uCE', 'vCE', 'wCE') %in% variables
@@ -37,8 +37,8 @@
 	Out <- SubRun[rep(1, length(SourceNames)), ][, 
         SensorHeight := as.character(SensorHeight)]
     # get Sensor heights
-	Sheight <- unique(range(InputList$Sensors$"Calc.Sensors"[
-        InputList[['Sensors']][['Calc.Sensors']][, 'Sensor Name'] == SubRun[, Sensor]
+	Sheight <- unique(range(CSens[
+        CSens[, 'Sensor Name'] == SubRun[, Sensor]
         , "Sensor Height (m)"]))
 	if (length(Sheight) > 1) {
 		Sheight <- paste(sprintf("%1.2f", Sheight), collapse = " to ")
@@ -48,7 +48,7 @@
     # fill & prepare Out
 	Out[, ":="(
 			Source = SourceNames, 
-            SourceArea = attr(InputList[["Sources"]], "SAreas")[SourceNames], 
+            SourceArea = SAreas[SourceNames], 
 			SensorHeight = Sheight, 
 			CE = 0, CE_se = NA_real_, CE_lo = NA_real_, CE_hi = NA_real_, 
 			uCE = 0, uCE_se = NA_real_, uCE_lo = NA_real_, uCE_hi = NA_real_, 
@@ -68,9 +68,9 @@
 		SensorNames <- unlist(strsplit(SubRun[Row, Calc.Sensor], ",", fixed = TRUE))
 		
         # prepare range of Source - Sensor distance
-        sind <- chmatch(SensorNames, InputList$Sensors$"Calc.Sensors"[, "Point Sensor Name"])
-        SensorPositions <- as.matrix(InputList$Sensors$"Calc.Sensors"[sind, c("x-Coord (m)", "y-Coord (m)")])
-        rownames(SensorPositions) <- InputList$Sensors$"Calc.Sensors"[sind, "Point Sensor Name"]
+        sind <- chmatch(SensorNames, CSens[, "Point Sensor Name"])
+        SensorPositions <- as.matrix(CSens[sind, c("x-Coord (m)", "y-Coord (m)")])
+        rownames(SensorPositions) <- CSens[sind, "Point Sensor Name"]
         Srange <- Scalc[, rbind(
             cbind(
                 x = max(x) - min(SensorPositions[, "x-Coord (m)"]),
@@ -217,9 +217,9 @@
 	rwts <- wts/sum(wts)
 	if(lasn > 1){
 		# rwts korrekt sortieren -> welche Sensoren sind max/min node? -> welche pos haben diese?
-		AllSensorOrder <- InputList$Sensors$"Calc.Sensors"[
+		AllSensorOrder <- CSens[
 			match(
-				InputList$Sensors$"Calc.Sensors"[, "Point Sensor Name"],
+				CSens[, "Point Sensor Name"],
 				AllSensorNames,
                 nomatch = 0
                 ), 

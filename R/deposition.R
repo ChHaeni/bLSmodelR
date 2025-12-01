@@ -256,27 +256,73 @@ deposition <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL,
             ntd_order <- Run[index_g0, order(N_TD, decreasing = TRUE)]
 
             # prepare row list
-            InputList <- split(Run[index_g0[ntd_order]], seq_along(index_g0))
+            Run_light <- copy(Run)
+            for (a in c('CalcSteps', 'CatPath', 'Catalogs', 'ModelInput', 'Version',
+                'ModelRunTime', 'sorted')) {
+                setattr(Run_light, a, NULL)
+            }
+            InputList <- split(Run_light[index_g0[ntd_order]], seq_along(index_g0))
 
             # run parallel
-            cat("\n***********\n")
-            # cat("Export R objects...\n")
-            # current_env <- environment()
-            # Sources <- ModelInput[['Sources']]
-            # Sensors <- pSens[['Calc.Sensors']]
-            # parallel::clusterExport(cl,
-            #     c('Catalogs', 'Cat.Path', 'Sources', 'Sensors', 'vDep', 'vDepSpatial'),
-            #     envir = current_env
-            #     )
-            # rm(Sources, Sensors)
-            cat("Parallel computing deposition corrected C/E ratios...\nThis will take a moment...\n\n")
+            cat("Exporting R objects...\n")
+            # print 0% progress
+            if (show_progress) {
+                cat(
+                    sprintf("\r[%s%s] %1.0f%%",
+                        "|",
+                        paste(rep(".", 20), 
+                            collapse=""),
+                        0
+                    )
+                )
+            }
+            current_env <- environment()
+            Sources <- ModelInput[['Sources']]
+            Sensors <- pSens[['Calc.Sensors']]
+            Catas <- copy(Catalogs)
+            nc <- length(cl)
+            for (i in seq_along(cl)) {
+                if (show_progress) {
+                    # get step
+                    i_step <- floor(i / nc * 20)
+                    # clean previous
+                    cat('\r', paste(rep(' ', 40), collapse = ''), '\r')
+                    cat(
+                        sprintf("\r[%s%s%s] %1.0f%%",
+                            paste(
+                                rep(">", i_step), 
+                                collapse=""),
+                            "|",
+                            paste(rep(".", 20 - i_step), 
+                                collapse=""),
+                            i / nc * 100
+                        )
+                    )
+                }
+                parallel::clusterExport(cl[i],
+                    c('Catas', 'Cat.Path', 'Sources', 'Sensors', 'vDep', 'vDepSpatial'),
+                    envir = current_env
+                    )
+            }
+            if (show_progress) {
+                cat('\r', paste(rep(' ', 40), collapse = ''), '\r')
+                cat(paste0("\r[", paste0(rep(">", 20), collapse = ""), "] 100%\n"))
+                cat('done.\n')
+            }
+            rm(Sources, Sensors, Catas)
 
+            cat("\n***********\n")
+            cat("Parallel computing deposition corrected C/E ratios...\nThis will take a moment...\n\n")
             # run in parallel
             OutList <- try(
-                .clusterApplyLB(cl, InputList, .calcDep_Wrapper, Catalogs, Cat.Path, 
-                    ModelInput[['Sources']], pSens[['Calc.Sensors']], vDep, vDepSpatial, 
-                    spatial = vdSpat, variables = variables, progress = show_progress)
-                , silent = TRUE)
+                .clusterApplyLB(cl, InputList, .calcDep_Wrapper, 
+                    # Catalogs, Cat.Path, ModelInput[['Sources']], 
+                    # pSens[['Calc.Sensors']], vDep, vDepSpatial, 
+                    spatial = vdSpat, variables = variables, 
+                    progress = show_progress
+                )
+                , silent = TRUE
+            )
 
             # check try-error
             if (inherits(OutList, 'try-error')) {

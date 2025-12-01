@@ -5,8 +5,9 @@
 
 ---
 
-# v4.11-9
+# v4.11-*
 - Minor fixes and improvements
+- Try to improve parallelism in deposition function
 
 # v4.11-8
 - Fix possible bug in cross-matches

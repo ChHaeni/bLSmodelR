@@ -89,7 +89,23 @@ rebuildCatListFile <- function(C.Path, fromScratch = FALSE, ncores = NULL) {
                 parallel::clusterEvalQ(cl, data.table::setDTthreads(1L))
                 CatAdd_list <- .clusterApplyLB(cl, check_index, \(i) {
                     # read catalog header
-                    CatHeader <- readCatalog(ExistingFull[i], header_only = TRUE)
+                    CatHeader <- try(readCatalog(ExistingFull[i], header_only = TRUE),
+                        silent = TRUE)
+                    # check for old versions of catalogs
+                    if (inherits(CatHeader, 'try-error')) {
+                        # check old serialization format
+                        CatHeader <- try(old_readCatalog(ExistingFull[i], header_only = FALSE),
+                            silent = TRUE)
+                        if (inherits(CatHeader, 'try-error')) {
+                            CatHeader <- NULL
+                        } else {
+                            # save in new format
+                            writeCatalog(CatHeader, ExistingFull[i])
+                            # get header
+                            CatHeader <- attr(CatHeader, 'header')
+                        }
+                    }
+                    # get header values
                     if (!is.null(CatHeader)) {
                         Head <- unlist(strsplit(CatHeader, "\n"))[-1]
                         c(
@@ -122,8 +138,24 @@ rebuildCatListFile <- function(C.Path, fromScratch = FALSE, ncores = NULL) {
                     cat('\r', j, '/', length(check_index))
                     # get i
                     i <- check_index[j]
-                    # read catalog
-                    CatHeader <- readCatalog(ExistingFull[i], header_only = TRUE)
+                    # read catalog header
+                    CatHeader <- try(readCatalog(ExistingFull[i], header_only = TRUE),
+                        silent = TRUE)
+                    # check for old versions of catalogs
+                    if (inherits(CatHeader, 'try-error')) {
+                        # check old serialization format
+                        CatHeader <- try(old_readCatalog(ExistingFull[i], header_only = FALSE),
+                            silent = TRUE)
+                        if (inherits(CatHeader, 'try-error')) {
+                            CatHeader <- NULL
+                        } else {
+                            # save in new format
+                            writeCatalog(CatHeader, ExistingFull[i])
+                            # get header
+                            CatHeader <- attr(CatHeader, 'header')
+                        }
+                    }
+                    # get header values
                     if (!is.null(CatHeader)) {
                         Head <- unlist(strsplit(CatHeader, "\n"))[-1]
                         Whead <- matrix(as.numeric(gsub(".*[=] ", "", Head)), nrow=1)

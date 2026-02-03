@@ -84,7 +84,7 @@ importFrom("grDevices", "x11")
 importFrom("graphics", "plot")                                       
 importFrom("stats", "setNames")
 
-importFrom(qs, qserialize, qdeserialize)
+importFrom(qs2, qd_save, qd_read, qd_serialize, qd_deserialize)
 
 
 S3method(switchNames,data.table)

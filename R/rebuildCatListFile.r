@@ -4,9 +4,9 @@ rebuildCatListFile <- function(C.Path, fromScratch = FALSE, ncores = NULL) {
     # check if cats exist & list them
 	Existing <- dir(C.Path, pattern = "Cat_Zm.*_[0-9]{14}$")
     # define path to CatList file
-	Catfile <- file.path(C.Path, ".catalogs")
+	Catfile <- file.path(C.Path, ".blsmodelr")
     # check if exists otherwise try old names
-    legacy_names <- '.cats'
+    legacy_names <- c('.catalogs', '.cats')
     if (Catfile_exists <- file.exists(Catfile)) {
         # remove old file names
         for (nm in legacy_names) {
@@ -18,7 +18,16 @@ rebuildCatListFile <- function(C.Path, fromScratch = FALSE, ncores = NULL) {
         # try old file names & rename (latest version has highest priority)
         for (nm in legacy_names) {
             if (file.exists(file.path(C.Path, nm))) {
-                Catfile_exists <- suppressWarnings(file.rename(file.path(C.Path, nm), Catfile))
+                # fix old qs dependence
+                if (Catfile_exists <- requireNamespace('qs')) {
+                    # read
+                    cf <- qs::qread(file.path(C.path, nm))
+                    # save
+                    qs2::qd_save(Catfile)
+                } else {
+                    # remove old file
+                    file.remove(file.path(C.Path, nm))
+                }
             }
         }
     }

@@ -29,11 +29,11 @@ rebuildCatListFile <- function(C.Path, fromScratch = FALSE, ncores = NULL) {
         # get CatList (read file)
 		if (Catfile_exists) {
             # try to read file
-            CatList <- try(qread(Catfile, strict = TRUE), silent = TRUE)
+            CatList <- try(qs2::qd_read(Catfile, validate_checksum = TRUE), silent = TRUE)
             # try again on error
             tic <- Sys.time()
             while (inherits(CatList, 'try-error') && as.numeric(Sys.time() - tic, units = 'secs') < 20) {
-                CatList <- try(qread(Catfile, strict = TRUE), silent = TRUE)
+                CatList <- try(qs2::qd_read(Catfile, validate_checksum = TRUE), silent = TRUE)
             }
             # improved error message upon failure
             if (inherits(CatList, 'try-error')) {
@@ -88,25 +88,8 @@ rebuildCatListFile <- function(C.Path, fromScratch = FALSE, ncores = NULL) {
                 old_nthreads <- data.table::setDTthreads(1L)
                 parallel::clusterEvalQ(cl, data.table::setDTthreads(1L))
                 CatAdd_list <- .clusterApplyLB(cl, check_index, \(i) {
-                    # read catalog
+                    # read catalog header
                     CatHeader <- readCatalog(ExistingFull[i], header_only = TRUE)
-                    # convert from old serialization?
-                    if (is.null(CatHeader)) {
-                        # old qs format
-                        Cat <- try(qs::qread(ExistingFull[i], strict = TRUE), silent = TRUE)
-                        if (inherits(Cat, 'try-error')) {
-                            # old rds format
-                            Cat <- try(readRDS(ExistingFull[i]))
-                        }
-                        if (inherits(Cat, 'try-error')) {
-                            # file corrupt
-                            file.remove(ExistingFull[i])
-                        } else {
-                            # save with new binary format
-                            writeCatalog(Cat, ExistingFull[i])
-                            CatHeader <- attr(Cat, 'header')
-                        }
-                    }
                     if (!is.null(CatHeader)) {
                         Head <- unlist(strsplit(CatHeader, "\n"))[-1]
                         c(
@@ -141,23 +124,6 @@ rebuildCatListFile <- function(C.Path, fromScratch = FALSE, ncores = NULL) {
                     i <- check_index[j]
                     # read catalog
                     CatHeader <- readCatalog(ExistingFull[i], header_only = TRUE)
-                    # convert from old serialization?
-                    if (is.null(CatHeader)) {
-                        # old qs format
-                        Cat <- try(qs::qread(ExistingFull[i], strict = TRUE), silent = TRUE)
-                        if (inherits(Cat, 'try-error')) {
-                            # old rds format
-                            Cat <- try(readRDS(ExistingFull[i]))
-                        }
-                        if (inherits(Cat, 'try-error')) {
-                            # file corrupt
-                            file.remove(ExistingFull[i])
-                        } else {
-                            # save with new binary format
-                            writeCatalog(Cat, ExistingFull[i])
-                            CatHeader <- attr(Cat, 'header')
-                        }
-                    }
                     if (!is.null(CatHeader)) {
                         Head <- unlist(strsplit(CatHeader, "\n"))[-1]
                         Whead <- matrix(as.numeric(gsub(".*[=] ", "", Head)), nrow=1)
@@ -176,7 +142,7 @@ rebuildCatListFile <- function(C.Path, fromScratch = FALSE, ncores = NULL) {
         # add catalog flag as attribute
         setattr(CatList, 'cat_flag', catalog_flag)
         # try to write - if error retry for 20 seconds
-        try_write <- try(qsave(CatList, Catfile, preset = 'uncompressed'), silent = TRUE)
+        try_write <- try(qs2::qd_save(CatList, Catfile), silent = TRUE)
         # loop on error
         time_now <- Sys.time()
         while(inherits(try_write, 'try-error')) {
@@ -188,7 +154,7 @@ rebuildCatListFile <- function(C.Path, fromScratch = FALSE, ncores = NULL) {
             # wait to continue...
             Sys.sleep(1)
             # try again
-            try_write <- try(qsave(CatList, Catfile, preset = 'uncompressed'), silent = TRUE)
+            try_write <- try(qs2::qd_save(CatList, Catfile), silent = TRUE)
         }
 	} else {
         ## no catalogs exist

@@ -5,10 +5,10 @@ writeCatalog <- function(Ctlg, Name, compactTDcat = TRUE, ...) {
     # serialize first
     ## header (raw or serialized?)
     h_r <- attr(Ctlg, 'header')[[1]]
-    h_s <- qs::qserialize(h_r, 'balanced')
+    h_s <- qs2::qd_serialize(h_r)
     h_s_length <- length(h_s)
     ## entire catalog
-    c_s <- qs::qserialize(Ctlg, 'balanced')
+    c_s <- qs2::qd_serialize(Ctlg)
     c_s_length <- length(c_s)
 
     # write binary

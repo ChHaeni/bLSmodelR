@@ -12,7 +12,7 @@ The package bLSmodelR provides functions to run a backward Lagrangian stochastic
 ### Install package dependencies
 ```r
 # install required packages
-install.packages(c('Rcpp', 'rlecuyer', 'data.table', 'qs'))
+install.packages(c('Rcpp', 'rlecuyer', 'data.table', 'qs2'))
 
 # install optional packages for footprint plotting
 # install.packages(c('sp', 'rgeos', 'geosphere', 'RgoogleMaps', 'maptools'))

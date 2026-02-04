@@ -101,7 +101,7 @@ rebuildCatListFile <- function(C.Path, fromScratch = FALSE, ncores = NULL) {
                     CatHeader <- try(readCatalog(ExistingFull[i], header_only = TRUE),
                         silent = TRUE)
                     # check for old versions of catalogs
-                    if (inherits(CatHeader, 'try-error')) {
+                    if (inherits(CatHeader, 'try-error') && requireNamespace('qs', quietly = TRUE)) {
                         # check old serialization format
                         CatHeader <- try(old_readCatalog(ExistingFull[i], header_only = FALSE),
                             silent = TRUE)

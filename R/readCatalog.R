@@ -33,6 +33,9 @@ readCatalog <- function(Name, as.is = FALSE, header_only = FALSE) {
 
 # old catalog reading function (used to convert existing catalogs)
 old_readCatalog <- function(Name, as.is = FALSE, header_only = FALSE) {
+    if (!requireNamespace('qs', quietly = TRUE)) {
+        stop('Cannot convert old catalog format based on depricated "qs" package functions')
+    }
     # read from binary file
     on.exit(close(con))
     con <- file(Name, open = 'rb')

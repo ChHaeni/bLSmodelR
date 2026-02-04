@@ -43,7 +43,7 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::rcmdcheck, devtools, rgeos=?ignore, maptools=?ignore, sp=?ignore, RgoogleMaps=?ignore, geosphere=?ignore
+          extra-packages: any::rcmdcheck, devtools, rgeos=?ignore, maptools=?ignore, sp=?ignore, RgoogleMaps=?ignore, geosphere=?ignore, qs=?ignore
           needs: check
 
       - uses: r-lib/actions/check-r-package@v2

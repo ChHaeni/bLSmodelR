@@ -7,6 +7,9 @@
 
 # v4.12-*
 
+# v4.12-1
+- Fix R CMD check warnings/errors
+
 # v4.12-0
 - Replace dependence on depricated qs package by qs2
 - Minor fixes and improvements

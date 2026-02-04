@@ -96,7 +96,7 @@ rebuildCatListFile <- function(C.Path, fromScratch = FALSE, ncores = NULL) {
                 # Fix data.table nthreads
                 old_nthreads <- data.table::setDTthreads(1L)
                 parallel::clusterEvalQ(cl, data.table::setDTthreads(1L))
-                CatAdd_list <- .clusterApplyLB(cl, check_index, \(i) {
+                CatAdd_list <- .clusterApplyLB(cl, check_index, function(i) {
                     # read catalog header
                     CatHeader <- try(readCatalog(ExistingFull[i], header_only = TRUE),
                         silent = TRUE)

@@ -158,9 +158,9 @@ combineSources <- function(res, comb_list = NULL, weight_units = c("m/A/t", "m/t
     # define patterns
     pattern <- paste0("\\b", names(comb_list[[source_to]]), "\\b")
     # get rows in CalcSteps
-    ind <- rowSums(CalcSteps[, lapply(pattern, \(x) grepl(x, Source))]) == length(pattern)
+    ind <- rowSums(CalcSteps[, lapply(pattern, function(x) grepl(x, Source))]) == length(pattern)
     # get rows in Interval
-    ind_I <- rowSums(Interval[, lapply(pattern, \(x) grepl(x, Source))]) == length(pattern)
+    ind_I <- rowSums(Interval[, lapply(pattern, function(x) grepl(x, Source))]) == length(pattern)
     # Sources
     Srcs <- ModelInput$Sources[ModelInput$Sources[, 1] %in% names(comb_list[[source_to]]),]
     Srcs[, 4] <- as.integer(as.factor(Srcs[, 1]))

@@ -61,7 +61,7 @@
 		####
 
         # prepare parallel input list
-        SncList <- SncRun[, I(lapply(Key[, I(strsplit(V1, split = ','))], \(i) 
+        SncList <- SncRun[, I(lapply(Key[, I(strsplit(V1, split = ','))], function(i) 
                 .SD[as.numeric(i), ]))]
 
         # fix DTthreads

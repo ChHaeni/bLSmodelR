@@ -70,7 +70,7 @@
                 old_nthreads <- data.table::setDTthreads(1L)
                 # split up and run load balanced
                 pindex <- clusterSplit(cl, seq_len(nrow(uvw)))
-                uvw_list <- lapply(pindex, \(x) uvw[x, , drop = FALSE])
+                uvw_list <- lapply(pindex, function(x) uvw[x, , drop = FALSE])
                 # run model
 				pList <- .clusterApplyLB(cl, uvw_list, coreModelWrapper, SnRun)
                 # fix DTthreads

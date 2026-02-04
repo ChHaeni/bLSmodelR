@@ -80,7 +80,7 @@ importFrom(Rcpp, evalCpp)
 importFrom(utils,head,tail)
 import(parallel,rlecuyer,data.table)
 
-importFrom("grDevices", "x11")
+importFrom("grDevices", "dev.new")
 importFrom("graphics", "plot")                                       
 importFrom("stats", "setNames")
 

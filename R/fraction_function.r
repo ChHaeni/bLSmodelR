@@ -681,7 +681,7 @@ splitSource <- function(
         )
 
       if(checkArea && abs(getArea(SubSource) - out$polygons[,area[1], by = .(tile, polygon)][,sum(V1)]) > sqrt(tol)){
-        x11()
+        dev.new()
         # plotM(out)
         plot(Poly$x[c(1:nrow(Poly),1)], Poly$y[c(1:nrow(Poly),1)], type = "l", lwd = 2)
           # ,xlim = c(-1, 1) + 711620, ylim = c(-1, 1) + 260850)

@@ -80,7 +80,7 @@ rebuildCatListFile <- function(C.Path, fromScratch = FALSE, ncores = NULL) {
                 if (inherits(ncores, 'cluster')) {
                     # get clusters
                     cl <- ncores
-                } else if (!is.integer(ncores)) {
+                } else if (!(is.numeric(ncores) && ncores %% 1 == 0)) {
                     stop("Argument 'ncores' is not of type integer!")
                 } else if (ncores < 1) {
                     stop("Number of cores must be greater or equal to 1!")

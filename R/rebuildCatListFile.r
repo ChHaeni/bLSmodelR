@@ -23,7 +23,7 @@ rebuildCatListFile <- function(C.Path, fromScratch = FALSE, ncores = NULL) {
                     # read
                     cf <- qs::qread(file.path(C.Path, nm))
                     # save
-                    qs2::qd_save(cf, Catfile)
+                    qs2::qd_save(cf, Catfile, warn_unsupported_types = FALSE)
                 } else {
                     # remove old file
                     file.remove(file.path(C.Path, nm))
@@ -183,7 +183,7 @@ rebuildCatListFile <- function(C.Path, fromScratch = FALSE, ncores = NULL) {
         # add catalog flag as attribute
         setattr(CatList, 'cat_flag', catalog_flag)
         # try to write - if error retry for 20 seconds
-        try_write <- try(qs2::qd_save(CatList, Catfile), silent = TRUE)
+        try_write <- try(qs2::qd_save(CatList, Catfile, warn_unsupported_types = FALSE), silent = TRUE)
         # loop on error
         time_now <- Sys.time()
         while(inherits(try_write, 'try-error')) {
@@ -195,7 +195,7 @@ rebuildCatListFile <- function(C.Path, fromScratch = FALSE, ncores = NULL) {
             # wait to continue...
             Sys.sleep(1)
             # try again
-            try_write <- try(qs2::qd_save(CatList, Catfile), silent = TRUE)
+            try_write <- try(qs2::qd_save(CatList, Catfile, warn_unsupported_types = FALSE), silent = TRUE)
         }
 	} else {
         ## no catalogs exist

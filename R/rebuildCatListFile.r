@@ -21,9 +21,9 @@ rebuildCatListFile <- function(C.Path, fromScratch = FALSE, ncores = NULL) {
                 # fix old qs dependence
                 if (Catfile_exists <- requireNamespace('qs')) {
                     # read
-                    cf <- qs::qread(file.path(C.path, nm))
+                    cf <- qs::qread(file.path(C.Path, nm))
                     # save
-                    qs2::qd_save(Catfile)
+                    qs2::qd_save(cf, Catfile)
                 } else {
                     # remove old file
                     file.remove(file.path(C.Path, nm))

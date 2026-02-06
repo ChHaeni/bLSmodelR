@@ -7,6 +7,10 @@
 
 # v4.12-*
 
+# v4.12-2
+- Fix errors introduced with v4.12-0
+- Suppress warnings from data.table serialization
+
 # v4.12-1
 - Fix R CMD check warnings/errors
 

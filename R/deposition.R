@@ -379,12 +379,12 @@ deposition <- function(x, vDep, rn = NULL, Sensor = NULL, Source = NULL,
     # TODO: add function bls_attributes -> CalcSteps, CatPath, Catalogs,
     #           ModelInput, Version, ModelRunTime, vDep
     for (att in c('CalcSteps', 'CatPath', 'Catalogs', 'ModelInput', 'Version', 'ModelRunTime')) {
-        setattr(Out, att, attr(Run, att))
+        setattr(Out, att, attr(x, att))
     }
 
     # add new attributes
-	setattr(Out,"vDep",list(vDep=vDep,vDepSpatial=vDepSpatial))
-	setattr(Out,"class",c("deposition",class(Out)))
+	setattr(Out, "vDep", list(vDep = vDep, vDepSpatial = vDepSpatial))
+	setattr(Out, "class", c("deposition", class(x)))
     setattr(Out, 'cpu_mem', cpu_mem)
 
     cat("\nFinished Deposition Calculation!\nLocal Date/Time: ",

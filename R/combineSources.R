@@ -224,6 +224,7 @@ combineSources <- function(res, comb_list = NULL, weight_units = c("m/A/t", "m/t
 
 avgSourcesWeights <- function(prior_weights, source_areas){
   R <- outer(prior_weights, prior_weights, "/")
+  R[is.na(R)] <- 1
   sum(source_areas) / as.numeric(t(R) %*% source_areas)
 }
 

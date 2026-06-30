@@ -15,9 +15,16 @@ genSources <- function(...){
 	isDF <- sapply(ArgList,is.data.frame)
 	for(i in seq_along(Names)){
 		nindex <- which(Names[i]==Lnams)
-		if(length(nindex)==1&&isDF[i]&&length(ArgList[[nindex]])==4){
-			app <- ArgList[[nindex]]
+		if(length(nindex)==1&&isDF[i]&&length(ArgList[[nindex]]) %in% 2:4){
+			app <- as.data.frame(ArgList[[nindex]])
 			if(any(is.na(app)))stop(paste0("Supplied argument (",Names[i],") contains NA values!\n"))
+            if (ncol(app) == 2) {
+                app <- cbind(name = Names[i], app)
+            }
+            if (ncol(app) == 3) {
+			    app[, 4] <- 1
+            }
+            # TODO: fix column order if names are provided
 			app[,1] <- as.character(app[,1])
 			names(app) <- cnames
 			Out <- rbind(Out,app)

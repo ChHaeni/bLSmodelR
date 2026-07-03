@@ -5,7 +5,12 @@
 
 ---
 
-# v4.12-*
+# v4.*
+
+# v4.12-3
+- Fix passing attributes in deposition function
+- Fix parallelism error in prepareIntervals()
+- Allow to provide a data.table (in correct format) to genSources()
 
 # v4.12-2
 - Fix errors introduced with v4.12-0

@@ -127,7 +127,7 @@ genInterval <- function(Data=NULL,Ustar=0.25,L=-2000,Zo=0.01,sUu=2.5,sVu=2,sWu=1
 	if(any(wruw <- abs(1/Out[!isna,"SigmaU/Ustar [-]"]/calcbw(Out[!isna,"SigmaW/Ustar [-]"],(Out[!isna,"SigmaW/Ustar Height [m]"]-Out[!isna,"d [m]"])/Out[!isna,"L [m]"]))>1)){
 		cat("Line:\n")
 		cat(paste(wruw <- which(wruw),collapse=","),"\n")
-		cat("Correlation of u and w is greater than 1! -> Setting Ustar value to NA!\n")
+		cat("Correlation of u and w @ model ground (Zo + d) cannot be greater than 1! -> Setting Ustar value to NA...\n")
 		Out[!isna,][wruw,2] <- NA
 	}
 

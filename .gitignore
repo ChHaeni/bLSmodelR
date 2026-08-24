@@ -1,0 +1,3 @@
+# temporary compiled code
+src/*.so
+src/*.o
